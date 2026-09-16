@@ -28,6 +28,12 @@
   <sub><em>Experience the live boot sequence, mecha voice greeting, atmospheric particle canvas, and bookmark blades right in your browser!</em></sub>
 </p>
 
+<br/>
+
+<p align="center">
+  <img src="assets/previews/crimson.png" alt="Shinsekai Crimson Flame Interface" width="100%" style="border-radius: 12px; box-shadow: 0 20px 50px rgba(0,0,0,0.85);" />
+</p>
+
 </div>
 
 ---
@@ -74,9 +80,49 @@
 
 ---
 
-## 🎨 Faction Themes & Video Stages
+## 🎨 Faction Themes & Screenshots
 
 Switch factions instantly via the header dropdown or by pressing <kbd>t</kbd>:
+
+<div align="center">
+
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <img src="assets/previews/crimson.png" alt="紅蓮 · Crimson Flame" width="100%" style="border-radius: 8px;" /><br/>
+      <b>🔥 紅蓮 · Crimson Flame</b><br/>
+      <sub>煉獄炎獄 · Kyojuro Rengoku Stage (Rising Embers)</sub>
+    </td>
+    <td width="50%" align="center">
+      <img src="assets/previews/tokyonight.png" alt="東京夜 · TokyoNight Void" width="100%" style="border-radius: 8px;" /><br/>
+      <b>🌌 東京夜 · TokyoNight Void</b><br/>
+      <sub>無量空処 · Satoru Gojo Stage (Spatial Energy Orbs)</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <img src="assets/previews/sakura.png" alt="桜吹雪 · Sakura Ronin" width="100%" style="border-radius: 8px;" /><br/>
+      <b>🌸 桜吹雪 · Sakura Ronin</b><br/>
+      <sub>侍道 · Cherry Blossom Stage (Fluttering Sakura Petals)</sub>
+    </td>
+    <td width="50%" align="center">
+      <img src="assets/previews/catppuccin.png" alt="終末谷 · Catppuccin Spiral" width="100%" style="border-radius: 8px;" /><br/>
+      <b>🌀 終末谷 · Catppuccin Spiral</b><br/>
+      <sub>螺旋輪廻 · Valley of the End Stage (Chakra Spheres)</sub>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2" align="center">
+      <img src="assets/previews/cyberpunk.png" alt="電脳都市 · Cyberpunk Neon" width="85%" style="border-radius: 8px;" /><br/>
+      <b>⚡ 電脳都市 · Cyberpunk Neon</b><br/>
+      <sub>攻殻機動 · Night City Digital Rain Stage (Matrix Rain)</sub>
+    </td>
+  </tr>
+</table>
+
+</div>
+
+<br/>
 
 | Faction Theme | Japanese Lore | Aesthetic Colors | Particle Dynamics | Default Wallpaper |
 |:---|:---|:---|:---|:---|
@@ -193,8 +239,14 @@ SHINSEKAI-Startup-Page/
 │   │   ├── cyberpunk.mp4   # Night City Rain
 │   │   ├── sakura.mp4      # Ronin Cherry Blossom
 │   │   └── tokyonight.mp4  # Infinite Void Cosmos
-│   └── audio/              # Mecha female voice welcome asset
-│       └── welcome.mp3     # 「ようこそ、ミモグ様」
+│   ├── audio/              # Mecha female voice welcome asset
+│   │   └── welcome.mp3     # 「ようこそ、ミモグ様」
+│   └── previews/           # High-resolution theme screenshots
+│       ├── catppuccin.png  # 終末谷 Interface
+│       ├── crimson.png     # 紅蓮 Interface
+│       ├── cyberpunk.png   # 電脳都市 Interface
+│       ├── sakura.png      # 桜吹雪 Interface
+│       └── tokyonight.png  # 東京夜 Interface
 ├── index.html              # Clean semantic anime HUD viewport
 ├── links.js                # Default pinned links & kanji seals
 ├── manifest.json           # Native Chromium Web Extension manifest (V3)
