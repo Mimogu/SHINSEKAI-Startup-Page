@@ -942,44 +942,138 @@
       return trimmed;
     }
 
-    /* ─── 8.0. FAVICON / ICON HELPERS ─── */
+    /* ─── 8.0. FAVICON & PERSISTENT OFFLINE ICON CACHE ─── */
+    const ICON_CACHE_PREFIX = 'shinsekai-icon-';
 
-    /**
-     * Returns the Google S2 favicon CDN URL for a given href.
-     * Falls back gracefully to '' on parse errors (e.g. '#').
-     */
-    function getFaviconUrl(href) {
+    function getHostname(href) {
       if (!href || href === '#') return '';
       try {
         const clean = sanitizeUrl(href);
         if (!clean || clean === '#' || clean.startsWith('javascript:')) return '';
         const { hostname } = new URL(clean);
-        if (!hostname) return '';
-        return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(hostname)}&sz=64`;
+        return hostname || '';
       } catch (e) {
         return '';
       }
     }
 
+    /** Returns Google S2 CDN URL for any href. */
+    function getFaviconUrl(href) {
+      const hostname = getHostname(href);
+      if (!hostname) return '';
+      return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(hostname)}&sz=64`;
+    }
+
     /**
-     * Builds the inner HTML for a .tile-seal element.
-     * Renders a 18×18 favicon img that falls back to the Kanji seal text on error.
+     * Builds the inner HTML for a .tile-seal or .editor-link-seal element.
+     * Priority:
+     *  1. Cached base64 data URL from localStorage (instant, works offline, survives cache wipe)
+     *  2. Google S2 CDN direct in <img> (instant, works online without CORS restrictions)
+     *  3. Kanji seal fallback text on error
      */
     function buildTileIconHtml(url, seal, fallback) {
-      const faviconUrl = getFaviconUrl(url);
       const sealText = escapeHtml(seal || fallback || '★');
-      if (!faviconUrl) {
+      const hostname = getHostname(url);
+      if (!hostname) {
         return `<span class="tile-seal-text">${sealText}</span>`;
       }
-      // Both img and fallback text rendered; JS/CSS toggles visibility
+
+      // Check localStorage first — if previously saved, works completely offline
+      const cached = safeStorage.getItem(ICON_CACHE_PREFIX + hostname);
+      const iconSrc = cached || getFaviconUrl(url);
+
       return `<img class="tile-icon-img"
-          src="${escapeHtml(faviconUrl)}"
+          src="${escapeHtml(iconSrc)}"
           alt="${sealText}"
           loading="lazy"
           decoding="async"
           onerror="this.style.display='none';var s=this.nextElementSibling;if(s)s.style.display='';"
           onload="var s=this.nextElementSibling;if(s)s.style.display='none';"
         /><span class="tile-seal-text" style="display:none;">${sealText}</span>`;
+    }
+
+    /**
+     * Saves an icon to localStorage as a compact 32x32 base64 PNG data URL.
+     * ONLY runs when there is an active internet connection.
+     * Silent and non-blocking: never interferes with the visible <img> elements.
+     */
+    async function cacheIconForOffline(url) {
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
+      const hostname = getHostname(url);
+      if (!hostname) return;
+
+      const key = ICON_CACHE_PREFIX + hostname;
+      if (safeStorage.getItem(key)) return;
+
+      try {
+        const resp = await fetch(`https://icon.horse/icon/${encodeURIComponent(hostname)}`, { mode: 'cors' });
+        if (!resp.ok) return;
+        const blob = await resp.blob();
+        if (!blob || blob.size === 0) return;
+
+        const img = new Image();
+        const blobUrl = URL.createObjectURL(blob);
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+          img.src = blobUrl;
+        });
+        URL.revokeObjectURL(blobUrl);
+
+        const offCanvas = document.createElement('canvas');
+        offCanvas.width = 32;
+        offCanvas.height = 32;
+        const ctx = offCanvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, 32, 32);
+        const compactDataUrl = offCanvas.toDataURL('image/png');
+
+        safeStorage.setItem(key, compactDataUrl);
+      } catch (e) {}
+    }
+
+    /**
+     * Syncs icon cache with active links — removes cached icons for domains no longer pinned.
+     * Keeps localStorage permanently lean and trimmed to only active links.
+     */
+    function syncIconCache() {
+      const activeDomains = new Set();
+      currentLinks.forEach(sec => {
+        (sec.items || []).forEach(item => {
+          const host = getHostname(item.url);
+          if (host) activeDomains.add(host);
+        });
+      });
+
+      try {
+        if (typeof window !== 'undefined' && window.localStorage) {
+          const keysToRemove = [];
+          for (let i = 0; i < localStorage.length; i++) {
+            const k = localStorage.key(i);
+            if (k && k.startsWith(ICON_CACHE_PREFIX)) {
+              const domain = k.slice(ICON_CACHE_PREFIX.length);
+              if (!activeDomains.has(domain)) {
+                keysToRemove.push(k);
+              }
+            }
+          }
+          keysToRemove.forEach(k => { safeStorage.removeItem(k); });
+        }
+      } catch (e) {}
+    }
+
+    /**
+     * Iterates all links and caches their icons for offline use.
+     * ONLY runs when online.
+     */
+    function syncAllIconsOffline() {
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
+      currentLinks.forEach(sec => {
+        (sec.items || []).forEach(item => {
+          if (item.url) {
+            cacheIconForOffline(item.url);
+          }
+        });
+      });
     }
 
     function getInitialLinks() {
@@ -1091,30 +1185,35 @@
      */
     function updateSealPreview(url, sealText) {
       if (!previewFaviconImg || !previewSealFallback) return;
-      const faviconUrl = getFaviconUrl(sanitizeUrl(url));
+      const hostname = getHostname(url);
       const displaySeal = sealText || '印';
 
       previewSealFallback.textContent = displaySeal;
 
-      if (faviconUrl) {
-        previewFaviconImg.src = faviconUrl;
-        previewFaviconImg.alt = displaySeal;
-        previewFaviconImg.style.display = '';
-        previewSealFallback.style.display = 'none';
-
-        previewFaviconImg.onerror = () => {
-          previewFaviconImg.style.display = 'none';
-          previewSealFallback.style.display = '';
-        };
-        previewFaviconImg.onload = () => {
-          previewFaviconImg.style.display = '';
-          previewSealFallback.style.display = 'none';
-        };
-      } else {
+      if (!hostname) {
         previewFaviconImg.style.display = 'none';
         previewFaviconImg.src = '';
         previewSealFallback.style.display = '';
+        return;
       }
+
+      const cached = safeStorage.getItem(ICON_CACHE_PREFIX + hostname);
+      const faviconUrl = cached || getFaviconUrl(url);
+
+      previewFaviconImg.src = faviconUrl;
+      previewFaviconImg.alt = displaySeal;
+      previewFaviconImg.style.display = '';
+      previewSealFallback.style.display = 'none';
+
+      previewFaviconImg.onerror = () => {
+        previewFaviconImg.style.display = 'none';
+        previewSealFallback.style.display = '';
+      };
+      previewFaviconImg.onload = () => {
+        previewFaviconImg.style.display = '';
+        previewSealFallback.style.display = 'none';
+        if (!cached) cacheIconForOffline(url);
+      };
     }
 
     function resetEditorForm() {
@@ -1157,6 +1256,8 @@
 
     function saveLinks() {
       safeStorage.setItem('shinsekai-custom-links', JSON.stringify(currentLinks));
+      syncIconCache();
+      syncAllIconsOffline();
     }
 
     function renderEditorModal() {
@@ -1704,6 +1805,10 @@
         }
       }
     });
+
+    // Offline icon persistence: background sync ONLY when online and system is idle
+    setTimeout(syncAllIconsOffline, 2500);
+    window.addEventListener('online', syncAllIconsOffline);
   }
 
   if (document.readyState === 'loading') {
