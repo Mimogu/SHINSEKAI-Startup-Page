@@ -15,6 +15,17 @@
 
 <br />
 
+<p align="center">
+  <a href="https://mimogu.github.io/SHINSEKAI-Startup-Page/" target="_blank" rel="noopener noreferrer">
+    <img src="https://img.shields.io/badge/▶_LIVE_DEMO-TRY_IN_YOUR_BROWSER-ff2a55?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Live Demo" height="38" />
+  </a>
+</p>
+
+<p align="center">
+  🚀 <b>Instant Web Preview:</b> <a href="https://mimogu.github.io/SHINSEKAI-Startup-Page/"><b>https://mimogu.github.io/SHINSEKAI-Startup-Page/</b></a><br />
+  <sub><em>Test the live 4K wallpapers, mecha voice greeting, particle canvas, and bookmark editor directly in your browser before downloading!</em></sub>
+</p>
+
 </div>
 
 ---
