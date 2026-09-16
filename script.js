@@ -101,6 +101,9 @@
     const addLinkUrl = document.getElementById('add-link-url');
     const addLinkDesc = document.getElementById('add-link-desc');
     const addLinkSeal = document.getElementById('add-link-seal');
+    const sealPreviewBox = document.getElementById('seal-preview-box');
+    const previewFaviconImg = document.getElementById('preview-favicon-img');
+    const previewSealFallback = document.getElementById('preview-seal-fallback');
     const addLinkBtn = document.getElementById('add-link-btn');
     const editLinkIndex = document.getElementById('edit-link-index');
     const editorFormHeading = document.getElementById('editor-form-heading');
@@ -888,6 +891,44 @@
       return trimmed;
     }
 
+    /* ─── 8.0. FAVICON / ICON HELPERS ─── */
+
+    /**
+     * Returns the Google S2 favicon CDN URL for a given href.
+     * Falls back gracefully to '' on parse errors (e.g. '#').
+     */
+    function getFaviconUrl(href) {
+      if (!href || href === '#') return '';
+      try {
+        const { hostname } = new URL(href);
+        if (!hostname) return '';
+        return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(hostname)}&sz=64`;
+      } catch (e) {
+        return '';
+      }
+    }
+
+    /**
+     * Builds the inner HTML for a .tile-seal element.
+     * Renders a 18×18 favicon img that falls back to the Kanji seal text on error.
+     */
+    function buildTileIconHtml(url, seal, fallback) {
+      const faviconUrl = getFaviconUrl(url);
+      const sealText = escapeHtml(seal || fallback || '★');
+      if (!faviconUrl) {
+        return `<span class="tile-seal-text">${sealText}</span>`;
+      }
+      // Both img and fallback text rendered; JS/CSS toggles visibility
+      return `<img class="tile-icon-img"
+          src="${escapeHtml(faviconUrl)}"
+          alt="${sealText}"
+          loading="lazy"
+          decoding="async"
+          onerror="this.style.display='none';var s=this.nextElementSibling;if(s)s.style.display='';"
+          onload="var s=this.nextElementSibling;if(s)s.style.display='none';"
+        /><span class="tile-seal-text" style="display:none;">${sealText}</span>`;
+    }
+
     function getInitialLinks() {
       const custom = safeStorage.getItem('shinsekai-custom-links');
       if (custom) {
@@ -951,7 +992,7 @@
           <div class="sector-grid">
             ${sec.items.map(item => `
               <a href="${escapeHtml(sanitizeUrl(item.url))}" class="holo-tile" target="_blank" rel="noopener noreferrer">
-                <span class="tile-seal">${escapeHtml(item.seal || item.title.slice(0, 1))}</span>
+                <span class="tile-seal">${buildTileIconHtml(item.url, item.seal, item.title.slice(0, 1))}</span>
                 <div class="tile-info">
                   <span class="tile-title">${escapeHtml(item.title)}</span>
                   <span class="tile-sub">${escapeHtml(item.desc || '')}</span>
@@ -990,12 +1031,47 @@
     /* ─── 8.1. LINK EDITOR MODAL CONTROLLER ─── */
     let activeEditorSectorId = 'anime';
 
+    /**
+     * Refreshes the live seal preview box in the editor form.
+     * Shows the favicon from Google CDN if the URL is valid;
+     * otherwise shows the kanji seal text or '印' as a placeholder.
+     */
+    function updateSealPreview(url, sealText) {
+      if (!previewFaviconImg || !previewSealFallback) return;
+      const faviconUrl = getFaviconUrl(sanitizeUrl(url));
+      const displaySeal = sealText || '印';
+
+      previewSealFallback.textContent = displaySeal;
+
+      if (faviconUrl) {
+        previewFaviconImg.src = faviconUrl;
+        previewFaviconImg.alt = displaySeal;
+        previewFaviconImg.style.display = '';
+        previewSealFallback.style.display = 'none';
+
+        previewFaviconImg.onerror = () => {
+          previewFaviconImg.style.display = 'none';
+          previewSealFallback.style.display = '';
+        };
+        previewFaviconImg.onload = () => {
+          previewFaviconImg.style.display = '';
+          previewSealFallback.style.display = 'none';
+        };
+      } else {
+        previewFaviconImg.style.display = 'none';
+        previewFaviconImg.src = '';
+        previewSealFallback.style.display = '';
+      }
+    }
+
     function resetEditorForm() {
       if (editLinkIndex) editLinkIndex.value = '-1';
       if (addLinkTitle) addLinkTitle.value = '';
       if (addLinkUrl) addLinkUrl.value = '';
       if (addLinkDesc) addLinkDesc.value = '';
       if (addLinkSeal) addLinkSeal.value = '';
+      // Reset seal preview to blank state
+      updateSealPreview('', '');
       if (addLinkBtn) {
         addLinkBtn.textContent = '追加 / ADD';
         addLinkBtn.classList.remove('editor-btn-accent');
@@ -1068,7 +1144,7 @@
       editorLinksList.innerHTML = currentSec.items.map((item, idx) => `
         <div class="editor-link-card ${idx === currentEditingIdx ? 'editing-active' : ''}" data-idx="${idx}">
           <div class="editor-link-main">
-            <span class="editor-link-seal">${escapeHtml(item.seal || (item.title ? item.title.slice(0, 1) : '★'))}</span>
+            <span class="editor-link-seal">${buildTileIconHtml(item.url, item.seal, item.title ? item.title.slice(0, 1) : '★')}</span>
             <div class="editor-link-info">
               <span class="editor-link-title">${escapeHtml(item.title)}</span>
               <span class="editor-link-sub">${escapeHtml(item.desc || item.url)}</span>
@@ -1094,6 +1170,9 @@
           if (addLinkUrl) addLinkUrl.value = item.url || '';
           if (addLinkDesc) addLinkDesc.value = item.desc || '';
           if (addLinkSeal) addLinkSeal.value = item.seal || '';
+
+          // Load the live favicon preview for the item being edited
+          updateSealPreview(item.url || '', item.seal || '');
 
           if (addLinkBtn) {
             addLinkBtn.textContent = '✓ 更新 / UPDATE';
@@ -1204,6 +1283,18 @@
         });
       }
     });
+
+    // Live seal/icon preview: update whenever the URL or seal field changes
+    if (addLinkUrl) {
+      addLinkUrl.addEventListener('input', () => {
+        updateSealPreview(addLinkUrl.value, addLinkSeal ? addLinkSeal.value : '');
+      });
+    }
+    if (addLinkSeal) {
+      addLinkSeal.addEventListener('input', () => {
+        updateSealPreview(addLinkUrl ? addLinkUrl.value : '', addLinkSeal.value);
+      });
+    }
 
     if (editorExportBtn) {
       editorExportBtn.addEventListener('click', () => {

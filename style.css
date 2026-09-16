@@ -1011,7 +1011,28 @@ body:not([data-dock-pinned="true"]) .blade-launcher-container:not(:hover):not(.o
   color: var(--accent);
   border: 1px solid var(--glass-border);
   flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.tile-icon-img {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  border-radius: 4px;
+  image-rendering: -webkit-optimize-contrast;
+  display: block;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.tile-seal-text {
+  font-family: var(--font-jp);
+  font-size: 0.88rem;
+  font-weight: 900;
+  line-height: 1;
+  color: inherit;
 }
 
 .holo-tile:hover .tile-seal {
@@ -1773,6 +1794,8 @@ body.boot-active .anime-subtitles-bar {
   font-weight: 900;
   border-radius: 6px;
   flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
 }
 
 .editor-link-info {
@@ -1855,11 +1878,43 @@ body.boot-active .anime-subtitles-bar {
 
 .editor-form-grid {
   display: grid;
-  grid-template-columns: 2fr 2.6fr 2.6fr 1fr auto;
+  grid-template-columns: 2fr 2.5fr 2.5fr 1.3fr auto;
   gap: 0.75rem;
   align-items: flex-end;
   width: 100%;
   box-sizing: border-box;
+}
+
+.seal-input-stack {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.seal-preview-box {
+  width: 38px;
+  height: 38px;
+  background: var(--accent-soft);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  overflow: hidden;
+  color: var(--accent);
+}
+
+.seal-preview-box:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 10px var(--accent-soft);
+}
+
+.seal-preview-box .tile-icon-img {
+  width: 20px;
+  height: 20px;
 }
 
 .editor-btn-group {

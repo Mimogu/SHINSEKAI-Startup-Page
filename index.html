@@ -345,8 +345,14 @@
             <input type="text" id="add-link-desc" placeholder="例: Anime Tracker & List" autocomplete="off" />
           </div>
           <div class="form-group span-seal">
-            <label>封印漢字 / Seal</label>
-            <input type="text" id="add-link-seal" maxlength="2" placeholder="例: 録" autocomplete="off" />
+            <label>封印 / Seal & Icon</label>
+            <div class="seal-input-stack">
+              <span class="seal-preview-box" id="seal-preview-box" title="アイコンプレビュー / Icon Preview">
+                <img id="preview-favicon-img" class="tile-icon-img" src="" alt="" style="display:none;" />
+                <span id="preview-seal-fallback" class="tile-seal-text">印</span>
+              </span>
+              <input type="text" id="add-link-seal" maxlength="2" placeholder="漢字" autocomplete="off" title="アイコン取得不可時の代替漢字 / Fallback seal Kanji" />
+            </div>
           </div>
           <div class="form-group span-btn">
             <div class="editor-btn-group">
