@@ -52,6 +52,7 @@
     const chronoAmpm = document.getElementById('chrono-ampm');
     const clockEra = document.getElementById('clock-era');
     const clockEraEn = document.getElementById('clock-era-en');
+    const chronometerBox = document.getElementById('chronometer-box');
 
     const themeBtn = document.getElementById('theme-btn');
     const themeLabel = document.getElementById('theme-label');
@@ -150,19 +151,35 @@
       }
     ];
 
+    let is12HourFormat = safeStorage.getItem('shinsekai-clock-12h') === 'true';
+
+    function toggleClockFormat() {
+      is12HourFormat = !is12HourFormat;
+      safeStorage.setItem('shinsekai-clock-12h', is12HourFormat ? 'true' : 'false');
+      updateEpisodeClock();
+    }
+
+    if (chronometerBox) {
+      chronometerBox.addEventListener('click', toggleClockFormat);
+    }
+
     function updateEpisodeClock() {
       const now = new Date();
       const hours = now.getHours();
-      const hours12 = hours % 12 || 12;
+      const displayHours = is12HourFormat ? (hours % 12 || 12) : hours;
       const minutes = String(now.getMinutes()).padStart(2, '0');
       const seconds = String(now.getSeconds()).padStart(2, '0');
 
       const enDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
       const enMonths = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
-      if (clockMain) clockMain.textContent = `${String(hours12).padStart(2, '0')}:${minutes}`;
+      if (clockMain) clockMain.textContent = `${String(displayHours).padStart(2, '0')}:${minutes}`;
       if (clockSec) clockSec.textContent = `:${seconds}`;
-      if (chronoAmpm) chronoAmpm.textContent = hours < 12 ? '午前 / AM' : '午後 / PM';
+      if (chronoAmpm) {
+        chronoAmpm.textContent = is12HourFormat
+          ? (hours < 12 ? '午前 / AM' : '午後 / PM')
+          : '24時間 / 24H';
+      }
 
       const dayOfWeek = kanjiDays[now.getDay()];
       const month = kanjiMonths[now.getMonth()];
@@ -503,8 +520,8 @@
 
     if (subtitlesBar) {
       subtitlesBar.addEventListener('click', cycleQuote);
-      // Start auto-cycling quotes only after boot sequence finishes (3s + 0.5s buffer)
-      setTimeout(() => { startQuoteTimer(); }, 3500);
+      // Start auto-cycling quotes only after boot sequence finishes (1.5s + 0.5s buffer)
+      setTimeout(() => { startQuoteTimer(); }, 2000);
 
       document.addEventListener('visibilitychange', () => {
         if (document.hidden) {
@@ -1410,7 +1427,7 @@
         return;
       }
 
-      const bootDuration = 3000; // Exact 3.0 seconds
+      const bootDuration = 1500; // Exact 1.5 seconds
       let startTime = null;
 
       const bootSteps = [
@@ -1439,7 +1456,7 @@
         if (elapsed < bootDuration) {
           requestAnimationFrame(updateBoot);
         } else {
-          // Exactly at 3.0 seconds: loading has finished!
+          // Exactly at 1.5 seconds: loading has finished!
           if (bootProgressBar) bootProgressBar.style.width = '100%';
           if (bootPct) bootPct.textContent = '100%';
           if (bootLog) bootLog.textContent = '新世界 起動完了 // WELCOME MIMOGU-SAMA';
@@ -1462,7 +1479,7 @@
       requestAnimationFrame(updateBoot);
     }
 
-    // Trigger 3-second theme-customized boot sequence on startup
+    // Trigger 1.5-second theme-customized boot sequence on startup
     runBootSequence();
 
     /* ─── 11. GLOBAL CLICK & SHORTCUT HANDLERS ─── */
@@ -1511,6 +1528,8 @@
         playWelcomeVoice();
       } else if (key === 'e') {
         openLinkEditor();
+      } else if (key === 'c') {
+        toggleClockFormat();
       } else if (e.key === 'Escape') {
         if (linkEditorModal && linkEditorModal.classList.contains('open')) {
           closeLinkEditor();
