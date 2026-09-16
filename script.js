@@ -153,13 +153,14 @@
     function updateEpisodeClock() {
       const now = new Date();
       const hours = now.getHours();
+      const hours12 = hours % 12 || 12;
       const minutes = String(now.getMinutes()).padStart(2, '0');
       const seconds = String(now.getSeconds()).padStart(2, '0');
 
       const enDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
       const enMonths = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
-      if (clockMain) clockMain.textContent = `${String(hours).padStart(2, '0')}:${minutes}`;
+      if (clockMain) clockMain.textContent = `${String(hours12).padStart(2, '0')}:${minutes}`;
       if (clockSec) clockSec.textContent = `:${seconds}`;
       if (chronoAmpm) chronoAmpm.textContent = hours < 12 ? '午前 / AM' : '午後 / PM';
 
@@ -1410,8 +1411,7 @@
       }
 
       const bootDuration = 3000; // Exact 3.0 seconds
-      let lastTimestamp = null;
-      let elapsed = 0;
+      let startTime = null;
 
       const bootSteps = [
         { pct: 25, log: '[BOOT 01/04] INITIALIZING SYSTEM KERNEL & CACHYOS LINUX CORE...' },
@@ -1423,15 +1423,11 @@
 
       function updateBoot(timestamp) {
         const now = timestamp || performance.now();
-        if (lastTimestamp === null) {
-          lastTimestamp = now;
+        if (startTime === null) {
+          startTime = now;
         }
 
-        // Clamp delta to prevent skips if the browser stutters, loads assets, or starts in background
-        const delta = Math.min(100, Math.max(0, now - lastTimestamp));
-        lastTimestamp = now;
-        elapsed += delta;
-
+        const elapsed = now - startTime;
         const progress = Math.min(100, Math.floor((elapsed / bootDuration) * 100));
 
         if (bootProgressBar) bootProgressBar.style.width = `${progress}%`;
