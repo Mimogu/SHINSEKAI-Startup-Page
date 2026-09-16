@@ -891,168 +891,44 @@
       return trimmed;
     }
 
-    /* ─── 8.0. FAVICON / ICON CACHE SYSTEM ─── */
+    /* ─── 8.0. FAVICON / ICON HELPERS ─── */
 
-    const ICON_CACHE_PREFIX = 'shinsekai-icon-';
-
-    /** Safely extracts the hostname from a URL string. Returns '' on failure. */
-    function getHostname(href) {
+    /**
+     * Returns the Google S2 favicon CDN URL for a given href.
+     * Falls back gracefully to '' on parse errors (e.g. '#').
+     */
+    function getFaviconUrl(href) {
       if (!href || href === '#') return '';
       try {
-        const { hostname } = new URL(href);
-        return hostname || '';
+        const clean = sanitizeUrl(href);
+        if (!clean || clean === '#' || clean.startsWith('javascript:')) return '';
+        const { hostname } = new URL(clean);
+        if (!hostname) return '';
+        return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(hostname)}&sz=64`;
       } catch (e) {
         return '';
       }
     }
 
-    /** Returns the localStorage key for a given URL's icon. */
-    function iconCacheKey(href) {
-      const host = getHostname(href);
-      return host ? ICON_CACHE_PREFIX + host : null;
-    }
-
-    /** Retrieves a cached base64 icon data URL from localStorage. Returns null if not found. */
-    function getCachedIcon(href) {
-      const key = iconCacheKey(href);
-      return key ? safeStorage.getItem(key) : null;
-    }
-
     /**
-     * Fetches a favicon from DuckDuckGo's CORS-enabled CDN, converts it to a
-     * persistent base64 data URL, and saves it to localStorage.
-     * Once saved, the icon works completely offline and survives HTTP cache clears.
-     * Updates imgEl and fallbackEl in-place when the fetch resolves.
-     */
-    async function fetchAndCacheIcon(url, imgEl, fallbackEl) {
-      const hostname = getHostname(sanitizeUrl(url));
-      if (!hostname) return;
-
-      const key = ICON_CACHE_PREFIX + hostname;
-
-      // Check localStorage first — serves instantly and works offline
-      const cached = safeStorage.getItem(key);
-      if (cached) {
-        if (imgEl && imgEl.isConnected) {
-          imgEl.src = cached;
-          imgEl.style.display = '';
-          if (fallbackEl) fallbackEl.style.display = 'none';
-        }
-        return;
-      }
-
-      // Fetch from DuckDuckGo (CORS-enabled favicon service)
-      const cdnUrl = `https://icons.duckduckgo.com/ip3/${hostname}.ico`;
-      try {
-        const resp = await fetch(cdnUrl, { mode: 'cors', cache: 'no-store' });
-        if (!resp.ok || resp.type === 'opaque') throw new Error('bad-response');
-        const blob = await resp.blob();
-        if (!blob || blob.size === 0) throw new Error('empty-blob');
-
-        const dataUrl = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result);
-          reader.onerror = reject;
-          reader.readAsDataURL(blob);
-        });
-
-        // Persist to localStorage — survives HTTP cache clears
-        try {
-          safeStorage.setItem(key, dataUrl);
-        } catch (storageErr) {
-          // Quota exceeded — skip persistence, still update DOM
-        }
-
-        // Update the DOM element if it is still in the document
-        if (imgEl && imgEl.isConnected) {
-          imgEl.src = dataUrl;
-          imgEl.style.display = '';
-          if (fallbackEl) fallbackEl.style.display = 'none';
-        }
-      } catch (_err) {
-        // Offline, CORS blocked, or no icon found — show kanji seal fallback
-        if (imgEl && imgEl.isConnected) {
-          imgEl.style.display = 'none';
-          if (fallbackEl) fallbackEl.style.display = '';
-        }
-      }
-    }
-
-    /**
-     * Removes icon cache entries from localStorage for any domain that is
-     * no longer referenced by any item in currentLinks.
-     * Call this after every save, delete, or reset to keep storage lean.
-     */
-    function syncIconCache() {
-      // Collect all domains currently in use
-      const activeDomains = new Set();
-      currentLinks.forEach(sec => {
-        (sec.items || []).forEach(item => {
-          const host = getHostname(sanitizeUrl(item.url));
-          if (host) activeDomains.add(host);
-        });
-      });
-
-      // Remove cached icons for domains that are no longer pinned
-      try {
-        const keysToRemove = [];
-        for (let i = 0; i < localStorage.length; i++) {
-          const k = localStorage.key(i);
-          if (k && k.startsWith(ICON_CACHE_PREFIX)) {
-            const domain = k.slice(ICON_CACHE_PREFIX.length);
-            if (!activeDomains.has(domain)) keysToRemove.push(k);
-          }
-        }
-        keysToRemove.forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
-      } catch (e) {}
-    }
-
-    /**
-     * Builds the inner HTML for a .tile-seal or .editor-link-seal element.
-     *
-     * Priority:
-     *  1. localStorage base64 data URL (works offline, survives HTTP cache clears)
-     *  2. Async fetch via DuckDuckGo CDN → saved to localStorage for next time
-     *  3. Kanji seal text fallback (always visible if icon unavailable)
-     *
-     * When no cached icon exists yet, the img is rendered with data-fetch-url so
-     * hydrateUnloadedIcons() can pick it up and fetch asynchronously.
+     * Builds the inner HTML for a .tile-seal element.
+     * Renders a 18×18 favicon img that falls back to the Kanji seal text on error.
      */
     function buildTileIconHtml(url, seal, fallback) {
+      const faviconUrl = getFaviconUrl(url);
       const sealText = escapeHtml(seal || fallback || '★');
-      const hostname = getHostname(url);
-
-      if (!hostname) {
+      if (!faviconUrl) {
         return `<span class="tile-seal-text">${sealText}</span>`;
       }
-
-      const cached = safeStorage.getItem(ICON_CACHE_PREFIX + hostname);
-
-      if (cached) {
-        // Serve directly from localStorage — instant, offline-capable
-        return `<img class="tile-icon-img" src="${escapeHtml(cached)}" alt="${sealText}" loading="lazy" decoding="async"
-            onerror="this.style.display='none';var s=this.nextElementSibling;if(s)s.style.display='';"
-            onload="var s=this.nextElementSibling;if(s)s.style.display='none';"
-          /><span class="tile-seal-text" style="display:none;">${sealText}</span>`;
-      }
-
-      // Not cached yet — show kanji seal immediately, mark for async hydration
-      return `<img class="tile-icon-img" src="" data-fetch-url="${escapeHtml(url)}" alt="${sealText}" loading="lazy" decoding="async" style="display:none;"
+      // Both img and fallback text rendered; JS/CSS toggles visibility
+      return `<img class="tile-icon-img"
+          src="${escapeHtml(faviconUrl)}"
+          alt="${sealText}"
+          loading="lazy"
+          decoding="async"
           onerror="this.style.display='none';var s=this.nextElementSibling;if(s)s.style.display='';"
-        /><span class="tile-seal-text">${sealText}</span>`;
-    }
-
-    /**
-     * After innerHTML is set, finds all imgs with data-fetch-url and fires
-     * async fetch+cache for each one. Non-blocking — tiles are already visible.
-     */
-    function hydrateUnloadedIcons(container) {
-      if (!container) return;
-      container.querySelectorAll('.tile-icon-img[data-fetch-url]').forEach(img => {
-        const fetchUrl = img.dataset.fetchUrl;
-        const fallbackEl = img.nextElementSibling;
-        fetchAndCacheIcon(fetchUrl, img, fallbackEl).catch(() => {});
-      });
+          onload="var s=this.nextElementSibling;if(s)s.style.display='none';"
+        /><span class="tile-seal-text" style="display:none;">${sealText}</span>`;
     }
 
     function getInitialLinks() {
@@ -1130,8 +1006,6 @@
         </div>
       `).join('');
 
-      // Async-hydrate any icons not yet in localStorage cache
-      hydrateUnloadedIcons(hologramDrawer);
     }
 
     if (launcherTabsBar) {
@@ -1161,43 +1035,34 @@
 
     /**
      * Refreshes the live seal preview box in the editor form.
-     * Priority: localStorage cache → async DDG fetch → kanji seal fallback.
-     * The preview is fully offline-capable once an icon has been fetched once.
+     * Shows the favicon from Google CDN if the URL is valid;
+     * otherwise shows the kanji seal text or '印' as a placeholder.
      */
     function updateSealPreview(url, sealText) {
       if (!previewFaviconImg || !previewSealFallback) return;
-
+      const faviconUrl = getFaviconUrl(sanitizeUrl(url));
       const displaySeal = sealText || '印';
+
       previewSealFallback.textContent = displaySeal;
-      previewFaviconImg.alt = displaySeal;
 
-      const sanitized = sanitizeUrl(url);
-      const hostname = getHostname(sanitized);
-
-      if (!hostname) {
-        // No valid URL — show kanji placeholder
-        previewFaviconImg.style.display = 'none';
-        previewFaviconImg.src = '';
-        previewSealFallback.style.display = '';
-        return;
-      }
-
-      const cached = safeStorage.getItem(ICON_CACHE_PREFIX + hostname);
-      if (cached) {
-        // Instant — served from localStorage, works offline
-        previewFaviconImg.src = cached;
+      if (faviconUrl) {
+        previewFaviconImg.src = faviconUrl;
+        previewFaviconImg.alt = displaySeal;
         previewFaviconImg.style.display = '';
         previewSealFallback.style.display = 'none';
+
         previewFaviconImg.onerror = () => {
           previewFaviconImg.style.display = 'none';
           previewSealFallback.style.display = '';
         };
+        previewFaviconImg.onload = () => {
+          previewFaviconImg.style.display = '';
+          previewSealFallback.style.display = 'none';
+        };
       } else {
-        // Show kanji while fetching; update in-place when done
         previewFaviconImg.style.display = 'none';
         previewFaviconImg.src = '';
         previewSealFallback.style.display = '';
-        fetchAndCacheIcon(sanitized, previewFaviconImg, previewSealFallback).catch(() => {});
       }
     }
 
@@ -1239,8 +1104,6 @@
 
     function saveLinks() {
       safeStorage.setItem('shinsekai-custom-links', JSON.stringify(currentLinks));
-      // Remove cached icons for any domains no longer in the link list
-      syncIconCache();
     }
 
     function renderEditorModal() {
@@ -1296,9 +1159,6 @@
           </div>
         </div>
       `).join('');
-
-      // Async-hydrate any icons not yet in localStorage cache
-      hydrateUnloadedIcons(editorLinksList);
 
       // Wire up Edit buttons
       editorLinksList.querySelectorAll('.editor-edit-btn').forEach(editBtn => {
