@@ -151,7 +151,6 @@ html, body {
   height: 100vh;
   object-fit: cover;
   object-position: center;
-  will-change: transform;
   transform: translate3d(0, 0, 0) scale(1.02);
   backface-visibility: hidden;
   transition: opacity 0.4s ease;
@@ -175,6 +174,7 @@ html, body {
   height: 100vh;
   z-index: 1;
   pointer-events: none;
+  contain: strict;
 }
 
 /* ─── 4. RETRO CRT SCANLINES & FILM GRAIN OVERLAY ─── */
@@ -183,6 +183,7 @@ html, body {
   inset: 0;
   z-index: 2;
   pointer-events: none;
+  contain: strict;
   background: repeating-linear-gradient(
     0deg,
     rgba(0, 0, 0, 0.13) 0px,
@@ -199,6 +200,7 @@ html, body {
   inset: 0;
   z-index: 2;
   pointer-events: none;
+  contain: strict;
   background-image: radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
   background-size: 3px 3px;
   opacity: 0.75;
@@ -209,6 +211,7 @@ body[data-grain="off"] .crt-overlay,
 body[data-grain="off"] .grain-overlay {
   opacity: 0;
   visibility: hidden;
+  display: none !important;
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
@@ -2089,6 +2092,17 @@ body.boot-active .anime-subtitles-bar {
   }
   .editor-footer-right {
     justify-content: center;
+  }
+
+  /* Low-Power Mobile GPU Optimization: Opaque dark backgrounds replace expensive blur shaders */
+  .anime-popover,
+  .command-input-wrapper,
+  .blade-launcher,
+  .anime-subtitles-bar,
+  .link-editor-card {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: rgba(10, 14, 26, 0.96) !important;
   }
 }
 

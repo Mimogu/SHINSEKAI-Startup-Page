@@ -214,16 +214,19 @@
     updateEpisodeClock();
     setInterval(updateEpisodeClock, 1000);
 
-    /* ─── 2. ATMOSPHERIC PARTICLE CANVAS ENGINE (60 FPS) ─── */
+    /* ─── 2. ATMOSPHERIC PARTICLE CANVAS ENGINE (PEAK OPTIMIZATION) ─── */
     let particles = [];
     let animFrameId = null;
     let currentThemeKey = (() => {
       try { return localStorage.getItem('shinsekai-theme') || 'crimson'; } catch (e) { return 'crimson'; }
     })();
 
+    let startCanvasAnim = () => {};
+    let stopCanvasAnim = () => {};
+
     function initCanvas() {
       if (!canvas) return;
-      const ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext('2d', { alpha: true, desynchronized: true });
 
       function resize() {
         canvas.width = window.innerWidth;
@@ -234,15 +237,23 @@
       function spawnParticles() {
         particles = [];
         const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        const count = prefersReduced ? 15 : (window.innerWidth < 800 ? 25 : 50);
+        if (prefersReduced) return;
+
+        // Adaptive particle density based on device capability & screen size
+        const isMobile = window.innerWidth < 768;
+        const isLowEnd = typeof navigator !== 'undefined' && (
+          (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4) ||
+          (navigator.deviceMemory && navigator.deviceMemory <= 4)
+        );
+        const count = isMobile || isLowEnd ? 18 : 34;
 
         for (let i = 0; i < count; i++) {
           particles.push({
             x: Math.random() * canvas.width,
             y: Math.random() * canvas.height,
-            size: Math.random() * 4 + 2,
-            speedY: Math.random() * 1.5 + 0.5,
-            speedX: (Math.random() - 0.5) * 1.2,
+            size: Math.random() * 3.5 + 2,
+            speedY: Math.random() * 1.4 + 0.4,
+            speedX: (Math.random() - 0.5) * 1.1,
             opacity: Math.random() * 0.7 + 0.3,
             rotation: Math.random() * Math.PI * 2,
             rotSpeed: (Math.random() - 0.5) * 0.04,
@@ -252,10 +263,10 @@
         }
       }
 
-      let resizeRaf = null;
+      let resizeTimer = null;
       window.addEventListener('resize', () => {
-        if (resizeRaf) cancelAnimationFrame(resizeRaf);
-        resizeRaf = requestAnimationFrame(resize);
+        if (resizeTimer) cancelAnimationFrame(resizeTimer);
+        resizeTimer = requestAnimationFrame(resize);
       }, { passive: true });
       resize();
 
@@ -263,12 +274,22 @@
 
       function render(timestamp) {
         const now = timestamp || performance.now();
-        const deltaMs = Math.min(100, Math.max(1, now - lastFrameTime));
+        // Frame throttle: cap at max ~60 FPS (16ms) to prevent burning GPU/CPU on 120Hz/144Hz/240Hz screens
+        if (now - lastFrameTime < 16) {
+          animFrameId = requestAnimationFrame(render);
+          return;
+        }
+
+        const deltaMs = Math.min(64, Math.max(1, now - lastFrameTime));
         lastFrameTime = now;
-        const dtScale = deltaMs / 16.667; // Normalized to 60fps baseline
+        const dtScale = deltaMs / 16.667;
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         const len = particles.length;
+        if (!len) {
+          stopAnimation();
+          return;
+        }
 
         if (currentThemeKey === 'crimson') {
           for (let i = 0; i < len; i++) {
@@ -289,6 +310,8 @@
             ctx.fill();
           }
         } else if (currentThemeKey === 'sakura') {
+          // Optimized without ctx.save()/ctx.restore() overhead: uses native ctx.ellipse rotation parameter
+          ctx.fillStyle = 'rgba(244, 184, 228, 0.85)';
           for (let i = 0; i < len; i++) {
             const p = particles[i];
             p.life += 0.5 * dtScale;
@@ -297,14 +320,9 @@
             p.rotation += p.rotSpeed * dtScale;
             if (p.y > canvas.height + 10) { p.y = -10; p.x = Math.random() * canvas.width; }
 
-            ctx.save();
-            ctx.translate(p.x, p.y);
-            ctx.rotate(p.rotation);
-            ctx.fillStyle = `rgba(244, 184, 228, ${p.opacity * 0.85})`;
             ctx.beginPath();
-            ctx.ellipse(0, 0, p.size * 1.4, p.size * 0.7, 0, 0, Math.PI * 2);
+            ctx.ellipse(p.x, p.y, p.size * 1.4, p.size * 0.7, p.rotation, 0, Math.PI * 2);
             ctx.fill();
-            ctx.restore();
           }
         } else if (currentThemeKey === 'cyberpunk') {
           for (let i = 0; i < len; i++) {
@@ -341,7 +359,8 @@
       }
 
       function startAnimation() {
-        if (!animFrameId) {
+        if (!animFrameId && particles.length > 0) {
+          lastFrameTime = performance.now();
           animFrameId = requestAnimationFrame(render);
         }
       }
@@ -353,13 +372,8 @@
         }
       }
 
-      document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-          stopAnimation();
-        } else {
-          startAnimation();
-        }
-      });
+      startCanvasAnim = startAnimation;
+      stopCanvasAnim = stopAnimation;
 
       startAnimation();
     }
@@ -527,14 +541,6 @@
       subtitlesBar.addEventListener('click', cycleQuote);
       // Start auto-cycling quotes only after boot sequence finishes (1.5s + 0.5s buffer)
       setTimeout(() => { startQuoteTimer(); }, 2000);
-
-      document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-          clearInterval(quoteTimer);
-        } else {
-          startQuoteTimer();
-        }
-      });
     }
 
     /* ─── 4. VIDEO SCENE CONTROLLER ─── */
@@ -632,19 +638,50 @@
       }
     }
 
-    // Resume when returning from another app or tab
+    /* ─── 4.2. UNIFIED POWER & MEMORY LIFECYCLE MANAGER ─── */
+    let isAppSuspended = false;
+
+    function pauseAllEngines() {
+      if (isAppSuspended) return;
+      isAppSuspended = true;
+      stopCanvasAnim();
+      if (bgVideo && !bgVideo.paused) {
+        bgVideo.pause();
+      }
+      clearInterval(quoteTimer);
+    }
+
+    function resumeAllEngines() {
+      // Never resume if document is hidden or link editor is open
+      if (document.hidden) return;
+      if (linkEditorModal && linkEditorModal.classList.contains('open')) return;
+      isAppSuspended = false;
+      startCanvasAnim();
+      ensureVideoPlayback();
+      startQuoteTimer();
+    }
+
+    // Suspend execution when tab is hidden or minimized
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
-        if (bgVideo && !bgVideo.paused) {
-          bgVideo.pause();
-        }
+        pauseAllEngines();
       } else {
-        ensureVideoPlayback();
+        resumeAllEngines();
       }
     });
 
-    window.addEventListener('focus', ensureVideoPlayback);
-    window.addEventListener('pageshow', ensureVideoPlayback);
+    // Suspend non-critical rendering when user shifts focus to another window/application
+    window.addEventListener('blur', () => {
+      pauseAllEngines();
+    });
+
+    window.addEventListener('focus', () => {
+      resumeAllEngines();
+    });
+
+    window.addEventListener('pageshow', () => {
+      resumeAllEngines();
+    });
 
     if (bgVideo) {
       bgVideo.muted = true;
@@ -652,9 +689,9 @@
 
       // Auto-resume if paused unexpectedly while page is visible
       bgVideo.addEventListener('pause', () => {
-        if (!document.hidden) {
+        if (!document.hidden && !isAppSuspended) {
           setTimeout(() => {
-            if (!document.hidden && bgVideo.paused) {
+            if (!document.hidden && !isAppSuspended && bgVideo.paused) {
               ensureVideoPlayback();
             }
           }, 120);
@@ -669,10 +706,10 @@
 
       // Recover from decoder stalls or waiting state
       bgVideo.addEventListener('stalled', () => {
-        if (!document.hidden) ensureVideoPlayback();
+        if (!document.hidden && !isAppSuspended) ensureVideoPlayback();
       });
       bgVideo.addEventListener('waiting', () => {
-        if (!document.hidden) ensureVideoPlayback();
+        if (!document.hidden && !isAppSuspended) ensureVideoPlayback();
       });
       bgVideo.addEventListener('error', () => {
         try {
@@ -681,11 +718,11 @@
         } catch (e) {}
       });
 
-      // Watchdog: checks every 3.5s to unfreeze video if frame gets stuck
+      // Watchdog: checks every 4s to unfreeze video if frame gets stuck (dormant when paused/hidden)
       let lastVideoTime = -1;
       let freezeCount = 0;
       setInterval(() => {
-        if (document.hidden || !bgVideo) return;
+        if (document.hidden || isAppSuspended || !bgVideo) return;
         if (bgVideo.paused) {
           ensureVideoPlayback();
           return;
@@ -703,7 +740,7 @@
           freezeCount = 0;
           lastVideoTime = bgVideo.currentTime;
         }
-      }, 3500);
+      }, 4000);
     }
 
     function cycleScene() {
@@ -1092,6 +1129,7 @@
       if (!linkEditorModal) return;
       linkEditorModal.classList.add('open');
       linkEditorModal.setAttribute('aria-hidden', 'false');
+      pauseAllEngines();
       renderEditorModal();
     }
 
@@ -1100,6 +1138,7 @@
       linkEditorModal.classList.remove('open');
       linkEditorModal.setAttribute('aria-hidden', 'true');
       resetEditorForm();
+      resumeAllEngines();
     }
 
     function saveLinks() {
@@ -1123,16 +1162,6 @@
           </div>
         </button>
       `).join('');
-
-      editorTabsBar.querySelectorAll('.editor-tab-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          if (activeEditorSectorId !== btn.dataset.sector) {
-            activeEditorSectorId = btn.dataset.sector;
-            resetEditorForm();
-            renderEditorModal();
-          }
-        });
-      });
 
       // Render Link Cards in Active Sector
       const currentSec = currentLinks.find(s => s.id === activeEditorSectorId) || currentLinks[0];
@@ -1159,10 +1188,27 @@
           </div>
         </div>
       `).join('');
+    }
 
-      // Wire up Edit buttons
-      editorLinksList.querySelectorAll('.editor-edit-btn').forEach(editBtn => {
-        editBtn.addEventListener('click', () => {
+    // High-performance single-point event delegation for editor tabs & link cards
+    if (editorTabsBar) {
+      editorTabsBar.addEventListener('click', (e) => {
+        const btn = e.target.closest('.editor-tab-btn');
+        if (btn && btn.dataset.sector && activeEditorSectorId !== btn.dataset.sector) {
+          activeEditorSectorId = btn.dataset.sector;
+          resetEditorForm();
+          renderEditorModal();
+        }
+      });
+    }
+
+    if (editorLinksList) {
+      editorLinksList.addEventListener('click', (e) => {
+        const currentSec = currentLinks.find(s => s.id === activeEditorSectorId) || currentLinks[0];
+        if (!currentSec || !currentSec.items) return;
+
+        const editBtn = e.target.closest('.editor-edit-btn');
+        if (editBtn) {
           const idx = parseInt(editBtn.dataset.idx, 10);
           const item = currentSec.items[idx];
           if (!item) return;
@@ -1173,7 +1219,6 @@
           if (addLinkDesc) addLinkDesc.value = item.desc || '';
           if (addLinkSeal) addLinkSeal.value = item.seal || '';
 
-          // Load the live favicon preview for the item being edited
           updateSealPreview(item.url || '', item.seal || '');
 
           if (addLinkBtn) {
@@ -1194,12 +1239,11 @@
             addLinkTitle.focus();
             addLinkTitle.select();
           }
-        });
-      });
+          return;
+        }
 
-      // Wire up Delete buttons
-      editorLinksList.querySelectorAll('.editor-del-btn').forEach(delBtn => {
-        delBtn.addEventListener('click', () => {
+        const delBtn = e.target.closest('.editor-del-btn');
+        if (delBtn) {
           const idx = parseInt(delBtn.dataset.idx, 10);
           const editingIdx = editLinkIndex ? parseInt(editLinkIndex.value, 10) : -1;
           currentSec.items.splice(idx, 1);
@@ -1211,7 +1255,8 @@
           }
           renderEditorModal();
           renderBladeLauncher(currentLinks);
-        });
+          return;
+        }
       });
     }
 
