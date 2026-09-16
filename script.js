@@ -38,6 +38,7 @@
 
   function initShinsekai() {
     document.title = 'shinsekai';
+    let isAppSuspended = false;
 
     /* ─── 0. DOM ELEMENTS ─── */
     const bgVideo = document.getElementById('bg-video');
@@ -643,8 +644,8 @@
           bgVideo.setAttribute('muted', '');
           bgVideo.setAttribute('playsinline', '');
 
-          const activeSrc = bgVideo.currentSrc || (videoSource ? videoSource.src : '');
-          if (!activeSrc.includes(s.video)) {
+          const activeSrc = String(bgVideo.currentSrc || (videoSource ? videoSource.src : '') || '');
+          if (!activeSrc || !activeSrc.includes(s.video)) {
             bgVideo.style.opacity = '0.2';
             bgVideo.src = s.video;
             if (videoSource) videoSource.src = s.video;
@@ -700,8 +701,6 @@
     }
 
     /* ─── 4.2. UNIFIED POWER & MEMORY LIFECYCLE MANAGER ─── */
-    let isAppSuspended = false;
-
     function pauseAllEngines() {
       if (isAppSuspended) return;
       isAppSuspended = true;
