@@ -398,16 +398,16 @@
         en: 'I am the bone of my sword. Steel is my body, and fire is my blood.'
       },
       {
-        speaker: 'ギルガメッシュ',
-        speakerEn: 'Gilgamesh (Fate)',
-        jp: '「天上天下、我を裁ける者は我しかおらぬ」',
-        en: 'In all the heavens and earth, I alone am fit to judge myself.'
+        speaker: 'カミナ',
+        speakerEn: 'Kamina (Gurren Lagann)',
+        jp: '「お前が信じる、お前を信じろ！」',
+        en: 'Believe in the you who believes in yourself!'
       },
       {
-        speaker: '両儀 式',
-        speakerEn: 'Shiki Ryougi (Kara no Kyoukai)',
-        jp: '「生きているのなら、神様だって殺してみせる」',
-        en: "As long as it's alive, I can even kill a god."
+        speaker: '竈門 炭治郎',
+        speakerEn: 'Tanjiro Kamado (Demon Slayer)',
+        jp: '「人は心が原動力だから、心はどこまでも強くなれる」',
+        en: 'The heart is the driving force of people. Your heart can grow stronger without limit.'
       },
       {
         speaker: '言峰 綺礼',
