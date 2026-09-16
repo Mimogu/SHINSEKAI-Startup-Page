@@ -236,16 +236,23 @@
       }, { passive: true });
       resize();
 
-      function render() {
+      let lastFrameTime = performance.now();
+
+      function render(timestamp) {
+        const now = timestamp || performance.now();
+        const deltaMs = Math.min(100, Math.max(1, now - lastFrameTime));
+        lastFrameTime = now;
+        const dtScale = deltaMs / 16.667; // Normalized to 60fps baseline
+
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         const len = particles.length;
 
         if (currentThemeKey === 'crimson') {
           for (let i = 0; i < len; i++) {
             const p = particles[i];
-            p.life += 0.5;
-            p.y -= p.speedY * 1.4;
-            p.x += Math.sin(p.life * 0.05) * 0.8;
+            p.life += 0.5 * dtScale;
+            p.y -= p.speedY * 1.4 * dtScale;
+            p.x += Math.sin(p.life * 0.05) * 0.8 * dtScale;
             if (p.y < -10) { p.y = canvas.height + 10; p.x = Math.random() * canvas.width; }
 
             ctx.fillStyle = `rgba(255, 60, 20, ${p.opacity * 0.25})`;
@@ -261,10 +268,10 @@
         } else if (currentThemeKey === 'sakura') {
           for (let i = 0; i < len; i++) {
             const p = particles[i];
-            p.life += 0.5;
-            p.y += p.speedY * 1.1;
-            p.x += Math.cos(p.life * 0.04) * 1.5 + 0.8;
-            p.rotation += p.rotSpeed;
+            p.life += 0.5 * dtScale;
+            p.y += p.speedY * 1.1 * dtScale;
+            p.x += (Math.cos(p.life * 0.04) * 1.5 + 0.8) * dtScale;
+            p.rotation += p.rotSpeed * dtScale;
             if (p.y > canvas.height + 10) { p.y = -10; p.x = Math.random() * canvas.width; }
 
             ctx.save();
@@ -279,8 +286,8 @@
         } else if (currentThemeKey === 'cyberpunk') {
           for (let i = 0; i < len; i++) {
             const p = particles[i];
-            p.life += 0.5;
-            p.y += p.speedY * 3.2;
+            p.life += 0.5 * dtScale;
+            p.y += p.speedY * 3.2 * dtScale;
             if (p.y > canvas.height + 20) { p.y = -20; p.x = Math.random() * canvas.width; }
 
             ctx.fillStyle = p.cyberColor;
@@ -290,9 +297,9 @@
           const color = currentThemeKey === 'catppuccin' ? '203, 166, 247' : '122, 162, 247';
           for (let i = 0; i < len; i++) {
             const p = particles[i];
-            p.life += 0.5;
-            p.y -= p.speedY * 0.6;
-            p.x += Math.sin(p.life * 0.04) * 0.7;
+            p.life += 0.5 * dtScale;
+            p.y -= p.speedY * 0.6 * dtScale;
+            p.x += Math.sin(p.life * 0.04) * 0.7 * dtScale;
             if (p.y < -10) { p.y = canvas.height + 10; p.x = Math.random() * canvas.width; }
 
             ctx.fillStyle = `rgba(${color}, ${p.opacity * 0.28})`;
@@ -549,6 +556,8 @@
         bgVideo.muted = true;
         bgVideo.defaultMuted = true;
         bgVideo.playsInline = true;
+        bgVideo.setAttribute('muted', '');
+        bgVideo.setAttribute('playsinline', '');
 
         const activeSrc = bgVideo.currentSrc || (videoSource ? videoSource.src : '');
         if (!activeSrc.includes(s.video)) {
@@ -586,6 +595,8 @@
       bgVideo.muted = true;
       bgVideo.defaultMuted = true;
       bgVideo.playsInline = true;
+      bgVideo.setAttribute('muted', '');
+      bgVideo.setAttribute('playsinline', '');
 
       if (bgVideo.paused || bgVideo.ended) {
         if (bgVideo.ended || (bgVideo.duration && bgVideo.currentTime >= bgVideo.duration - 0.15)) {
@@ -1384,8 +1395,7 @@
       if (bootKanji) bootKanji.textContent = lore.kanji;
       if (bootSub) bootSub.textContent = lore.sub;
 
-      const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      const skipBoot = prefersReduced || (urlParams && (urlParams.get('noboot') === '1' || urlParams.get('noboot') === 'true'));
+      const skipBoot = urlParams && (urlParams.get('noboot') === '1' || urlParams.get('noboot') === 'true');
       if (!bootOverlay || skipBoot) {
         if (bootOverlay) bootOverlay.classList.add('boot-completed');
         document.body.classList.remove('booting');
@@ -1400,7 +1410,8 @@
       }
 
       const bootDuration = 3000; // Exact 3.0 seconds
-      const startTime = performance.now();
+      let lastTimestamp = null;
+      let elapsed = 0;
 
       const bootSteps = [
         { pct: 25, log: '[BOOT 01/04] INITIALIZING SYSTEM KERNEL & CACHYOS LINUX CORE...' },
@@ -1410,8 +1421,17 @@
         { pct: 100, log: '新世界 起動完了 // WELCOME MIMOGU-SAMA' }
       ];
 
-      function updateBoot(now) {
-        const elapsed = now - startTime;
+      function updateBoot(timestamp) {
+        const now = timestamp || performance.now();
+        if (lastTimestamp === null) {
+          lastTimestamp = now;
+        }
+
+        // Clamp delta to prevent skips if the browser stutters, loads assets, or starts in background
+        const delta = Math.min(100, Math.max(0, now - lastTimestamp));
+        lastTimestamp = now;
+        elapsed += delta;
+
         const progress = Math.min(100, Math.floor((elapsed / bootDuration) * 100));
 
         if (bootProgressBar) bootProgressBar.style.width = `${progress}%`;
