@@ -166,6 +166,15 @@ html, body {
   pointer-events: none;
 }
 
+/* Eco Mode (Zero-Video / Minimal RAM mode) */
+body[data-scene="eco"] .video-stage {
+  display: none !important;
+}
+
+body[data-scene="eco"] {
+  background: radial-gradient(circle at center, var(--theme-base, #0b0f19) 0%, #030408 100%);
+}
+
 /* ─── 3. ATMOSPHERIC PARTICLE CANVAS ─── */
 .ambient-canvas {
   position: fixed;

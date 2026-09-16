@@ -229,8 +229,12 @@
       const ctx = canvas.getContext('2d', { alpha: true, desynchronized: true });
 
       function resize() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+        // High-DPI / 4K optimization: atmospheric dust/embers do not require 1:1 screen pixel density.
+        // Rendering at 0.5x internal resolution scaled to 100vw/100vh via CSS reduces canvas VRAM by 75%
+        // (e.g. from 33MB down to 8MB on 4K, and 8MB down to 2MB on 1080p).
+        const scale = 0.5;
+        canvas.width = Math.max(320, Math.floor(window.innerWidth * scale));
+        canvas.height = Math.max(180, Math.floor(window.innerHeight * scale));
         spawnParticles();
       }
 
@@ -245,15 +249,15 @@
           (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4) ||
           (navigator.deviceMemory && navigator.deviceMemory <= 4)
         );
-        const count = isMobile || isLowEnd ? 18 : 34;
+        const count = isMobile || isLowEnd ? 16 : 30;
 
         for (let i = 0; i < count; i++) {
           particles.push({
             x: Math.random() * canvas.width,
             y: Math.random() * canvas.height,
-            size: Math.random() * 3.5 + 2,
-            speedY: Math.random() * 1.4 + 0.4,
-            speedX: (Math.random() - 0.5) * 1.1,
+            size: Math.random() * 2.2 + 1.2,
+            speedY: Math.random() * 1.0 + 0.3,
+            speedX: (Math.random() - 0.5) * 0.8,
             opacity: Math.random() * 0.7 + 0.3,
             rotation: Math.random() * Math.PI * 2,
             rotSpeed: (Math.random() - 0.5) * 0.04,
@@ -549,7 +553,8 @@
       { key: 'tokyonight', label: '映像: 東京夜', labelEn: 'TokyoNight', video: 'assets/animated/tokyonight.mp4' },
       { key: 'sakura',     label: '映像: 桜吹雪', labelEn: 'Sakura',     video: 'assets/animated/sakura.mp4' },
       { key: 'catppuccin', label: '映像: 終末谷', labelEn: 'Catppuccin', video: 'assets/animated/catppuccin.mp4' },
-      { key: 'cyberpunk',  label: '映像: 電脳都市', labelEn: 'Cyberpunk',  video: 'assets/animated/cyberpunk.mp4' }
+      { key: 'cyberpunk',  label: '映像: 電脳都市', labelEn: 'Cyberpunk',  video: 'assets/animated/cyberpunk.mp4' },
+      { key: 'eco',        label: '省電力: 静止画', labelEn: 'Eco (Low RAM)', video: '' }
     ];
 
     const urlParams = (typeof window !== 'undefined' && window.location) ? new URLSearchParams(window.location.search) : null;
@@ -582,33 +587,42 @@
       if (sceneLabelSub) sceneLabelSub.textContent = s.labelEn || s.key.toUpperCase();
 
       if (bgVideo) {
-        bgVideo.muted = true;
-        bgVideo.defaultMuted = true;
-        bgVideo.playsInline = true;
-        bgVideo.setAttribute('muted', '');
-        bgVideo.setAttribute('playsinline', '');
-
-        const activeSrc = bgVideo.currentSrc || (videoSource ? videoSource.src : '');
-        if (!activeSrc.includes(s.video)) {
-          bgVideo.style.opacity = '0.2';
-          bgVideo.src = s.video;
-          if (videoSource) videoSource.src = s.video;
+        if (!s.video) {
+          // Eco Mode: Halt video decoding entirely to free GPU & system RAM
+          bgVideo.pause();
+          bgVideo.removeAttribute('src');
+          if (videoSource) videoSource.removeAttribute('src');
           bgVideo.load();
-          bgVideo.playbackRate = 1.15;
-
-          const onReady = () => {
-            bgVideo.removeEventListener('canplay', onReady);
-            bgVideo.playbackRate = 1.15;
-            const p = bgVideo.play();
-            if (p !== undefined) p.catch(() => {});
-            setTimeout(() => { bgVideo.style.opacity = '1'; }, 80);
-          };
-          bgVideo.addEventListener('canplay', onReady, { once: true });
+          bgVideo.style.opacity = '0';
         } else {
-          bgVideo.playbackRate = 1.15;
-          if (bgVideo.paused) {
-            const p = bgVideo.play();
-            if (p !== undefined) p.catch(() => {});
+          bgVideo.muted = true;
+          bgVideo.defaultMuted = true;
+          bgVideo.playsInline = true;
+          bgVideo.setAttribute('muted', '');
+          bgVideo.setAttribute('playsinline', '');
+
+          const activeSrc = bgVideo.currentSrc || (videoSource ? videoSource.src : '');
+          if (!activeSrc.includes(s.video)) {
+            bgVideo.style.opacity = '0.2';
+            bgVideo.src = s.video;
+            if (videoSource) videoSource.src = s.video;
+            bgVideo.load();
+            bgVideo.playbackRate = 1.15;
+
+            const onReady = () => {
+              bgVideo.removeEventListener('canplay', onReady);
+              bgVideo.playbackRate = 1.15;
+              const p = bgVideo.play();
+              if (p !== undefined) p.catch(() => {});
+              setTimeout(() => { bgVideo.style.opacity = '1'; }, 80);
+            };
+            bgVideo.addEventListener('canplay', onReady, { once: true });
+          } else {
+            bgVideo.playbackRate = 1.15;
+            if (bgVideo.paused) {
+              const p = bgVideo.play();
+              if (p !== undefined) p.catch(() => {});
+            }
           }
         }
       }
@@ -620,7 +634,7 @@
 
     /* ─── 4.1. BULLETPROOF VIDEO AUTO-RESUME & FREEZE-RECOVERY ─── */
     function ensureVideoPlayback() {
-      if (!bgVideo) return;
+      if (!bgVideo || document.body.getAttribute('data-scene') === 'eco') return;
       bgVideo.muted = true;
       bgVideo.defaultMuted = true;
       bgVideo.playsInline = true;
@@ -1611,6 +1625,10 @@
             setTimeout(() => {
               document.body.classList.add('boot-ready');
               document.body.classList.remove('boot-active');
+              // Free boot DOM tree and internal laser/matrix shaders completely from memory
+              if (bootOverlay && bootOverlay.parentNode) {
+                bootOverlay.parentNode.removeChild(bootOverlay);
+              }
             }, 600);
           }, 350);
         }
