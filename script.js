@@ -124,6 +124,8 @@
     const kanjiNumbers = ['〇', '一', '二', '三', '四', '五', '六', '七', '八', '九', '十',
                           '十一', '十二', '十三', '十四', '十五', '十六', '十七', '十八', '十九', '二十',
                           '二十一', '二十二', '二十三', '二十四', '二十五', '二十六', '二十七', '二十八', '二十九', '三十', '三十一'];
+    const enDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const enMonths = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
     const episodeLore = [
       {
@@ -157,10 +159,14 @@
     ];
 
     let is12HourFormat = safeStorage.getItem('shinsekai-clock-12h') === 'true';
+    let lastLoreHour = -1;
+    let lastDateDay = -1;
+    let lastClockMainStr = '';
 
     function toggleClockFormat() {
       is12HourFormat = !is12HourFormat;
       safeStorage.setItem('shinsekai-clock-12h', is12HourFormat ? 'true' : 'false');
+      lastClockMainStr = '';
       updateEpisodeClock();
     }
 
@@ -169,46 +175,55 @@
     }
 
     function updateEpisodeClock() {
+      if (document.hidden || isAppSuspended) return;
+
       const now = new Date();
       const hours = now.getHours();
+      const minutes = now.getMinutes();
+      const seconds = now.getSeconds();
+
       const displayHours = is12HourFormat ? (hours % 12 || 12) : hours;
-      const minutes = String(now.getMinutes()).padStart(2, '0');
-      const seconds = String(now.getSeconds()).padStart(2, '0');
-
-      const enDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-      const enMonths = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-
-      if (clockMain) clockMain.textContent = `${String(displayHours).padStart(2, '0')}:${minutes}`;
-      if (clockSec) clockSec.textContent = `:${seconds}`;
+      const mainStr = `${String(displayHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+      if (mainStr !== lastClockMainStr) {
+        lastClockMainStr = mainStr;
+        if (clockMain) clockMain.textContent = mainStr;
+      }
+      if (clockSec) clockSec.textContent = `:${String(seconds).padStart(2, '0')}`;
       if (chronoAmpm) {
         chronoAmpm.textContent = is12HourFormat
           ? (hours < 12 ? '午前 / AM' : '午後 / PM')
           : '24時間 / 24H';
       }
 
-      const dayOfWeek = kanjiDays[now.getDay()];
-      const month = kanjiMonths[now.getMonth()];
-      const dateIdx = now.getDate();
-      const dateKanji = kanjiNumbers[dateIdx] ? `${kanjiNumbers[dateIdx]}日` : `${dateIdx}日`;
+      const dayIdx = now.getDate();
+      if (dayIdx !== lastDateDay) {
+        lastDateDay = dayIdx;
+        const dayOfWeek = kanjiDays[now.getDay()];
+        const month = kanjiMonths[now.getMonth()];
+        const dateKanji = kanjiNumbers[dayIdx] ? `${kanjiNumbers[dayIdx]}日` : `${dayIdx}日`;
 
-      const reiwaYear = now.getFullYear() - 2018;
-      const reiwaKanji = reiwaYear === 1 ? '元' : (kanjiNumbers[reiwaYear] || String(reiwaYear));
-      if (clockEra) clockEra.textContent = `令和${reiwaKanji}年 ${month}${dateKanji} ${dayOfWeek}`;
-      if (clockEraEn) {
-        clockEraEn.textContent = `${enMonths[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()} · ${enDays[now.getDay()]}`;
+        const reiwaYear = now.getFullYear() - 2018;
+        const reiwaKanji = reiwaYear === 1 ? '元' : (kanjiNumbers[reiwaYear] || String(reiwaYear));
+        if (clockEra) clockEra.textContent = `令和${reiwaKanji}年 ${month}${dateKanji} ${dayOfWeek}`;
+        if (clockEraEn) {
+          clockEraEn.textContent = `${enMonths[now.getMonth()]} ${dayIdx}, ${now.getFullYear()} · ${enDays[now.getDay()]}`;
+        }
       }
 
-      // Update episode title card based on hour
-      const lore = episodeLore.find(ep => {
-        const [start, end] = ep.hours;
-        if (start <= end) return hours >= start && hours <= end;
-        return hours >= start || hours <= end; // Cross midnight
-      }) || episodeLore[0];
+      // Update episode title card based on hour only when the hour changes
+      if (hours !== lastLoreHour) {
+        lastLoreHour = hours;
+        const lore = episodeLore.find(ep => {
+          const [start, end] = ep.hours;
+          if (start <= end) return hours >= start && hours <= end;
+          return hours >= start || hours <= end; // Cross midnight
+        }) || episodeLore[0];
 
-      if (epTag) epTag.textContent = lore.tag;
-      if (epArc) epArc.textContent = lore.arc;
-      if (epTitle) epTitle.textContent = lore.title;
-      if (epSub) epSub.textContent = lore.sub;
+        if (epTag) epTag.textContent = lore.tag;
+        if (epArc) epArc.textContent = lore.arc;
+        if (epTitle) epTitle.textContent = lore.title;
+        if (epSub) epSub.textContent = lore.sub;
+      }
     }
 
     updateEpisodeClock();
@@ -223,6 +238,7 @@
 
     let startCanvasAnim = () => {};
     let stopCanvasAnim = () => {};
+    let refreshParticleColors = () => {};
 
     function initCanvas() {
       if (!canvas) return;
@@ -236,6 +252,29 @@
         canvas.width = Math.max(320, Math.floor(window.innerWidth * scale));
         canvas.height = Math.max(180, Math.floor(window.innerHeight * scale));
         spawnParticles();
+      }
+
+      function updateParticleColors() {
+        const len = particles.length;
+        if (currentThemeKey === 'crimson') {
+          for (let i = 0; i < len; i++) {
+            const p = particles[i];
+            p.glowColor = `rgba(255, 60, 20, ${(p.opacity * 0.25).toFixed(3)})`;
+            p.coreColor = `rgba(255, 95, 40, ${p.opacity.toFixed(3)})`;
+          }
+        } else if (currentThemeKey === 'catppuccin') {
+          for (let i = 0; i < len; i++) {
+            const p = particles[i];
+            p.glowColor = `rgba(203, 166, 247, ${(p.opacity * 0.28).toFixed(3)})`;
+            p.coreColor = `rgba(203, 166, 247, ${p.opacity.toFixed(3)})`;
+          }
+        } else if (currentThemeKey === 'tokyonight') {
+          for (let i = 0; i < len; i++) {
+            const p = particles[i];
+            p.glowColor = `rgba(122, 162, 247, ${(p.opacity * 0.28).toFixed(3)})`;
+            p.coreColor = `rgba(122, 162, 247, ${p.opacity.toFixed(3)})`;
+          }
+        }
       }
 
       function spawnParticles() {
@@ -262,9 +301,12 @@
             rotation: Math.random() * Math.PI * 2,
             rotSpeed: (Math.random() - 0.5) * 0.04,
             life: Math.random() * 100,
-            cyberColor: Math.random() > 0.4 ? 'rgba(0, 240, 255, 0.85)' : 'rgba(255, 0, 85, 0.85)'
+            cyberColor: Math.random() > 0.4 ? 'rgba(0, 240, 255, 0.85)' : 'rgba(255, 0, 85, 0.85)',
+            glowColor: '',
+            coreColor: ''
           });
         }
+        updateParticleColors();
       }
 
       let resizeTimer = null;
@@ -278,8 +320,8 @@
 
       function render(timestamp) {
         const now = timestamp || performance.now();
-        // Frame throttle: cap at max ~60 FPS (16ms) to prevent burning GPU/CPU on 120Hz/144Hz/240Hz screens
-        if (now - lastFrameTime < 16) {
+        // Frame throttle: cap at max ~60 FPS (15.1ms) to prevent burning GPU/CPU on 120Hz/144Hz/240Hz screens without dropping frames on 60Hz displays
+        if (now - lastFrameTime < 15.1) {
           animFrameId = requestAnimationFrame(render);
           return;
         }
@@ -303,12 +345,12 @@
             p.x += Math.sin(p.life * 0.05) * 0.8 * dtScale;
             if (p.y < -10) { p.y = canvas.height + 10; p.x = Math.random() * canvas.width; }
 
-            ctx.fillStyle = `rgba(255, 60, 20, ${p.opacity * 0.25})`;
+            ctx.fillStyle = p.glowColor;
             ctx.beginPath();
             ctx.arc(p.x, p.y, p.size * 1.8, 0, Math.PI * 2);
             ctx.fill();
 
-            ctx.fillStyle = `rgba(255, ${Math.floor(80 + Math.sin(p.life) * 40)}, 40, ${p.opacity})`;
+            ctx.fillStyle = p.coreColor;
             ctx.beginPath();
             ctx.arc(p.x, p.y, p.size * 0.8, 0, Math.PI * 2);
             ctx.fill();
@@ -339,7 +381,6 @@
             ctx.fillRect(p.x, p.y, 1.8, p.size * 3.5);
           }
         } else {
-          const color = currentThemeKey === 'catppuccin' ? '203, 166, 247' : '122, 162, 247';
           for (let i = 0; i < len; i++) {
             const p = particles[i];
             p.life += 0.5 * dtScale;
@@ -347,12 +388,12 @@
             p.x += Math.sin(p.life * 0.04) * 0.7 * dtScale;
             if (p.y < -10) { p.y = canvas.height + 10; p.x = Math.random() * canvas.width; }
 
-            ctx.fillStyle = `rgba(${color}, ${p.opacity * 0.28})`;
+            ctx.fillStyle = p.glowColor;
             ctx.beginPath();
             ctx.arc(p.x, p.y, p.size * 1.6, 0, Math.PI * 2);
             ctx.fill();
 
-            ctx.fillStyle = `rgba(${color}, ${p.opacity})`;
+            ctx.fillStyle = p.coreColor;
             ctx.beginPath();
             ctx.arc(p.x, p.y, p.size * 0.7, 0, Math.PI * 2);
             ctx.fill();
@@ -378,6 +419,7 @@
 
       startCanvasAnim = startAnimation;
       stopCanvasAnim = stopAnimation;
+      refreshParticleColors = updateParticleColors;
 
       startAnimation();
     }
@@ -616,8 +658,13 @@
               if (p !== undefined) p.catch(() => {});
               setTimeout(() => { bgVideo.style.opacity = '1'; }, 80);
             };
-            bgVideo.addEventListener('canplay', onReady, { once: true });
+            if (bgVideo.readyState >= 3) {
+              onReady();
+            } else {
+              bgVideo.addEventListener('canplay', onReady, { once: true });
+            }
           } else {
+            bgVideo.style.opacity = '1';
             bgVideo.playbackRate = 1.15;
             if (bgVideo.paused) {
               const p = bgVideo.play();
@@ -670,6 +717,10 @@
       if (document.hidden) return;
       if (linkEditorModal && linkEditorModal.classList.contains('open')) return;
       isAppSuspended = false;
+      lastClockMainStr = '';
+      lastDateDay = -1;
+      lastLoreHour = -1;
+      updateEpisodeClock();
       startCanvasAnim();
       ensureVideoPlayback();
       startQuoteTimer();
@@ -732,11 +783,11 @@
         } catch (e) {}
       });
 
-      // Watchdog: checks every 4s to unfreeze video if frame gets stuck (dormant when paused/hidden)
+      // Watchdog: checks every 4s to unfreeze video if frame gets stuck (dormant when paused/hidden/eco)
       let lastVideoTime = -1;
       let freezeCount = 0;
       setInterval(() => {
-        if (document.hidden || isAppSuspended || !bgVideo) return;
+        if (document.hidden || isAppSuspended || !bgVideo || document.body.getAttribute('data-scene') === 'eco') return;
         if (bgVideo.paused) {
           ensureVideoPlayback();
           return;
@@ -847,6 +898,8 @@
       themeItems.forEach(item => {
         item.classList.toggle('active', item.dataset.theme === t.key);
       });
+
+      refreshParticleColors();
 
       if (syncScene && t.defaultScene) {
         applyScene(t.defaultScene);
@@ -992,6 +1045,8 @@
         /><span class="tile-seal-text" style="display:none;">${sealText}</span>`;
     }
 
+    const inFlightIconFetches = new Set();
+
     /**
      * Saves an icon to localStorage as a compact 32x32 base64 PNG data URL.
      * ONLY runs when there is an active internet connection.
@@ -1004,7 +1059,11 @@
 
       const key = ICON_CACHE_PREFIX + hostname;
       if (safeStorage.getItem(key)) return;
+      if (inFlightIconFetches.has(hostname)) return;
+      inFlightIconFetches.add(hostname);
 
+      let blobUrl = null;
+      let offCanvas = null;
       try {
         const resp = await fetch(`https://icon.horse/icon/${encodeURIComponent(hostname)}`, { mode: 'cors' });
         if (!resp.ok) return;
@@ -1012,15 +1071,14 @@
         if (!blob || blob.size === 0) return;
 
         const img = new Image();
-        const blobUrl = URL.createObjectURL(blob);
+        blobUrl = URL.createObjectURL(blob);
         await new Promise((resolve, reject) => {
           img.onload = resolve;
           img.onerror = reject;
           img.src = blobUrl;
         });
-        URL.revokeObjectURL(blobUrl);
 
-        const offCanvas = document.createElement('canvas');
+        offCanvas = document.createElement('canvas');
         offCanvas.width = 32;
         offCanvas.height = 32;
         const ctx = offCanvas.getContext('2d');
@@ -1028,7 +1086,27 @@
         const compactDataUrl = offCanvas.toDataURL('image/png');
 
         safeStorage.setItem(key, compactDataUrl);
-      } catch (e) {}
+
+        // Update any live images on page for this domain that previously fell back to seal
+        document.querySelectorAll(`img.tile-icon-img[src*="${hostname}"]`).forEach(el => {
+          el.src = compactDataUrl;
+          el.style.display = '';
+          const fallback = el.nextElementSibling;
+          if (fallback && fallback.classList.contains('tile-seal-text')) {
+            fallback.style.display = 'none';
+          }
+        });
+      } catch (e) {
+      } finally {
+        if (blobUrl) {
+          URL.revokeObjectURL(blobUrl);
+        }
+        if (offCanvas) {
+          offCanvas.width = 0;
+          offCanvas.height = 0;
+        }
+        inFlightIconFetches.delete(hostname);
+      }
     }
 
     /**
@@ -1465,8 +1543,10 @@
         const a = document.createElement('a');
         a.href = dlUrl;
         a.download = 'shinsekai-links.json';
+        document.body.appendChild(a);
         a.click();
-        URL.revokeObjectURL(dlUrl);
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(dlUrl), 1000);
       });
     }
 
@@ -1670,7 +1750,12 @@
 
       const skipBoot = urlParams && (urlParams.get('noboot') === '1' || urlParams.get('noboot') === 'true');
       if (!bootOverlay || skipBoot) {
-        if (bootOverlay) bootOverlay.classList.add('boot-completed');
+        if (bootOverlay) {
+          bootOverlay.classList.add('boot-completed');
+          if (bootOverlay.parentNode) {
+            bootOverlay.parentNode.removeChild(bootOverlay);
+          }
+        }
         document.body.classList.remove('booting');
         document.body.classList.add('boot-ready');
         if (urlParams && urlParams.get('menu') === 'scene' && scenePopover) {
