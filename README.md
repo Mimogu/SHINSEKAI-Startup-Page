@@ -192,13 +192,13 @@ Type any shortcut into the Katana search capsule followed by your query:
 
 | Bang | Target Terminal | Example Command |
 |:---:|:---|:---|
-| `!g` | Google Search | `!g jujutsu kaisen season 3 trailer` |
-| `!y` | YouTube Video | `!y lofi anime chillhop beats` |
-| `!a` | AniList Database | `!a solo leveling` |
+| `!g` | Google Search | `!g mechanical keyboard reviews` |
+| `!y` | YouTube Video | `!y linux customization guide` |
+| `!a` | AniList Database | `!a database search` |
 | `!gh` | GitHub Code | `!gh cachyos linux` |
 | `!r` | Reddit Community | `!r unixporn` |
 | `!d` | DuckDuckGo Privacy | `!d neovim lua setup` |
-| `!w` | Wikipedia Archive | `!w cyberpunk edgerunners` |
+| `!w` | Wikipedia Archive | `!w artificial intelligence` |
 
 *Tip: Pasting or typing direct URLs (e.g., `github.com` or `https://archlinux.org`) will jump straight to the destination.*
 
