@@ -168,7 +168,9 @@
       const dateIdx = now.getDate();
       const dateKanji = kanjiNumbers[dateIdx] ? `${kanjiNumbers[dateIdx]}日` : `${dateIdx}日`;
 
-      if (clockEra) clockEra.textContent = `令和八年 ${month}${dateKanji} ${dayOfWeek}`;
+      const reiwaYear = now.getFullYear() - 2018;
+      const reiwaKanji = reiwaYear === 1 ? '元' : (kanjiNumbers[reiwaYear] || String(reiwaYear));
+      if (clockEra) clockEra.textContent = `令和${reiwaKanji}年 ${month}${dateKanji} ${dayOfWeek}`;
       if (clockEraEn) {
         clockEraEn.textContent = `${enMonths[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()} · ${enDays[now.getDay()]}`;
       }
@@ -221,15 +223,16 @@
             opacity: Math.random() * 0.7 + 0.3,
             rotation: Math.random() * Math.PI * 2,
             rotSpeed: (Math.random() - 0.5) * 0.04,
-            life: Math.random() * 100
+            life: Math.random() * 100,
+            cyberColor: Math.random() > 0.4 ? 'rgba(0, 240, 255, 0.85)' : 'rgba(255, 0, 85, 0.85)'
           });
         }
       }
 
-      let resizeTimer = null;
+      let resizeRaf = null;
       window.addEventListener('resize', () => {
-        clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(resize, 120);
+        if (resizeRaf) cancelAnimationFrame(resizeRaf);
+        resizeRaf = requestAnimationFrame(resize);
       }, { passive: true });
       resize();
 
@@ -280,7 +283,7 @@
             p.y += p.speedY * 3.2;
             if (p.y > canvas.height + 20) { p.y = -20; p.x = Math.random() * canvas.width; }
 
-            ctx.fillStyle = Math.random() > 0.4 ? 'rgba(0, 240, 255, 0.85)' : 'rgba(255, 0, 85, 0.85)';
+            ctx.fillStyle = p.cyberColor;
             ctx.fillRect(p.x, p.y, 1.8, p.size * 3.5);
           }
         } else {
@@ -327,8 +330,6 @@
           startAnimation();
         }
       });
-      window.addEventListener('blur', stopAnimation);
-      window.addEventListener('focus', startAnimation);
 
       startAnimation();
     }
@@ -460,6 +461,12 @@
     ];
 
     let currentQuoteIdx = 0;
+    let quoteTimer = null;
+
+    function startQuoteTimer() {
+      clearInterval(quoteTimer);
+      quoteTimer = setInterval(cycleQuote, 10000);
+    }
 
     function cycleQuote() {
       if (!subJp || !subEn || !subSpeaker) return;
@@ -482,12 +489,22 @@
         subSpeaker.style.opacity = '1';
         if (subSpeakerEn) subSpeakerEn.style.opacity = '1';
       }, 200);
+
+      startQuoteTimer();
     }
 
     if (subtitlesBar) {
       subtitlesBar.addEventListener('click', cycleQuote);
       // Start auto-cycling quotes only after boot sequence finishes (3s + 0.5s buffer)
-      setTimeout(() => { setInterval(cycleQuote, 10000); }, 3500);
+      setTimeout(() => { startQuoteTimer(); }, 3500);
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          clearInterval(quoteTimer);
+        } else {
+          startQuoteTimer();
+        }
+      });
     }
 
     /* ─── 4. VIDEO SCENE CONTROLLER ─── */
@@ -915,16 +932,17 @@
         </div>
       `).join('');
 
-      // Attach Event Listeners on newly rendered tab blades
-      const dynamicBlades = launcherTabsBar.querySelectorAll('.tab-blade');
-      dynamicBlades.forEach(blade => {
-        blade.addEventListener('click', () => {
+    }
+
+    if (launcherTabsBar) {
+      const handleBladeActivation = (e) => {
+        const blade = e.target.closest('.tab-blade');
+        if (blade && blade.dataset.sector) {
           switchSector(blade.dataset.sector);
-        });
-        blade.addEventListener('mouseenter', () => {
-          switchSector(blade.dataset.sector);
-        });
-      });
+        }
+      };
+      launcherTabsBar.addEventListener('click', handleBladeActivation);
+      launcherTabsBar.addEventListener('mouseover', handleBladeActivation);
     }
 
     if (bladeLauncher) {
@@ -1180,12 +1198,35 @@
         reader.onload = (evt) => {
           try {
             const parsed = JSON.parse(evt.target.result);
-            if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].items) {
-              currentLinks = parsed;
-              saveLinks();
-              resetEditorForm();
-              renderEditorModal();
-              renderBladeLauncher(currentLinks);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              const validData = parsed
+                .filter(sec => sec && typeof sec === 'object' && Array.isArray(sec.items))
+                .map((sec, sIdx) => ({
+                  id: String(sec.id || `sector-${sIdx}`).trim(),
+                  index: String(sec.index || String(sIdx + 1).padStart(2, '0')).trim(),
+                  kanji: String(sec.kanji || '印').trim().slice(0, 2),
+                  main: String(sec.main || 'カテゴリ').trim(),
+                  sub: String(sec.sub || '').trim(),
+                  hotkey: String(sec.hotkey || String(sIdx + 1)).trim(),
+                  items: (sec.items || [])
+                    .filter(item => item && (item.title || item.url))
+                    .map(item => ({
+                      title: String(item.title || 'Bookmark').trim(),
+                      url: sanitizeUrl(item.url),
+                      desc: String(item.desc || '').trim(),
+                      seal: String(item.seal || (item.title ? item.title.slice(0, 1) : '★')).trim().slice(0, 2)
+                    }))
+                }));
+
+              if (validData.length > 0) {
+                currentLinks = validData;
+                saveLinks();
+                resetEditorForm();
+                renderEditorModal();
+                renderBladeLauncher(currentLinks);
+              } else {
+                alert('無効な設定ファイル形式です (Invalid format: missing sectors or items)');
+              }
             } else {
               alert('無効な設定ファイル形式です (Invalid format: missing sectors or items)');
             }
@@ -1227,9 +1268,10 @@
     if (commandInput) {
       function checkBangs(val) {
         const trimmed = (val || '').trim();
+        const firstToken = trimmed.split(/\s+/)[0].toLowerCase();
         bangChips.forEach(chip => {
-          const bang = chip.dataset.bang;
-          chip.classList.toggle('active', bang && trimmed.startsWith(bang));
+          const bang = (chip.dataset.bang || '').toLowerCase();
+          chip.classList.toggle('active', Boolean(bang && firstToken === bang));
         });
       }
 
@@ -1256,20 +1298,28 @@
           const query = commandInput.value.trim();
           if (!query) return;
 
-          if (query.startsWith('!y ')) {
-            window.location.href = searchEngines.youtube + encodeURIComponent(query.slice(3));
-          } else if (query.startsWith('!a ')) {
-            window.location.href = searchEngines.anilist + encodeURIComponent(query.slice(3));
-          } else if (query.startsWith('!gh ')) {
-            window.location.href = searchEngines.github + encodeURIComponent(query.slice(4));
-          } else if (query.startsWith('!r ')) {
-            window.location.href = searchEngines.reddit + encodeURIComponent(query.slice(3));
-          } else if (query.startsWith('!d ')) {
-            window.location.href = searchEngines.duckduckgo + encodeURIComponent(query.slice(3));
-          } else if (query.startsWith('!g ')) {
-            window.location.href = searchEngines.google + encodeURIComponent(query.slice(3));
-          } else if (query.startsWith('!w ')) {
-            window.location.href = searchEngines.wikipedia + encodeURIComponent(query.slice(3));
+          const lowerQuery = query.toLowerCase();
+          if (lowerQuery === '!gh' || lowerQuery.startsWith('!gh ')) {
+            const term = query.slice(3).trim();
+            window.location.href = term ? searchEngines.github + encodeURIComponent(term) : 'https://github.com';
+          } else if (lowerQuery === '!y' || lowerQuery.startsWith('!y ')) {
+            const term = query.slice(2).trim();
+            window.location.href = term ? searchEngines.youtube + encodeURIComponent(term) : 'https://www.youtube.com';
+          } else if (lowerQuery === '!a' || lowerQuery.startsWith('!a ')) {
+            const term = query.slice(2).trim();
+            window.location.href = term ? searchEngines.anilist + encodeURIComponent(term) : 'https://anilist.co';
+          } else if (lowerQuery === '!r' || lowerQuery.startsWith('!r ')) {
+            const term = query.slice(2).trim();
+            window.location.href = term ? searchEngines.reddit + encodeURIComponent(term) : 'https://www.reddit.com';
+          } else if (lowerQuery === '!d' || lowerQuery.startsWith('!d ')) {
+            const term = query.slice(2).trim();
+            window.location.href = term ? searchEngines.duckduckgo + encodeURIComponent(term) : 'https://duckduckgo.com';
+          } else if (lowerQuery === '!g' || lowerQuery.startsWith('!g ')) {
+            const term = query.slice(2).trim();
+            window.location.href = term ? searchEngines.google + encodeURIComponent(term) : 'https://www.google.com';
+          } else if (lowerQuery === '!w' || lowerQuery.startsWith('!w ')) {
+            const term = query.slice(2).trim();
+            window.location.href = term ? searchEngines.wikipedia + encodeURIComponent(term) : 'https://en.wikipedia.org';
           } else if (/^https?:\/\//i.test(query) || (query.includes('.') && !query.includes(' '))) {
             window.location.href = query.startsWith('http') ? query : 'https://' + query;
           } else {
@@ -1281,6 +1331,7 @@
 
     /* ─── 10. ANIME MECHA SYSTEM BOOT & ANDROID VOICE ─── */
     let hasPlayedWelcome = false;
+    let cleanupVoiceListeners = null;
 
     function playWelcomeVoice() {
       if (!welcomeAudio) return;
@@ -1291,20 +1342,26 @@
       if (playPromise !== undefined) {
         playPromise.then(() => {
           hasPlayedWelcome = true;
-        }).catch((err) => {
-          // If browser policy prevents unmuted autoplay without prior interaction,
-          // listen for first interaction and immediately play
+          if (cleanupVoiceListeners) cleanupVoiceListeners();
+        }).catch(() => {
+          if (hasPlayedWelcome) return;
           const resumeOnInteract = () => {
             if (!hasPlayedWelcome) {
               welcomeAudio.currentTime = 0;
               welcomeAudio.play().then(() => {
                 hasPlayedWelcome = true;
+                if (cleanupVoiceListeners) cleanupVoiceListeners();
               }).catch(() => {});
             }
           };
           window.addEventListener('pointerdown', resumeOnInteract, { once: true });
           window.addEventListener('keydown', resumeOnInteract, { once: true });
           window.addEventListener('focus', resumeOnInteract, { once: true });
+          cleanupVoiceListeners = () => {
+            window.removeEventListener('pointerdown', resumeOnInteract);
+            window.removeEventListener('keydown', resumeOnInteract);
+            window.removeEventListener('focus', resumeOnInteract);
+          };
         });
       }
     }
@@ -1327,7 +1384,8 @@
       if (bootKanji) bootKanji.textContent = lore.kanji;
       if (bootSub) bootSub.textContent = lore.sub;
 
-      const skipBoot = urlParams && (urlParams.get('noboot') === '1' || urlParams.get('noboot') === 'true');
+      const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const skipBoot = prefersReduced || (urlParams && (urlParams.get('noboot') === '1' || urlParams.get('noboot') === 'true'));
       if (!bootOverlay || skipBoot) {
         if (bootOverlay) bootOverlay.classList.add('boot-completed');
         document.body.classList.remove('booting');
@@ -1437,14 +1495,6 @@
         playWelcomeVoice();
       } else if (key === 'e') {
         openLinkEditor();
-      } else if (key === '1') {
-        switchSector('anime');
-      } else if (key === '2') {
-        switchSector('gaming');
-      } else if (key === '3') {
-        switchSector('dev');
-      } else if (key === '4') {
-        switchSector('media');
       } else if (e.key === 'Escape') {
         if (linkEditorModal && linkEditorModal.classList.contains('open')) {
           closeLinkEditor();
@@ -1454,6 +1504,11 @@
         if (themePopover) themePopover.classList.remove('open');
         if (scenePopover) scenePopover.classList.remove('open');
         if (bladeLauncher && !dockPinned) bladeLauncher.classList.remove('open-active');
+      } else {
+        const matchedSector = currentLinks.find(s => s && s.hotkey === key);
+        if (matchedSector) {
+          switchSector(matchedSector.id);
+        }
       }
     });
   }
