@@ -37,6 +37,8 @@
   };
 
   function initShinsekai() {
+    document.title = 'shinsekai';
+
     /* ─── 0. DOM ELEMENTS ─── */
     const bgVideo = document.getElementById('bg-video');
     const videoSource = document.getElementById('video-source');

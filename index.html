@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>shinsekai</title>
   <meta name="description" content="新世界 · SHINSEKAI - Anime Cinematic OS Startup Page" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚔️</text></svg>" />
   <link rel="stylesheet" href="style.css" />
@@ -13,6 +14,7 @@
   <script>
     (function() {
       try {
+        document.title = 'shinsekai';
         var t = localStorage.getItem('shinsekai-theme') || 'crimson';
         var s = localStorage.getItem('shinsekai-scene') || 'crimson';
         if (s === 'eyes' || s === 'rengoku' || s === 'sukuna') s = 'crimson';
