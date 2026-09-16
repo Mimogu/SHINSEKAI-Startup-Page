@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>新世界 · SHINSEKAI - Startup Page</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap" rel="stylesheet">
+  <!-- Early Zero-Latency Theme Sync -->
+  <script>
+    (function() {
+      try {
+        var t = localStorage.getItem('shinsekai-theme') || 'crimson';
+        var s = localStorage.getItem('shinsekai-scene') || 'crimson';
+        if (s === 'eyes' || s === 'rengoku' || s === 'sukuna') s = 'crimson';
+        if (s === 'gojo') s = 'tokyonight';
+        if (s === 'sasuke') s = 'catppuccin';
+        document.documentElement.setAttribute('data-theme', t);
+        document.documentElement.setAttribute('data-scene', s);
+      } catch(e) {}
+    })();
+  </script>
+</head>
+<body class="booting" data-grain="on">
+
+  <!-- 0. ANIME MECHA SYSTEM BOOT LOADER -->
+  <div class="mecha-boot-overlay" id="boot-overlay" aria-hidden="true">
+    <div class="boot-matrix-grid"></div>
+    <div class="boot-scanner-laser"></div>
+    <div class="boot-terminal-card">
+      <div class="boot-card-header">
+        <span class="boot-pill" id="boot-pill">SHINSEKAI_OS // SYSTEM_BOOT</span>
+        <span class="boot-code">SYS.AUTH.OK</span>
+      </div>
+      <div class="boot-title-row">
+        <span class="boot-kanji" id="boot-kanji">新世界 · 領域展開</span>
+        <span class="boot-sub" id="boot-sub">SYNCHRONIZING QUANTUM COGNITIVE CORE</span>
+      </div>
+      <div class="boot-progress-deck">
+        <div class="boot-bar-track">
+          <div class="boot-bar-fill" id="boot-progress-bar"></div>
+        </div>
+        <div class="boot-meta-row">
+          <span class="boot-log-text" id="boot-log">INIT_CORE: MIMOGU-SAMA AUTHENTICATED</span>
+          <span class="boot-pct" id="boot-pct">0%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MECHA FEMALE ANDROID VOICE WELCOME ASSET -->
+  <audio id="welcome-voice" src="assets/audio/welcome.mp3" preload="auto"></audio>
+
+  <!-- 1. CINEMATIC BACKGROUND VIDEO LAYER (Seamless Loop, Hardware Accelerated) -->
+  <div class="video-stage">
+    <video
+      id="bg-video"
+      class="bg-video"
+      autoplay
+      loop
+      muted
+      playsinline
+      preload="auto">
+      <source id="video-source" src="assets/animated/crimson.mp4" type="video/mp4" />
+    </video>
+    <div class="video-scrim"></div>
+  </div>
+
+  <!-- 2. ATMOSPHERIC PARTICLE CANVAS (Sakura Petals / Flame Embers / Electric Sparks) -->
+  <canvas id="ambient-canvas" class="ambient-canvas"></canvas>
+
+  <!-- 3. RETRO ANIME CRT SCANLINES & FILM GRAIN (Toggleable) -->
+  <div class="crt-overlay" aria-hidden="true"></div>
+  <div class="grain-overlay" aria-hidden="true"></div>
+
+  <!-- 4. ANIME CINEMATIC VIEWPORT -->
+  <div class="cinema-viewport">
+
+    <!-- 4.1. TOP BAR: Anime Episode Card & Temporal Header -->
+    <header class="anime-header">
+      
+      <!-- Left: Episode Title Card -->
+      <div class="episode-titlecard">
+        <div class="episode-stamp">
+          <span class="ep-num" id="ep-tag">第廿四話 · EP.24</span>
+          <span class="ep-arc" id="ep-arc">特別篇 · 領域決闘 · SPECIAL ARC</span>
+        </div>
+        <div class="ep-headings">
+          <h1 class="ep-kanji-title" id="ep-title">黎明の咆哮 · 魂の境界</h1>
+          <span class="ep-roman-sub" id="ep-sub">ACT XXIV: BORDER OF SOULS // SPECIAL GRADE</span>
+        </div>
+      </div>
+
+      <!-- Center: High-Contrast Skewed Anime Chronometer -->
+      <div class="chronometer-box">
+        <div class="chrono-tag">
+          <span class="pulse-core"></span>
+          <span class="chrono-label">LOCAL_SYSTEM_TIME</span>
+          <span class="chrono-ampm" id="chrono-ampm">午後 / PM</span>
+        </div>
+        <div class="chrono-digits">
+          <span class="time-main" id="clock-main">00:00</span>
+          <span class="time-sec" id="clock-sec">:00</span>
+        </div>
+        <div class="chrono-era-box">
+          <div class="chrono-era" id="clock-era">令和八年 九月十五日 火曜日</div>
+          <div class="chrono-era-en" id="clock-era-en">September 15, 2026 · Tuesday</div>
+        </div>
+      </div>
+
+      <!-- Right: Mission HUD & Cyber Controls -->
+      <div class="hud-controls-deck">
+        
+        <!-- Live Sync / Combat Power Meter -->
+        <div class="combat-gauge-card">
+          <div class="gauge-meta">
+            <span class="gauge-label">SYNC RATE // 特級 · GRADE 1</span>
+            <span class="gauge-val" id="sync-val">99.8%</span>
+          </div>
+          <div class="gauge-track">
+            <div class="gauge-fill" id="gauge-fill"></div>
+          </div>
+        </div>
+
+        <!-- System Quick Toolbar -->
+        <div class="quick-tools-row">
+
+          <!-- Theme Faction Dropdown -->
+          <div class="dropdown-wrapper">
+            <button class="tool-pill" id="theme-btn" title="テーマ・陣営切替 / Switch Theme (Hotkey: 't')">
+              <span class="tool-dot" id="theme-color-dot" style="background: #f7768e;"></span>
+              <div class="tool-label-stack">
+                <span class="tool-label-main" id="theme-label">紅蓮</span>
+                <span class="tool-label-sub" id="theme-label-sub">Crimson</span>
+              </div>
+            </button>
+            <div class="anime-popover" id="theme-popover">
+              <button class="pop-item active" data-theme="crimson">
+                <span class="pop-dot" style="background: #f7768e;"></span>
+                <span class="pop-name">紅蓮 · 煉獄炎獄</span>
+                <span class="pop-rom">Crimson Flame</span>
+              </button>
+              <button class="pop-item" data-theme="tokyonight">
+                <span class="pop-dot" style="background: #7aa2f7;"></span>
+                <span class="pop-name">東京夜 · 無量空処</span>
+                <span class="pop-rom">TokyoNight</span>
+              </button>
+              <button class="pop-item" data-theme="sakura">
+                <span class="pop-dot" style="background: #f4b8e4;"></span>
+                <span class="pop-name">桜吹雪 · 侍刀一閃</span>
+                <span class="pop-rom">Sakura Ronin</span>
+              </button>
+              <button class="pop-item" data-theme="catppuccin">
+                <span class="pop-dot" style="background: #cba6f7;"></span>
+                <span class="pop-name">終末谷 · 宿命螺旋</span>
+                <span class="pop-rom">Catppuccin</span>
+              </button>
+              <button class="pop-item" data-theme="cyberpunk">
+                <span class="pop-dot" style="background: #00f0ff;"></span>
+                <span class="pop-name">電脳都市 · 超限界</span>
+                <span class="pop-rom">Cyberpunk Neon</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Animated Video Scene Dropdown -->
+          <div class="dropdown-wrapper">
+            <button class="tool-pill" id="scene-btn" title="動的壁紙映像切替 / Switch Wallpaper (Hotkey: 's' / 'w')">
+              <span class="tool-icon">▶</span>
+              <div class="tool-label-stack">
+                <span class="tool-label-main" id="scene-label">映像: 紅蓮</span>
+                <span class="tool-label-sub" id="scene-label-sub">Wallpaper</span>
+              </div>
+            </button>
+            <div class="anime-popover" id="scene-popover">
+              <button class="pop-item active" data-scene="crimson" data-video="assets/animated/crimson.mp4">
+                <span class="pop-dot" style="background: #f7768e;"></span>
+                <span class="pop-name">紅蓮 · 煉獄炎 (Crimson)</span>
+                <span class="pop-rom">crimson.mp4</span>
+              </button>
+              <button class="pop-item" data-scene="tokyonight" data-video="assets/animated/tokyonight.mp4">
+                <span class="pop-dot" style="background: #7aa2f7;"></span>
+                <span class="pop-name">東京夜 · 蒼炎 (TokyoNight)</span>
+                <span class="pop-rom">tokyonight.mp4</span>
+              </button>
+              <button class="pop-item" data-scene="sakura" data-video="assets/animated/sakura.mp4">
+                <span class="pop-dot" style="background: #f4b8e4;"></span>
+                <span class="pop-name">桜吹雪 · 桜花 (Sakura)</span>
+                <span class="pop-rom">sakura.mp4</span>
+              </button>
+              <button class="pop-item" data-scene="catppuccin" data-video="assets/animated/catppuccin.mp4">
+                <span class="pop-dot" style="background: #cba6f7;"></span>
+                <span class="pop-name">終末谷 · 宿命 (Catppuccin)</span>
+                <span class="pop-rom">catppuccin.mp4</span>
+              </button>
+              <button class="pop-item" data-scene="cyberpunk" data-video="assets/animated/cyberpunk.mp4">
+                <span class="pop-dot" style="background: #00f0ff;"></span>
+                <span class="pop-name">電脳都市 · ネオン (Cyberpunk)</span>
+                <span class="pop-rom">cyberpunk.mp4</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Film Grain / CRT Effect Toggle -->
+          <button class="tool-pill" id="grain-toggle-btn" title="CRT走査線・フィルム粒子切替 / CRT Filter (Hotkey: 'g')">
+            <span class="tool-icon">⛶</span>
+            <div class="tool-label-stack">
+              <span class="tool-label-main" id="grain-status-text">CRT: ON</span>
+              <span class="tool-label-sub">Filter</span>
+            </div>
+          </button>
+
+          <!-- Pin Dock Mode Toggle -->
+          <button class="tool-pill" id="pin-dock-btn" title="リンク展開固定切替 / Pin Dock (Hotkey: 'p')">
+            <span class="tool-icon">📌</span>
+            <div class="tool-label-stack">
+              <span class="tool-label-main" id="pin-status-text">固定: OFF</span>
+              <span class="tool-label-sub" id="pin-status-sub">Pin Dock</span>
+            </div>
+          </button>
+
+          <!-- Android AI Voice Replay Button -->
+          <button class="tool-pill" id="voice-btn" title="機体音声再生 / Replay Voice Greeting (Hotkey: 'v')">
+            <span class="tool-icon">🎙️</span>
+            <div class="tool-label-stack">
+              <span class="tool-label-main">機体音声</span>
+              <span class="tool-label-sub">Mecha Voice</span>
+            </div>
+          </button>
+
+          <!-- Pinned Links Editor Modal Trigger -->
+          <button class="tool-pill" id="edit-links-btn" title="ピン留めリンク編集 / Edit Links (Hotkey: 'e')">
+            <span class="tool-icon">⚙️</span>
+            <div class="tool-label-stack">
+              <span class="tool-label-main">リンク編集</span>
+              <span class="tool-label-sub">Edit Links</span>
+            </div>
+          </button>
+
+        </div>
+      </div>
+
+    </header>
+
+    <!-- 4.2. CENTER SECTION: Anime Command Slash Search Bar -->
+    <section class="search-stage command-console-box">
+      <div class="search-capsule" id="search-capsule">
+        <div class="capsule-prompt">
+          <span class="sword-icon">⚔</span>
+          <span class="prompt-text">EXECUTE_COMMAND</span>
+        </div>
+        <input
+          type="text"
+          id="command-input"
+          class="command-input"
+          placeholder="検索ワード、またはURLを入力 ( [ / ] キーで起動 ) · Search or enter URL..."
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <div class="search-actions">
+          <kbd class="key-tag">/</kbd>
+        </div>
+      </div>
+
+      <!-- Quick Bang Tags -->
+      <div class="bangs-container">
+        <button class="bang-chip" data-bang="!g"><span class="b-key">!g</span> Google</button>
+        <button class="bang-chip" data-bang="!y"><span class="b-key">!y</span> YouTube</button>
+        <button class="bang-chip" data-bang="!a"><span class="b-key">!a</span> AniList</button>
+        <button class="bang-chip" data-bang="!gh"><span class="b-key">!gh</span> GitHub</button>
+        <button class="bang-chip" data-bang="!r"><span class="b-key">!r</span> Reddit</button>
+        <button class="bang-chip" data-bang="!d"><span class="b-key">!d</span> DuckDuck</button>
+        <button class="bang-chip" data-bang="!w"><span class="b-key">!w</span> Wiki</button>
+      </div>
+    </section>
+
+    <!-- 4.3. DYNAMIC ANIME BLADE LAUNCHER (Drawer System) -->
+    <nav class="blade-launcher-container" id="blade-launcher">
+
+      <!-- Category Tab Blades (Dynamically Managed from links.js & Local Config) -->
+      <div class="launcher-tabs-bar" id="launcher-tabs-bar"></div>
+
+      <!-- Expandable Hologram Grid Drawer -->
+      <div class="hologram-drawer" id="hologram-drawer"></div>
+    </nav>
+
+    <!-- 4.4. CINEMATIC ANIME SUBTITLE & DIALOGUE SYSTEM (Bottom Bar) -->
+    <footer class="anime-subtitles-bar" id="subtitles-bar" title="クリックでセリフ切替 / Click to cycle quote (Hotkey: 'q')">
+      <div class="sub-speaker-box">
+        <span class="sub-speaker-badge" id="sub-speaker">煉獄 杏寿郎</span>
+        <span class="sub-speaker-en" id="sub-speaker-en">Kyojuro Rengoku</span>
+      </div>
+      <div class="sub-dialogue-content">
+        <p class="sub-jp-line" id="sub-jp">「心を燃やせ、歯を食いしばって前を向け」</p>
+        <p class="sub-en-line" id="sub-en">Set your heart ablaze. Grit your teeth and move forward.</p>
+      </div>
+      <div class="sub-controls-hint">
+        <span class="hint-cycle"><kbd>q</kbd> 台詞切替 / QUOTE</span>
+        <span class="hint-offline">● OFFLINE STANDALONE</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- 5. ANIME LINK EDITOR MODAL -->
+  <div class="link-editor-backdrop" id="link-editor-modal" aria-hidden="true">
+    <div class="link-editor-dialog">
+      
+      <div class="editor-header">
+        <div class="editor-header-left">
+          <span class="editor-pill">SHINSEKAI_HUD // LINK_CONFIG</span>
+          <h2 class="editor-title">ピン留めリンク編集 · 構成中枢 / Link Configuration Hub</h2>
+        </div>
+        <button class="editor-close-btn" id="editor-close-btn" title="閉じる (Esc)">✕</button>
+      </div>
+
+      <!-- Category Tabs inside Modal -->
+      <div class="editor-tabs-bar" id="editor-tabs-bar"></div>
+
+      <!-- Current Links in Active Sector -->
+      <div class="editor-links-container">
+        <div class="editor-section-heading">登録済みリンク一覧 / CURRENT PINNED LINKS</div>
+        <div class="editor-links-list" id="editor-links-list"></div>
+      </div>
+
+      <!-- Add / Edit Link Form -->
+      <div class="editor-add-section">
+        <input type="hidden" id="edit-link-index" value="-1" />
+        <div class="editor-section-heading" id="editor-form-heading">＋ 新規リンク追加 / ADD NEW LINK</div>
+        <div class="editor-form-grid">
+          <div class="form-group span-title">
+            <label>サイト名 / Title</label>
+            <input type="text" id="add-link-title" placeholder="例: AniList" autocomplete="off" />
+          </div>
+          <div class="form-group span-url">
+            <label>URL (https://...)</label>
+            <input type="url" id="add-link-url" placeholder="https://..." autocomplete="off" />
+          </div>
+          <div class="form-group span-desc">
+            <label>サブタイトル / Description</label>
+            <input type="text" id="add-link-desc" placeholder="例: Anime Tracker & List" autocomplete="off" />
+          </div>
+          <div class="form-group span-seal">
+            <label>封印漢字 / Seal</label>
+            <input type="text" id="add-link-seal" maxlength="2" placeholder="例: 録" autocomplete="off" />
+          </div>
+          <div class="form-group span-btn">
+            <div class="editor-btn-group">
+              <button type="button" class="editor-btn editor-btn-primary" id="add-link-btn">追加 / ADD</button>
+              <button type="button" class="editor-btn editor-btn-ghost" id="cancel-edit-btn" style="display: none;">取消 / CANCEL</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Editor Footer Actions -->
+      <div class="editor-footer">
+        <div class="editor-footer-left">
+          <button class="editor-btn editor-btn-ghost" id="editor-export-btn" title="現在のリンク設定をJSONファイルで保存">⭳ 設定保存 / EXPORT</button>
+          <button class="editor-btn editor-btn-ghost" id="editor-import-btn" title="JSONファイルからリンク設定を復元">⭱ 設定読込 / IMPORT</button>
+          <input type="file" id="editor-import-file" accept=".json" style="display: none;" />
+          <button class="editor-btn editor-btn-danger" id="editor-reset-btn" title="初期設定リンクに戻す">↺ 初期化 / RESET</button>
+        </div>
+        <div class="editor-footer-right">
+          <button class="editor-btn editor-btn-accent" id="editor-done-btn">完了 / DONE</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="links.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "manifest_version": 3,
+  "name": "新世界 · SHINSEKAI - Startup Page",
+  "version": "1.0",
+  "description": "新世界 · SHINSEKAI - Anime Cinematic OS Startup Page",
+  "chrome_url_overrides": {
+    "newtab": "index.html"
+  },
+  "offline_enabled": true
+}
