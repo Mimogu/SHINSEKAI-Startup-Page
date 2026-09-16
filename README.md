@@ -68,7 +68,7 @@
 
 ### 💬 5. Subtitle Dialogue System
 - Real-time anime dialogue bar rendering legendary quotes in Japanese Kanji/Kana accompanied by English translations.
-- Featuring lines from **Gojo Satoru**, **Ryomen Sukuna**, **Kyojuro Rengoku**, **Naruto Uzumaki**, **Sasuke Uchiha**, **Mugen**, and **David Martinez**. Click or press <kbd>q</kbd> to cycle anytime.
+- Featuring 20 iconic anime lines from **Saber**, **Archer (EMIYA)**, **Gilgamesh**, **Shiki Ryougi**, **Kirei Kotomine**, **Gojo Satoru**, **Ryomen Sukuna**, **Kyojuro Rengoku**, **Naruto**, **Sasuke**, **Lelouch**, **Levi**, **Erwin**, **Edward Elric**, **Zoro**, and **Luffy**. Click or press <kbd>q</kbd> to cycle anytime.
 
 ### 🗡️ 6. Katana Command Console & Hologram Drawer
 - Press <kbd>/</kbd> to activate the frosted **Katana Search Console** with direct URL navigation and quick bang queries (`!g`, `!y`, `!a`, `!gh`, `!r`, `!d`, `!w`).

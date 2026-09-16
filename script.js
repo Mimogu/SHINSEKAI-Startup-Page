@@ -384,6 +384,78 @@
         speakerEn: 'Yuta Okkotsu',
         jp: '「失礼だな、純愛だよ」',
         en: "How rude. This is pure love."
+      },
+      {
+        speaker: 'セイバー (アルトリア)',
+        speakerEn: 'Saber (Fate/stay night)',
+        jp: '「問おう、貴方が私のマスターか」',
+        en: 'I ask of you: Are you my Master?'
+      },
+      {
+        speaker: 'アーチャー (エミヤ)',
+        speakerEn: 'Archer (Unlimited Blade Works)',
+        jp: '「体は剣で出来ている。血潮は鉄で、心は硝子」',
+        en: 'I am the bone of my sword. Steel is my body, and fire is my blood.'
+      },
+      {
+        speaker: 'ギルガメッシュ',
+        speakerEn: 'Gilgamesh (Fate)',
+        jp: '「天上天下、我を裁ける者は我しかおらぬ」',
+        en: 'In all the heavens and earth, I alone am fit to judge myself.'
+      },
+      {
+        speaker: '両儀 式',
+        speakerEn: 'Shiki Ryougi (Kara no Kyoukai)',
+        jp: '「生きているのなら、神様だって殺してみせる」',
+        en: "As long as it's alive, I can even kill a god."
+      },
+      {
+        speaker: '言峰 綺礼',
+        speakerEn: 'Kirei Kotomine (Fate)',
+        jp: '「喜べ少年、君の願いはようやく叶う」',
+        en: 'Rejoice, young man. Your wish will finally come true.'
+      },
+      {
+        speaker: '衛宮 切嗣',
+        speakerEn: 'Kiritsugu Emiya (Fate/Zero)',
+        jp: '「誰かを救うということは、誰かを救わないということだ」',
+        en: 'To save one life means having to abandon another.'
+      },
+      {
+        speaker: 'ルルーシュ',
+        speakerEn: 'Lelouch Lamperouge (Code Geass)',
+        jp: '「撃っていいのは、撃たれる覚悟のある奴だけだ」',
+        en: 'The only ones who should shoot are those prepared to be shot.'
+      },
+      {
+        speaker: 'リヴァイ',
+        speakerEn: 'Levi Ackerman (Attack on Titan)',
+        jp: '「悔いなき選択を自分で選べ」',
+        en: "Make the choice you'll regret the least."
+      },
+      {
+        speaker: 'エルヴィン',
+        speakerEn: 'Erwin Smith (Attack on Titan)',
+        jp: '「我が兵士よ怒れ、我が兵士よ叫べ、我が兵士よ戦え！」',
+        en: 'My soldiers, rage! My soldiers, scream! My soldiers, fight!'
+      },
+      {
+        speaker: 'エドワード',
+        speakerEn: 'Edward Elric (Fullmetal Alchemist)',
+        jp: '「立って歩け、前へ進め。あんたには立派な足がついてるじゃないか」',
+        en: "Stand up and walk. Keep moving forward. You have two good legs, don't you?"
+      },
+      {
+        speaker: 'ロロノア・ゾロ',
+        speakerEn: 'Roronoa Zoro (One Piece)',
+        jp: '「背中の傷は剣士の恥だ」',
+        en: "A wound on one's back is the greatest shame of a swordsman."
+      },
+      {
+        speaker: 'モンキー・D・ルフィ',
+        speakerEn: 'Monkey D. Luffy (One Piece)',
+        jp: '「海賊王に、おれはなる！」',
+        en: "I'm going to be the King of the Pirates!"
       }
     ];
 
