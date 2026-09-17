@@ -63,6 +63,16 @@
     let currentTier = safeStorage.getItem('shinsekai-tier') || detectTier();
     if (!safeStorage.getItem('shinsekai-tier')) safeStorage.setItem('shinsekai-tier', currentTier);
 
+    function updateTierUI(tier) {
+      const activeTier = tier || currentTier;
+      if (currentTierBadge) currentTierBadge.textContent = String(activeTier).toUpperCase();
+      if (tierChips && tierChips.length) {
+        tierChips.forEach(chip => {
+          chip.classList.toggle('active', chip.dataset.tier === activeTier);
+        });
+      }
+    }
+
     function applyTierPreset(tier) {
       currentTier = tier;
       safeStorage.setItem('shinsekai-tier', tier);
@@ -70,6 +80,7 @@
       document.body.style.setProperty('--blur-px', cfg.blurPx + 'px');
       if (!cfg.grain) setGrain(false);
       if (typeof respawnParticles === 'function') respawnParticles(); // Directly respawn particles matching count without re-running initCanvas() or adding resize listeners
+      updateTierUI(tier);
     }
 
     if (typeof window !== 'undefined') {
@@ -154,6 +165,8 @@
     const liveCountBadge = document.getElementById('live-count-badge');
     const staticCountBadge = document.getElementById('static-count-badge');
     const popHeaderModeStatus = document.getElementById('pop-header-mode-status');
+    const ultraToggleBtn = document.getElementById('ultra-toggle-btn');
+    const ultraBtnLabel = document.getElementById('ultra-btn-label');
 
     const particlesToggleBtn = document.getElementById('particles-toggle-btn');
     const particlesStatusIcon = document.getElementById('particles-status-icon');
@@ -222,6 +235,9 @@
     const operatorResetBtn = document.getElementById('operator-reset-btn');
     const operatorSaveBtn = document.getElementById('operator-save-btn');
     const operatorSaveStatus = document.getElementById('operator-save-status');
+    const currentTierBadge = document.getElementById('current-tier-badge');
+    const tierChips = document.querySelectorAll('#tier-chips .tier-chip:not(.tier-chip-autodetect)');
+    const tierAutodetectBtn = document.getElementById('tier-autodetect-btn');
 
     const navToOperatorBtn = document.getElementById('nav-to-operator-btn');
     const navToLinksBtn = document.getElementById('nav-to-links-btn');
@@ -947,7 +963,7 @@
       { key: 'sakura',     fileName: 'sakura.mp4',     label: '映像: 桜吹雪',   labelEn: 'Sakura',        badge: '720p / 1080p MP4', video: { default: 'assets/animated/720p/sakura.mp4',    ultra: 'assets/animated/sakura.mp4'    }, preview: 'assets/previews/sakura.png' },
       { key: 'catppuccin', fileName: 'catppuccin.mp4', label: '映像: 終末谷',   labelEn: 'Catppuccin',    badge: '720p / 1080p MP4', video: { default: 'assets/animated/720p/catppuccin.mp4', ultra: 'assets/animated/catppuccin.mp4' }, preview: 'assets/previews/catppuccin.png' },
       { key: 'cyberpunk',  fileName: 'cyberpunk.mp4',  label: '映像: 電脳都市', labelEn: 'Cyberpunk',     badge: '720p / 1080p MP4', video: { default: 'assets/animated/720p/cyberpunk.mp4', ultra: 'assets/animated/cyberpunk.mp4' }, preview: 'assets/previews/cyberpunk.png' },
-      { key: 'eco',        fileName: 'eco',            label: '省電力: 静止画', labelEn: 'Eco (Low RAM)', badge: 'ECO / LOW RAM',    video: null, preview: null }
+      { key: 'eco',        fileName: 'eco',            label: '省電力: 静止画', labelEn: 'Eco (Low Power)', badge: 'ECO · 0% GPU / LOW RAM', video: null, preview: null }
     ];
 
     const scenes = DEFAULT_LIVE_SCENES;
@@ -1437,6 +1453,17 @@
       }
     }
 
+    function updateUltraToggleUI(isUltra) {
+      if (!ultraToggleBtn) return;
+      ultraToggleBtn.classList.toggle('active', !!isUltra);
+      if (ultraBtnLabel) {
+        ultraBtnLabel.textContent = isUltra ? '1080p HD' : '720p';
+      }
+      ultraToggleBtn.title = isUltra
+        ? '解像度: 1080p Ultra HD (クリックで720p標準へ切替)'
+        : '解像度: 720p 標準 (クリックで1080p Ultra HDへ切替)';
+    }
+
     /* ─── WALLPAPER ACTIVATION CONTROLLER ─── */
     function applyDefaultLiveScene(sceneKey, isUltra = null) {
       const resolvedKey = sceneAliasMap[sceneKey] || sceneKey;
@@ -1464,6 +1491,7 @@
         ? !!isUltra
         : ((urlParams && (urlParams.get('ultra') === '1' || urlParams.get('hd') === '1')) || safeStorage.getItem('shinsekai-ultra') === 'true');
       safeStorage.setItem('shinsekai-ultra', ultraActive ? 'true' : 'false');
+      updateUltraToggleUI(ultraActive);
 
       const videoSrc = (ultraActive && s.video && s.video.ultra)
         ? s.video.ultra
@@ -1910,6 +1938,22 @@
         }
       });
 
+      if (ultraToggleBtn) {
+        const initialUltra = (urlParams && (urlParams.get('ultra') === '1' || urlParams.get('hd') === '1')) || safeStorage.getItem('shinsekai-ultra') === 'true';
+        updateUltraToggleUI(initialUltra);
+
+        ultraToggleBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const currentUltra = safeStorage.getItem('shinsekai-ultra') === 'true';
+          const nextUltra = !currentUltra;
+          safeStorage.setItem('shinsekai-ultra', nextUltra ? 'true' : 'false');
+          updateUltraToggleUI(nextUltra);
+          if (activeWallpaper && activeWallpaper.source === 'default-live') {
+            applyDefaultLiveScene(activeWallpaper.id, nextUltra);
+          }
+        });
+      }
+
       // Segmented mode switcher tabs: Live vs Static vs Custom
       if (modeTabLive) {
         modeTabLive.addEventListener('click', (e) => {
@@ -2043,6 +2087,8 @@
               }
             } catch (err) {
               console.error('Failed to save custom wallpaper:', err);
+              const errMsg = (err && (err.message || err.name)) ? String(err.message || err.name) : 'Storage Quota Error';
+              alert(`ファイル "${file.name}" の保存に失敗しました (ブラウザのストレージ容量不足または権限エラー)。\nFailed to save "${file.name}" to browser storage:\n${errMsg}`);
             }
           }
 
@@ -3276,6 +3322,7 @@
       }
 
       updateOperatorPreview();
+      updateTierUI(currentTier);
       if (operatorSaveStatus) operatorSaveStatus.textContent = '';
       if (operatorNameInput) {
         setTimeout(() => {
@@ -3407,6 +3454,26 @@
       operatorCustomHonorific.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
           saveOperatorSettings();
+        }
+      });
+    }
+
+    if (tierChips) {
+      tierChips.forEach(chip => {
+        chip.addEventListener('click', () => {
+          applyTierPreset(chip.dataset.tier);
+        });
+      });
+    }
+
+    if (tierAutodetectBtn) {
+      tierAutodetectBtn.addEventListener('click', () => {
+        const detected = detectTier();
+        applyTierPreset(detected);
+        if (operatorSaveStatus) {
+          operatorSaveStatus.textContent = `✓ 自動判定完了: ${detected.toUpperCase()}`;
+          operatorSaveStatus.style.color = '#a6da95';
+          setTimeout(() => { if (operatorSaveStatus) operatorSaveStatus.textContent = ''; }, 3000);
         }
       });
     }

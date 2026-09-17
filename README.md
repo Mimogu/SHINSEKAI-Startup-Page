@@ -77,7 +77,7 @@
 
 ### 💬 5. Subtitle Dialogue System
 - Real-time anime dialogue bar rendering legendary quotes in Japanese Kanji/Kana accompanied by English translations.
-- Featuring 20 iconic anime lines from **Saber**, **Archer (EMIYA)**, **Gilgamesh**, **Shiki Ryougi**, **Kirei Kotomine**, **Gojo Satoru**, **Ryomen Sukuna**, **Kyojuro Rengoku**, **Naruto**, **Sasuke**, **Lelouch**, **Levi**, **Erwin**, **Edward Elric**, **Zoro**, and **Luffy**. Click or press <kbd>q</kbd> to cycle anytime.
+- Featuring 20 iconic anime lines from **Kyojuro Rengoku**, **Satoru Gojo**, **Ryomen Sukuna**, **Naruto Uzumaki**, **Sasuke Uchiha**, **Mugen** (*Samurai Champloo*), **David Martinez** (*Cyberpunk: Edgerunners*), **Yuta Okkotsu** (*Jujutsu Kaisen*), **Saber** (*Fate/stay night*), **Archer (EMIYA)**, **Kamina** (*Gurren Lagann*), **Tanjiro Kamado**, **Kirei Kotomine**, **Kiritsugu Emiya**, **Lelouch Lamperouge**, **Levi Ackerman**, **Erwin Smith**, **Edward Elric**, **Roronoa Zoro**, and **Monkey D. Luffy**. Click or press <kbd>q</kbd> to cycle anytime.
 
 ### 🗡️ 6. Katana Command Console & Hologram Drawer
 - Press <kbd>/</kbd> to activate the frosted **Katana Search Console** with direct URL navigation and quick bang queries (`!g`, `!y`, `!a`, `!gh`, `!r`, `!d`, `!w`).
@@ -189,7 +189,7 @@ Navigate your startpage like a mecha cockpit with full keyboard controls:
 | <kbd>u</kbd> / <kbd>o</kbd> | **Operator Profile** | Launch the Operator Identity hub to customize pilot name & honorific |
 | <kbd>e</kbd> | **Link Matrix** | Launch the visual cyberpunk bookmark configuration dialog |
 | <kbd>g</kbd> | **CRT Scanlines** | Toggle vintage anime monitor scanlines and film grain |
-| <kbd>b</kbd> | **Particle FX** | Toggle floating particles, cherry blossom petals, or burning flame embers |
+| <kbd>b</kbd> / <kbd>a</kbd> | **Particle FX** | Toggle floating particles, cherry blossom petals, or burning flame embers |
 | <kbd>c</kbd> | **Clock Format** | Toggle 12-hour (AM/PM) and military 24-hour chrono formats |
 | <kbd>p</kbd> | **Lock Drawer** | Pin the holographic bookmark drawer open |
 | <kbd>v</kbd> | **Voice Comms** | Re-trigger the mecha android audio greeting |
@@ -287,9 +287,10 @@ Type any shortcut into the Katana search capsule followed by your query:
 1. Press <kbd>u</kbd> (or click **`👤 OPERATOR`** in the top bar).
 2. Enter your desired pilot callsign / name (e.g. `ALEX`, `SHADOW`, `LEVI`, `ZERO`).
 3. Select your preferred Japanese honorific protocol (`-SAMA`, `-SAN`, `-SENPAI`, `-KUN`, `NONE / 敬称なし`, or a `CUSTOM` title).
-4. Watch the real-time mecha boot telemetry preview update live as you type.
-5. Click **`▶ 起動シミュレーション (Test Boot)`** to immediately experience the cinematic mecha boot sequence and audio greeting with your custom name!
-6. *Optional URL Override:* You can also pass `?user=YourName` or `?operator=YourName` directly in the browser address bar.
+4. Select your **機体性能 (Hardware Performance Tier)** (`HIGH`, `MID`, `ECO`) or click **`🔄 自動判定 (Auto-Detect)`** to benchmark your device based on CPU cores, RAM, and motion preferences.
+5. Watch the real-time mecha boot telemetry preview update live as you type.
+6. Click **`▶ 起動シミュレーション (Test Boot)`** to immediately experience the cinematic mecha boot sequence and audio greeting with your custom name!
+7. *Optional URL Override:* You can also pass `?user=YourName` or `?operator=YourName` directly in the browser address bar.
 
 ### 2. Unified Profile & Link Matrix Editor (No Coding Required)
 1. Press <kbd>e</kbd> or click the **`⚙️ リンク編集`** button in the header.
@@ -330,8 +331,9 @@ assets/animated/
    - **`▶ カスタム動的映像 (Custom Videos)`**: Displays uploaded `.mp4` and `.webm` files with exact file size badges.
    - **`🖼 カスタム静止画 (Custom Images)`**: Displays uploaded `.png`, `.jpg`, `.webp`, and `.gif` files with format badges.
    - **`🔗 オンラインリンク (Web URLs)`**: Displays external online image and video bookmarks.
-4. **Multi-File Upload**: Click **`＋ ファイル追加`** to select and upload multiple files at once. Files are stored safely in **IndexedDB** without 5MB storage limits.
-5. **Contextual Restores & Deletions**:
+4. **1080p Ultra HD / 720p Toggle Button**: Seamlessly toggle between 720p standard mode (low VRAM, power-efficient) and 1080p Ultra HD mode directly from the wallpaper popover header bar without page reloads.
+5. **Multi-File Upload & Storage Limits**: Click **`＋ ファイル追加`** to select and upload multiple files at once (up to 35MB per file). Files are stored safely in **IndexedDB** without 5MB `localStorage` limits.
+6. **Contextual Restores & Deletions**:
    - Delete any preset or custom wallpaper at any time via the **`✕`** delete button on each item.
    - Contextual restore banners (**`↺ 削除された初期動画を復元`** and **`↺ 削除された初期静止画を復元`**) appear directly within their respective panels whenever default items are deleted.
    - Uploading a file with the original filename (e.g., `crimson.mp4` or `tokyonight.png`) also automatically restores that preset.

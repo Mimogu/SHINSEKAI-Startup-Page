@@ -284,6 +284,10 @@
                 <!-- Popover Header Bar -->
                 <div class="pop-header-title-bar">
                   <div class="pop-header-tag">SYS // WALLPAPER ARCHIVE</div>
+                  <button type="button" class="pop-ultra-toggle" id="ultra-toggle-btn" title="解像度切替: 720p (軽量標準) / 1080p (最高画質 Ultra HD)">
+                    <span class="ultra-dot"></span>
+                    <span class="ultra-label" id="ultra-btn-label">720p</span>
+                  </button>
                   <span class="pop-header-mode-status" id="pop-header-mode-status">LIVE VIDEO</span>
                 </div>
 
@@ -356,6 +360,12 @@
                       <span>初期復元</span>
                     </button>
                     <input type="file" id="wallpaper-file-input" accept="image/*,video/mp4,video/webm" multiple style="display: none;" />
+                  </div>
+
+                  <!-- Upload Limits & Formats Info Note -->
+                  <div class="pop-upload-info-note">
+                    <span class="note-icon">ℹ</span>
+                    <span>最大35MB/ファイル · 動画 (MP4/WebM) · 静止画 (PNG/JPG/WebP/GIF) · IndexedDB保存</span>
                   </div>
 
                   <!-- Empty State Message -->
@@ -683,6 +693,33 @@
             </div>
           </div>
 
+          <!-- Performance Tier Selector & Re-detection -->
+          <div class="operator-field-group" style="margin-top: 1.1rem;">
+            <label class="operator-label">
+              <span class="label-kanji">機体性能</span>
+              <span class="label-en">HARDWARE PERFORMANCE TIER</span>
+              <span class="current-tier-badge" id="current-tier-badge">HIGH</span>
+            </label>
+            <div class="tier-chips" id="tier-chips">
+              <button type="button" class="tier-chip" data-tier="high" title="最高品質 (パーティクル30・フルブラー16px・グレイン有効)">
+                <span class="chip-main">HIGH</span>
+                <span class="chip-sub">30 FX · 16px Blur</span>
+              </button>
+              <button type="button" class="tier-chip" data-tier="mid" title="標準バランス (パーティクル18・ブラー8px・グレイン有効)">
+                <span class="chip-main">MID</span>
+                <span class="chip-sub">18 FX · 8px Blur</span>
+              </button>
+              <button type="button" class="tier-chip" data-tier="eco" title="省電力 (0% GPU・パーティクル無効・ブラー0px)">
+                <span class="chip-main">ECO</span>
+                <span class="chip-sub">0 FX · Low RAM</span>
+              </button>
+              <button type="button" class="tier-chip tier-chip-autodetect" id="tier-autodetect-btn" title="ハードウェアスペックから自動再判定 (Auto-Detect Hardware Specs)">
+                <span class="chip-main">🔄 自動判定</span>
+                <span class="chip-sub">AUTO-DETECT</span>
+              </button>
+            </div>
+          </div>
+
           <div class="operator-quick-actions" style="margin-top: 1.25rem;">
             <button type="button" class="editor-btn editor-btn-accent" id="test-boot-btn" title="起動シーケンスを今すぐ再生して確認">
               ▶ 起動シミュレーション / TEST BOOT
@@ -803,7 +840,7 @@
               </td>
             </tr>
             <tr>
-              <td><span class="shortcut-kbd">b</span></td>
+              <td><span class="shortcut-kbd">b</span> / <span class="shortcut-kbd">a</span></td>
               <td>
                 <div class="shortcut-action">Atmospheric Particles</div>
                 <div class="shortcut-desc">浮遊粒子・桜吹雪・火の粉切替 / Particle FX toggle</div>

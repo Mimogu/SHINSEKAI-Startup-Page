@@ -706,6 +706,73 @@ body[data-particles="off"] .ambient-canvas {
   box-shadow: 0 0 8px var(--accent-glow);
 }
 
+/* Popover Ultra HD 1080p Toggle Button */
+.pop-ultra-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 20px;
+  padding: 2px 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--text-muted);
+}
+
+.pop-ultra-toggle:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: var(--accent);
+  color: #ffffff;
+}
+
+.pop-ultra-toggle.active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: #ffffff;
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+
+.ultra-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  transition: all 0.2s ease;
+}
+
+.pop-ultra-toggle.active .ultra-dot {
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--accent);
+}
+
+.ultra-label {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+/* Upload Information Note */
+.pop-upload-info-note {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 2px 4px 6px;
+  margin-bottom: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.54rem;
+  color: var(--text-muted);
+  letter-spacing: 0.03em;
+  opacity: 0.85;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+}
+
+.pop-upload-info-note .note-icon {
+  font-size: 0.65rem;
+  color: var(--accent);
+}
+
 /* Modern Segmented Control Bar (Presets Live | Static || Custom) */
 .wallpaper-mode-switch {
   display: flex;
@@ -2884,6 +2951,83 @@ body.boot-active .anime-subtitles-bar {
 #operator-custom-honorific:focus {
   border-color: var(--accent);
   box-shadow: 0 0 12px var(--accent-soft);
+}
+
+/* Performance Tier Chips */
+.current-tier-badge {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 800;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent);
+  padding: 1px 7px;
+  border-radius: 4px;
+  letter-spacing: 0.08em;
+}
+
+.tier-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.35rem;
+}
+
+.tier-chip {
+  flex: 1;
+  min-width: 82px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.45rem 0.45rem;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.tier-chip:hover {
+  border-color: var(--accent);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.tier-chip.active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+
+.tier-chip .chip-main {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 0.04em;
+}
+
+.tier-chip .chip-sub {
+  font-family: var(--font-mono);
+  font-size: 0.52rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.tier-chip.active .chip-sub {
+  color: #ffffff;
+  opacity: 0.85;
+}
+
+.tier-chip-autodetect {
+  border-style: dashed;
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.tier-chip-autodetect:hover {
+  border-color: var(--accent);
 }
 
 /* Live Hologram Telemetry Preview Console */
