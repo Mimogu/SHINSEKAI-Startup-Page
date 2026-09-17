@@ -681,22 +681,29 @@
     const foundScene = scenes.findIndex(s => s.key === savedScene);
     if (foundScene !== -1) currentSceneIdx = foundScene;
 
-    function applyScene(sceneKey, isUltra = false) {
+    function applyScene(sceneKey, isUltra = null) {
       const resolvedKey = sceneAliasMap[sceneKey] || sceneKey;
       const s = scenes.find(item => item.key === resolvedKey) || scenes[0];
       currentSceneIdx = scenes.indexOf(s);
       safeStorage.setItem('shinsekai-scene', s.key);
       document.body.setAttribute('data-scene', s.key);
 
+      // If isUltra is not explicitly passed, check URL params or stored preference
+      const ultraActive = isUltra !== null
+        ? !!isUltra
+        : ((urlParams && (urlParams.get('ultra') === '1' || urlParams.get('hd') === '1')) || safeStorage.getItem('shinsekai-ultra') === 'true');
+
+      safeStorage.setItem('shinsekai-ultra', ultraActive ? 'true' : 'false');
+
       // Resolve video source: .default (720p) is always the unconditional default;
-      // .ultra is only used when explicitly requested via the HD popover items.
-      const videoSrc = (isUltra && s.video && s.video.ultra)
+      // .ultra is only used when explicitly requested via the HD popover items or stored preference.
+      const videoSrc = (ultraActive && s.video && s.video.ultra)
         ? s.video.ultra
         : (s.video ? (s.video.default || s.video[currentTier] || s.video.mid) : null);
 
-      if (sceneLabel) sceneLabel.textContent = s.label + (isUltra ? ' HD' : '');
+      if (sceneLabel) sceneLabel.textContent = s.label + (ultraActive ? ' HD' : '');
       const sceneLabelSub = document.getElementById('scene-label-sub');
-      if (sceneLabelSub) sceneLabelSub.textContent = (s.labelEn || s.key.toUpperCase()) + (isUltra ? ' (1080p)' : '');
+      if (sceneLabelSub) sceneLabelSub.textContent = (s.labelEn || s.key.toUpperCase()) + (ultraActive ? ' (1080p)' : '');
 
       if (bgVideo) {
         // Set poster matching the scene key (if preview exists)
@@ -749,7 +756,7 @@
 
       sceneItems.forEach(item => {
         const matchesScene = item.dataset.scene === s.key;
-        const matchesUltra = isUltra ? item.dataset.ultra === 'true' : !item.dataset.ultra;
+        const matchesUltra = ultraActive ? item.dataset.ultra === 'true' : !item.dataset.ultra;
         item.classList.toggle('active', matchesScene && matchesUltra);
       });
     }

@@ -91,15 +91,20 @@
     (function() {
       try {
         var validScenes = { crimson: 1, tokyonight: 1, sakura: 1, catppuccin: 1, cyberpunk: 1 };
-        var stored = null;
-        try { stored = localStorage.getItem('shinsekai-scene'); } catch (e) {}
+        var stored = null, storedUltra = null;
+        try {
+          stored = localStorage.getItem('shinsekai-scene');
+          storedUltra = localStorage.getItem('shinsekai-ultra');
+        } catch (e) {}
         var params = new URLSearchParams(location.search);
         var scene = params.get('scene') || stored || 'crimson';
+        var isUltra = (params && (params.get('ultra') === '1' || params.get('hd') === '1')) || (storedUltra === 'true');
         // Resolve aliases used by the main engine
         var aliases = { eyes: 'crimson', gojo: 'tokyonight', sasuke: 'catppuccin', rengoku: 'crimson', sukuna: 'crimson' };
         scene = aliases[scene] || scene;
         if (validScenes[scene]) {
-          document.getElementById('video-source').src = 'assets/animated/720p/' + scene + '.mp4';
+          var basePath = isUltra ? 'assets/animated/' : 'assets/animated/720p/';
+          document.getElementById('video-source').src = basePath + scene + '.mp4';
         }
       } catch (e) {}
     })();
