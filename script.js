@@ -2366,36 +2366,80 @@
 
     function applyCustomThemeColor(hex) {
       const { r, g, b } = hexToRgb(hex);
-      const root = document.documentElement;
+      const themeBase = `rgb(${Math.max(4, Math.floor(r * 0.05))}, ${Math.max(5, Math.floor(g * 0.05))}, ${Math.max(10, Math.floor(b * 0.06))})`;
+      const accentGlow = `rgba(${r}, ${g}, ${b}, 0.55)`;
+      const accentSoft = `rgba(${r}, ${g}, ${b}, 0.18)`;
+      const accentAlt = `rgb(${Math.min(255, Math.floor(r * 1.15))}, ${Math.min(255, Math.floor(g * 0.85))}, ${Math.min(255, Math.floor(b * 1.15))})`;
+      const accentCyan = `rgb(${Math.min(255, Math.floor(r * 0.85))}, ${Math.min(255, Math.floor(g * 1.15))}, ${Math.min(255, Math.floor(b * 1.15))})`;
+      const glassBg = `rgba(${Math.max(6, Math.floor(r * 0.07))}, ${Math.max(8, Math.floor(g * 0.07))}, ${Math.max(16, Math.floor(b * 0.08))}, 0.80)`;
+      const glassBorder = `rgba(${r}, ${g}, ${b}, 0.35)`;
+      const glassBorderHover = `rgba(${r}, ${g}, ${b}, 0.85)`;
+      const particleColor = `rgba(${r}, ${g}, ${b}, 0.75)`;
+      const textMain = `rgb(${Math.min(255, Math.floor(225 + r * 0.10))}, ${Math.min(255, Math.floor(225 + g * 0.10))}, ${Math.min(255, Math.floor(230 + b * 0.10))})`;
+      const textMuted = `rgb(${Math.min(255, Math.floor(130 + r * 0.25))}, ${Math.min(255, Math.floor(140 + g * 0.25))}, ${Math.min(255, Math.floor(160 + b * 0.25))})`;
 
-      root.style.setProperty('--theme-base', `rgb(${Math.max(4, Math.floor(r * 0.05))}, ${Math.max(5, Math.floor(g * 0.05))}, ${Math.max(10, Math.floor(b * 0.06))})`);
-      root.style.setProperty('--accent', hex);
-      root.style.setProperty('--accent-glow', `rgba(${r}, ${g}, ${b}, 0.55)`);
-      root.style.setProperty('--accent-soft', `rgba(${r}, ${g}, ${b}, 0.18)`);
-      root.style.setProperty('--accent-alt', `rgb(${Math.min(255, Math.floor(r * 1.15))}, ${Math.min(255, Math.floor(g * 0.85))}, ${Math.min(255, Math.floor(b * 1.15))})`);
-      root.style.setProperty('--accent-cyan', `rgb(${Math.min(255, Math.floor(r * 0.85))}, ${Math.min(255, Math.floor(g * 1.15))}, ${Math.min(255, Math.floor(b * 1.15))})`);
-      root.style.setProperty('--glass-bg', `rgba(${Math.max(6, Math.floor(r * 0.07))}, ${Math.max(8, Math.floor(g * 0.07))}, ${Math.max(16, Math.floor(b * 0.08))}, 0.80)`);
-      root.style.setProperty('--glass-border', `rgba(${r}, ${g}, ${b}, 0.35)`);
-      root.style.setProperty('--glass-border-hover', `rgba(${r}, ${g}, ${b}, 0.85)`);
-      root.style.setProperty('--particle-color', `rgba(${r}, ${g}, ${b}, 0.75)`);
-      root.style.setProperty('--text-main', `rgb(${Math.min(255, Math.floor(225 + r * 0.10))}, ${Math.min(255, Math.floor(225 + g * 0.10))}, ${Math.min(255, Math.floor(230 + b * 0.10))})`);
-      root.style.setProperty('--text-muted', `rgb(${Math.min(255, Math.floor(130 + r * 0.25))}, ${Math.min(255, Math.floor(140 + g * 0.25))}, ${Math.min(255, Math.floor(160 + b * 0.25))})`);
+      const targets = [document.documentElement, document.body];
+      targets.forEach(el => {
+        if (!el) return;
+        el.style.setProperty('--theme-base', themeBase, 'important');
+        el.style.setProperty('--accent', hex, 'important');
+        el.style.setProperty('--accent-glow', accentGlow, 'important');
+        el.style.setProperty('--accent-soft', accentSoft, 'important');
+        el.style.setProperty('--accent-alt', accentAlt, 'important');
+        el.style.setProperty('--accent-cyan', accentCyan, 'important');
+        el.style.setProperty('--glass-bg', glassBg, 'important');
+        el.style.setProperty('--glass-border', glassBorder, 'important');
+        el.style.setProperty('--glass-border-hover', glassBorderHover, 'important');
+        el.style.setProperty('--particle-color', particleColor, 'important');
+        el.style.setProperty('--text-main', textMain, 'important');
+        el.style.setProperty('--text-bright', '#ffffff', 'important');
+        el.style.setProperty('--text-muted', textMuted, 'important');
+      });
+
+      let styleTag = document.getElementById('shinsekai-custom-theme-vars');
+      if (!styleTag) {
+        styleTag = document.createElement('style');
+        styleTag.id = 'shinsekai-custom-theme-vars';
+        document.head.appendChild(styleTag);
+      }
+      styleTag.textContent = `
+        :root[data-theme="custom"],
+        html[data-theme="custom"],
+        body[data-theme="custom"],
+        [data-theme="custom"] {
+          --theme-base: ${themeBase} !important;
+          --accent: ${hex} !important;
+          --accent-glow: ${accentGlow} !important;
+          --accent-soft: ${accentSoft} !important;
+          --accent-alt: ${accentAlt} !important;
+          --accent-cyan: ${accentCyan} !important;
+          --glass-bg: ${glassBg} !important;
+          --glass-border: ${glassBorder} !important;
+          --glass-border-hover: ${glassBorderHover} !important;
+          --particle-color: ${particleColor} !important;
+          --text-main: ${textMain} !important;
+          --text-bright: #ffffff !important;
+          --text-muted: ${textMuted} !important;
+        }
+      `;
     }
 
     function removeCustomThemeStyles() {
-      const root = document.documentElement;
-      root.style.removeProperty('--theme-base');
-      root.style.removeProperty('--accent');
-      root.style.removeProperty('--accent-glow');
-      root.style.removeProperty('--accent-soft');
-      root.style.removeProperty('--accent-alt');
-      root.style.removeProperty('--accent-cyan');
-      root.style.removeProperty('--glass-bg');
-      root.style.removeProperty('--glass-border');
-      root.style.removeProperty('--glass-border-hover');
-      root.style.removeProperty('--particle-color');
-      root.style.removeProperty('--text-main');
-      root.style.removeProperty('--text-muted');
+      const targets = [document.documentElement, document.body];
+      const props = [
+        '--theme-base', '--accent', '--accent-glow', '--accent-soft',
+        '--accent-alt', '--accent-cyan', '--glass-bg', '--glass-border',
+        '--glass-border-hover', '--particle-color', '--text-main',
+        '--text-bright', '--text-muted'
+      ];
+      targets.forEach(el => {
+        if (!el) return;
+        props.forEach(p => el.style.removeProperty(p));
+      });
+      const styleTag = document.getElementById('shinsekai-custom-theme-vars');
+      if (styleTag) {
+        styleTag.remove();
+      }
     }
 
     function updateActiveCrystalState(currentHex = safeStorage.getItem('shinsekai-custom-theme-color') || '#a6e3a1') {
@@ -2555,33 +2599,39 @@
     }
 
     function initSpectrumTuner() {
-      // 1. Populate Chakra Crystals
-      if (spectrumCrystalsGrid && spectrumCrystalsGrid.children.length === 0) {
-        CHAKRA_CRYSTALS.forEach(c => {
-          const btn = document.createElement('button');
-          btn.type = 'button';
-          btn.className = 'chakra-crystal';
-          btn.dataset.color = c.color;
-          btn.dataset.key = c.key;
-          btn.dataset.kanji = c.kanji;
-          btn.dataset.rom = c.rom;
-          btn.title = `${c.kanji} (${c.rom}) - ${c.desc}`;
-          btn.setAttribute('aria-label', `${c.kanji} ${c.rom} (${c.color})`);
-          btn.style.setProperty('--crystal-c', c.color);
+      // 1. Populate / Bind Chakra Crystals
+      if (spectrumCrystalsGrid) {
+        let crystals = spectrumCrystalsGrid.querySelectorAll('.chakra-crystal');
+        if (crystals.length === 0) {
+          CHAKRA_CRYSTALS.forEach(c => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'chakra-crystal';
+            btn.dataset.color = c.color;
+            btn.dataset.key = c.key;
+            btn.dataset.kanji = c.kanji;
+            btn.dataset.rom = c.rom;
+            btn.title = `${c.kanji} (${c.rom}) - ${c.desc}`;
+            btn.setAttribute('aria-label', `${c.kanji} ${c.rom} (${c.color})`);
+            btn.style.setProperty('--crystal-c', c.color);
+            spectrumCrystalsGrid.appendChild(btn);
+          });
+          crystals = spectrumCrystalsGrid.querySelectorAll('.chakra-crystal');
+        }
 
+        crystals.forEach(btn => {
           btn.addEventListener('mouseenter', () => {
-            if (spectrumCoreLabel) spectrumCoreLabel.textContent = `${c.kanji} · ${c.rom}`;
+            if (spectrumCoreLabel && btn.dataset.kanji) {
+              spectrumCoreLabel.textContent = `${btn.dataset.kanji} · ${btn.dataset.rom}`;
+            }
           });
           btn.addEventListener('mouseleave', () => {
             updateActiveCrystalState();
           });
-
           btn.addEventListener('click', (e) => {
             e.stopPropagation();
-            applyCustomTheme(c.color, false);
+            applyCustomTheme(btn.dataset.color, false);
           });
-
-          spectrumCrystalsGrid.appendChild(btn);
         });
       }
 
@@ -2720,13 +2770,13 @@
       updateActiveCrystalState(savedHex);
     }
 
+    initSpectrumTuner();
     if (themeBtn && themePopover) {
       themeBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         if (scenePopover) scenePopover.classList.remove('open');
         themePopover.classList.toggle('open');
       });
-      initSpectrumTuner();
     }
 
     const initialTheme = paramTheme || safeStorage.getItem('shinsekai-theme') || 'crimson';

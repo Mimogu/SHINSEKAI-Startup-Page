@@ -6,7 +6,7 @@
   <title>shinsekai</title>
   <meta name="description" content="新世界 · SHINSEKAI - Anime Cinematic OS Startup Page" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚔️</text></svg>" />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=2.2" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://www.google.com">
@@ -27,22 +27,67 @@
         document.documentElement.setAttribute('data-scene', s);
 
         if (t === 'custom') {
-          var c = (params && params.get('color')) || localStorage.getItem('shinsekai-custom-theme-color') || '#a6e3a1';
+          var c = (params && (params.get('color') || params.get('hex'))) || localStorage.getItem('shinsekai-custom-theme-color') || '#a6e3a1';
           var cleanC = c.replace('#', '').trim();
           if (cleanC.length === 3) cleanC = cleanC[0] + cleanC[0] + cleanC[1] + cleanC[1] + cleanC[2] + cleanC[2];
           var numC = parseInt(cleanC, 16);
           if (!isNaN(numC) && cleanC.length === 6) {
             c = '#' + cleanC;
             var r = (numC >> 16) & 255, g = (numC >> 8) & 255, b = numC & 255;
+            var themeBase = 'rgb(' + Math.max(4, Math.floor(r * 0.05)) + ',' + Math.max(5, Math.floor(g * 0.05)) + ',' + Math.max(10, Math.floor(b * 0.06)) + ')';
+            var accentGlow = 'rgba(' + r + ',' + g + ',' + b + ',0.55)';
+            var accentSoft = 'rgba(' + r + ',' + g + ',' + b + ',0.18)';
+            var accentAlt = 'rgb(' + Math.min(255, Math.floor(r * 1.15)) + ',' + Math.min(255, Math.floor(g * 0.85)) + ',' + Math.min(255, Math.floor(b * 1.15)) + ')';
+            var accentCyan = 'rgb(' + Math.min(255, Math.floor(r * 0.85)) + ',' + Math.min(255, Math.floor(g * 1.15)) + ',' + Math.min(255, Math.floor(b * 1.15)) + ')';
+            var glassBg = 'rgba(' + Math.max(6, Math.floor(r * 0.07)) + ',' + Math.max(8, Math.floor(g * 0.07)) + ',' + Math.max(16, Math.floor(b * 0.08)) + ',0.80)';
+            var glassBorder = 'rgba(' + r + ',' + g + ',' + b + ',0.35)';
+            var glassBorderHover = 'rgba(' + r + ',' + g + ',' + b + ',0.85)';
+            var particleColor = 'rgba(' + r + ',' + g + ',' + b + ',0.75)';
+            var textMain = 'rgb(' + Math.min(255, Math.floor(225 + r * 0.10)) + ',' + Math.min(255, Math.floor(225 + g * 0.10)) + ',' + Math.min(255, Math.floor(230 + b * 0.10)) + ')';
+            var textMuted = 'rgb(' + Math.min(255, Math.floor(130 + r * 0.25)) + ',' + Math.min(255, Math.floor(140 + g * 0.25)) + ',' + Math.min(255, Math.floor(160 + b * 0.25)) + ')';
+
             var root = document.documentElement;
-            root.style.setProperty('--accent', c);
-            root.style.setProperty('--accent-glow', 'rgba(' + r + ',' + g + ',' + b + ',0.55)');
-            root.style.setProperty('--accent-soft', 'rgba(' + r + ',' + g + ',' + b + ',0.18)');
-            root.style.setProperty('--glass-border', 'rgba(' + r + ',' + g + ',' + b + ',0.35)');
-            root.style.setProperty('--glass-border-hover', 'rgba(' + r + ',' + g + ',' + b + ',0.85)');
-            root.style.setProperty('--particle-color', 'rgba(' + r + ',' + g + ',' + b + ',0.75)');
+            root.style.setProperty('--theme-base', themeBase, 'important');
+            root.style.setProperty('--accent', c, 'important');
+            root.style.setProperty('--accent-glow', accentGlow, 'important');
+            root.style.setProperty('--accent-soft', accentSoft, 'important');
+            root.style.setProperty('--accent-alt', accentAlt, 'important');
+            root.style.setProperty('--accent-cyan', accentCyan, 'important');
+            root.style.setProperty('--glass-bg', glassBg, 'important');
+            root.style.setProperty('--glass-border', glassBorder, 'important');
+            root.style.setProperty('--glass-border-hover', glassBorderHover, 'important');
+            root.style.setProperty('--particle-color', particleColor, 'important');
+            root.style.setProperty('--text-main', textMain, 'important');
+            root.style.setProperty('--text-bright', '#ffffff', 'important');
+            root.style.setProperty('--text-muted', textMuted, 'important');
+
+            var earlyStyle = document.createElement('style');
+            earlyStyle.id = 'shinsekai-custom-theme-vars';
+            earlyStyle.textContent = ':root[data-theme="custom"],html[data-theme="custom"],body[data-theme="custom"],[data-theme="custom"]{' +
+              '--theme-base:' + themeBase + ' !important;' +
+              '--accent:' + c + ' !important;' +
+              '--accent-glow:' + accentGlow + ' !important;' +
+              '--accent-soft:' + accentSoft + ' !important;' +
+              '--accent-alt:' + accentAlt + ' !important;' +
+              '--accent-cyan:' + accentCyan + ' !important;' +
+              '--glass-bg:' + glassBg + ' !important;' +
+              '--glass-border:' + glassBorder + ' !important;' +
+              '--glass-border-hover:' + glassBorderHover + ' !important;' +
+              '--particle-color:' + particleColor + ' !important;' +
+              '--text-main:' + textMain + ' !important;' +
+              '--text-bright:#ffffff !important;' +
+              '--text-muted:' + textMuted + ' !important;' +
+            '}';
+            document.head.appendChild(earlyStyle);
           }
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+          if (document.body) {
+            document.body.setAttribute('data-theme', t);
+            document.body.setAttribute('data-scene', s);
+          }
+        });
 
         // Early Operator Name Sync
         var u = (params && (params.get('user') || params.get('operator'))) || localStorage.getItem('shinsekai-operator-name') || 'MIMOGU';
@@ -288,7 +333,18 @@
                       <span class="spectrum-sub-title">霊力結晶 · CHAKRA CORES</span>
                       <span class="spectrum-core-label" id="spectrum-core-label">カスタム周波数</span>
                     </div>
-                    <div class="spectrum-crystals-grid" id="spectrum-crystals-grid" role="group" aria-label="アニメ霊力結晶カラー"></div>
+                    <div class="spectrum-crystals-grid" id="spectrum-crystals-grid" role="group" aria-label="アニメ霊力結晶カラー">
+                      <button type="button" class="chakra-crystal" data-color="#fbbf24" data-key="thunder" data-kanji="雷光・神速" data-rom="Thunder Gold" title="雷光・神速 (Thunder Gold) - Zenitsu / Killua Godspeed" aria-label="雷光・神速 Thunder Gold (#fbbf24)" style="--crystal-c: #fbbf24;"></button>
+                      <button type="button" class="chakra-crystal" data-color="#10b981" data-key="wind" data-kanji="風神・翠緑" data-rom="Emerald Jade" title="風神・翠緑 (Emerald Jade) - Deku OFA / Wind Breathing" aria-label="風神・翠緑 Emerald Jade (#10b981)" style="--crystal-c: #10b981;"></button>
+                      <button type="button" class="chakra-crystal" data-color="#06b6d4" data-key="water" data-kanji="碧羅・蒼波" data-rom="Azure Ocean" title="碧羅・蒼波 (Azure Ocean) - Tomioka Water Breathing" aria-label="碧羅・蒼波 Azure Ocean (#06b6d4)" style="--crystal-c: #06b6d4;"></button>
+                      <button type="button" class="chakra-crystal" data-color="#c084fc" data-key="void" data-kanji="虚式・紫電" data-rom="Hollow Purple" title="虚式・紫電 (Hollow Purple) - Gojo Satoru Limitless" aria-label="虚式・紫電 Hollow Purple (#c084fc)" style="--crystal-c: #c084fc;"></button>
+                      <button type="button" class="chakra-crystal" data-color="#ff3366" data-key="eva" data-kanji="真紅・終焉" data-rom="Eva Crimson" title="真紅・終焉 (Eva Crimson) - Asuka EVA-02 / Alucard" aria-label="真紅・終焉 Eva Crimson (#ff3366)" style="--crystal-c: #ff3366;"></button>
+                      <button type="button" class="chakra-crystal" data-color="#f43f5e" data-key="sakura" data-kanji="幽玄・紅桜" data-rom="Phantom Lotus" title="幽玄・紅桜 (Phantom Lotus) - Senbonzakura / Mitsuri" aria-label="幽玄・紅桜 Phantom Lotus (#f43f5e)" style="--crystal-c: #f43f5e;"></button>
+                      <button type="button" class="chakra-crystal" data-color="#fb923c" data-key="flame" data-kanji="日輪・業火" data-rom="Solar Flame" title="日輪・業火 (Solar Flame) - Rengoku 9th Form" aria-label="日輪・業火 Solar Flame (#fb923c)" style="--crystal-c: #fb923c;"></button>
+                      <button type="button" class="chakra-crystal" data-color="#38bdf8" data-key="glacial" data-kanji="氷華・零度" data-rom="Glacial Frost" title="氷華・零度 (Glacial Frost) - Hitsugaya Hyorinmaru" aria-label="氷華・零度 Glacial Frost (#38bdf8)" style="--crystal-c: #38bdf8;"></button>
+                      <button type="button" class="chakra-crystal" data-color="#d946ef" data-key="venom" data-kanji="毒蝶・幻紫" data-rom="Venom Neon" title="毒蝶・幻紫 (Venom Neon) - Shinobu Insect Dance" aria-label="毒蝶・幻紫 Venom Neon (#d946ef)" style="--crystal-c: #d946ef;"></button>
+                      <button type="button" class="chakra-crystal" data-color="#e2e8f0" data-key="starlight" data-kanji="星骸・白金" data-rom="Starlight Platinum" title="星骸・白金 (Starlight Platinum) - Star Platinum / Saitama" aria-label="星骸・白金 Starlight Platinum (#e2e8f0)" style="--crystal-c: #e2e8f0;"></button>
+                    </div>
                   </div>
 
                   <!-- Mecha Frequency Hue Resonator -->
@@ -953,7 +1009,7 @@
     </div>
   </div>
 
-  <script src="links.js" defer></script>
-  <script src="script.js" defer></script>
+  <script src="links.js?v=2.2" defer></script>
+  <script src="script.js?v=2.2" defer></script>
 </body>
 </html>
