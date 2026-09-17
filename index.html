@@ -26,6 +26,24 @@
         document.documentElement.setAttribute('data-theme', t);
         document.documentElement.setAttribute('data-scene', s);
 
+        if (t === 'custom') {
+          var c = (params && params.get('color')) || localStorage.getItem('shinsekai-custom-theme-color') || '#a6e3a1';
+          var cleanC = c.replace('#', '').trim();
+          if (cleanC.length === 3) cleanC = cleanC[0] + cleanC[0] + cleanC[1] + cleanC[1] + cleanC[2] + cleanC[2];
+          var numC = parseInt(cleanC, 16);
+          if (!isNaN(numC) && cleanC.length === 6) {
+            c = '#' + cleanC;
+            var r = (numC >> 16) & 255, g = (numC >> 8) & 255, b = numC & 255;
+            var root = document.documentElement;
+            root.style.setProperty('--accent', c);
+            root.style.setProperty('--accent-glow', 'rgba(' + r + ',' + g + ',' + b + ',0.55)');
+            root.style.setProperty('--accent-soft', 'rgba(' + r + ',' + g + ',' + b + ',0.18)');
+            root.style.setProperty('--glass-border', 'rgba(' + r + ',' + g + ',' + b + ',0.35)');
+            root.style.setProperty('--glass-border-hover', 'rgba(' + r + ',' + g + ',' + b + ',0.85)');
+            root.style.setProperty('--particle-color', 'rgba(' + r + ',' + g + ',' + b + ',0.75)');
+          }
+        }
+
         // Early Operator Name Sync
         var u = (params && (params.get('user') || params.get('operator'))) || localStorage.getItem('shinsekai-operator-name') || 'MIMOGU';
         var h = localStorage.getItem('shinsekai-operator-honorific');
@@ -73,7 +91,7 @@
   <!-- MECHA FEMALE ANDROID VOICE WELCOME ASSET -->
   <audio id="welcome-voice" src="assets/audio/welcome.mp3" preload="none"></audio>
 
-  <!-- 1. CINEMATIC BACKGROUND VIDEO LAYER (Seamless Loop, Hardware Accelerated) -->
+  <!-- 1. CINEMATIC BACKGROUND LAYER (Live Video Loops & Static Artworks) -->
   <div class="video-stage">
     <video
       id="bg-video"
@@ -85,26 +103,53 @@
       preload="metadata">
       <source id="video-source" type="video/mp4" />
     </video>
-    <!-- Resolve the correct 720p scene immediately on parse, before script.js runs,
-         so the browser never decodes crimson.mp4 only to discard it. -->
+    <img
+      id="bg-static"
+      class="bg-static"
+      alt="Static Wallpaper Backdrop"
+      decoding="async"
+      loading="eager"
+    />
+    <!-- Resolve the correct scene & wallpaper mode immediately on parse, before script.js runs -->
     <script>
     (function() {
       try {
         var validScenes = { crimson: 1, tokyonight: 1, sakura: 1, catppuccin: 1, cyberpunk: 1 };
-        var stored = null, storedUltra = null;
+        var stored = null, storedUltra = null, storedMode = null;
         try {
           stored = localStorage.getItem('shinsekai-scene');
           storedUltra = localStorage.getItem('shinsekai-ultra');
+          storedMode = localStorage.getItem('shinsekai-wallpaper-mode');
         } catch (e) {}
         var params = new URLSearchParams(location.search);
         var scene = params.get('scene') || stored || 'crimson';
         var isUltra = (params && (params.get('ultra') === '1' || params.get('hd') === '1')) || (storedUltra === 'true');
+        var mode = params.get('mode') || storedMode || 'live';
         // Resolve aliases used by the main engine
         var aliases = { eyes: 'crimson', gojo: 'tokyonight', sasuke: 'catppuccin', rengoku: 'crimson', sukuna: 'crimson' };
         scene = aliases[scene] || scene;
-        if (validScenes[scene]) {
+        if (mode === 'static') {
+          document.body.setAttribute('data-wallpaper-mode', 'static');
+          var customUrl = null, customThumb = null;
+          try {
+            customUrl = localStorage.getItem('shinsekai-custom-wallpaper-url');
+            customThumb = localStorage.getItem('shinsekai-custom-wallpaper-thumb');
+          } catch(e) {}
+          var staticSrc = customUrl || customThumb || ('assets/previews/' + (validScenes[scene] ? scene : 'crimson') + '.png');
+          var staticEl = document.getElementById('bg-static');
+          if (staticEl) staticEl.src = staticSrc;
+        } else if (validScenes[scene]) {
+          document.body.setAttribute('data-wallpaper-mode', 'live');
           var basePath = isUltra ? 'assets/animated/' : 'assets/animated/720p/';
           document.getElementById('video-source').src = basePath + scene + '.mp4';
+        }
+        var storedParticles = null;
+        try { storedParticles = localStorage.getItem('shinsekai-particles'); } catch(e) {}
+        var partParam = params.get('particles');
+        if (partParam === '0' || partParam === 'off' || partParam === 'false' || storedParticles === 'off') {
+          document.body.setAttribute('data-particles', 'off');
+        } else {
+          document.body.setAttribute('data-particles', 'on');
         }
       } catch (e) {}
     })();
@@ -209,78 +254,155 @@
                   <span class="pop-name">電脳都市 · 超限界</span>
                   <span class="pop-rom">Cyberpunk Neon</span>
                 </button>
+
+                <!-- Custom Spectrum / Color Picker Option -->
+                <div class="theme-custom-divider" aria-hidden="true"></div>
+                <div class="pop-item pop-item-custom" id="custom-theme-item" data-theme="custom" role="button" tabindex="0" title="カスタムカラー選択 / Custom Theme Color">
+                  <span class="pop-dot" id="custom-theme-dot" style="background: #a6e3a1;"></span>
+                  <div class="pop-custom-text">
+                    <span class="pop-name">カスタム配色</span>
+                    <span class="pop-rom" id="custom-theme-hex">#A6E3A1 · Custom</span>
+                  </div>
+                  <label class="custom-color-picker-label" title="カラーパレットを開く (Open Color Palette)">
+                    <input type="color" id="custom-theme-color-input" value="#a6e3a1" class="custom-color-input" />
+                    <span class="color-picker-icon">🎨</span>
+                  </label>
+                </div>
               </div>
             </div>
 
-            <!-- Animated Video Scene Dropdown -->
+            <!-- Wallpaper Scene Dropdown (Live Video & Static Wallpapers) -->
             <div class="dropdown-wrapper">
-              <button class="tool-pill" id="scene-btn" title="動的壁紙映像切替 / Switch Wallpaper (Hotkey: 's' / 'w')">
-                <span class="tool-icon">▶</span>
+              <button class="tool-pill" id="scene-btn" title="壁紙切替 / Switch Wallpaper (Hotkey: 's' / 'w')">
+                <span class="tool-icon" id="scene-tool-icon">▶</span>
                 <div class="tool-label-stack">
                   <span class="tool-label-main" id="scene-label">映像: 紅蓮</span>
                   <span class="tool-label-sub" id="scene-label-sub">Wallpaper</span>
                 </div>
               </button>
               <div class="anime-popover" id="scene-popover">
-                <button class="pop-item active" data-scene="crimson" data-video="assets/animated/720p/crimson.mp4">
-                  <span class="pop-dot" style="background: #f7768e;"></span>
-                  <span class="pop-name">紅蓮 · 煉獄炎 (Crimson)</span>
-                  <span class="pop-rom">720p · Default</span>
-                </button>
-                <button class="pop-item" data-scene="tokyonight" data-video="assets/animated/720p/tokyonight.mp4">
-                  <span class="pop-dot" style="background: #7aa2f7;"></span>
-                  <span class="pop-name">東京夜 · 蒼炎 (TokyoNight)</span>
-                  <span class="pop-rom">720p · Default</span>
-                </button>
-                <button class="pop-item" data-scene="sakura" data-video="assets/animated/720p/sakura.mp4">
-                  <span class="pop-dot" style="background: #f4b8e4;"></span>
-                  <span class="pop-name">桜吹雪 · 桜花 (Sakura)</span>
-                  <span class="pop-rom">720p · Default</span>
-                </button>
-                <button class="pop-item" data-scene="catppuccin" data-video="assets/animated/720p/catppuccin.mp4">
-                  <span class="pop-dot" style="background: #cba6f7;"></span>
-                  <span class="pop-name">終末谷 · 宿命 (Catppuccin)</span>
-                  <span class="pop-rom">720p · Default</span>
-                </button>
-                <button class="pop-item" data-scene="cyberpunk" data-video="assets/animated/720p/cyberpunk.mp4">
-                  <span class="pop-dot" style="background: #00f0ff;"></span>
-                  <span class="pop-name">電脳都市 · ネオン (Cyberpunk)</span>
-                  <span class="pop-rom">720p · Default</span>
-                </button>
-                <button class="pop-item" data-scene="eco" data-video="">
-                  <span class="pop-dot" style="background: #a6da95;"></span>
-                  <span class="pop-name">省電力 · 静止画 (Eco / Minimal RAM)</span>
-                  <span class="pop-rom">Zero Video Decoding (~20MB RAM)</span>
-                </button>
-                <div class="pop-divider" aria-hidden="true" style="margin:4px 8px;border-top:1px solid var(--glass-border);opacity:.5;"></div>
-                <div class="pop-section-label" style="padding:2px 12px 4px;font-size:.65rem;opacity:.5;letter-spacing:.08em;text-transform:uppercase;">HD Ultra (高品質)</div>
-                <button class="pop-item" data-scene="crimson" data-ultra="true">
-                  <span class="pop-dot" style="background: #f7768e; outline: 2px solid #f7768e55;"></span>
-                  <span class="pop-name">紅蓮 HD (Crimson Ultra)</span>
-                  <span class="pop-rom">1080p · High RAM</span>
-                </button>
-                <button class="pop-item" data-scene="tokyonight" data-ultra="true">
-                  <span class="pop-dot" style="background: #7aa2f7; outline: 2px solid #7aa2f755;"></span>
-                  <span class="pop-name">東京夜 HD (TokyoNight Ultra)</span>
-                  <span class="pop-rom">1080p · High RAM</span>
-                </button>
-                <button class="pop-item" data-scene="sakura" data-ultra="true">
-                  <span class="pop-dot" style="background: #f4b8e4; outline: 2px solid #f4b8e455;"></span>
-                  <span class="pop-name">桜吹雪 HD (Sakura Ultra)</span>
-                  <span class="pop-rom">1080p · High RAM</span>
-                </button>
-                <button class="pop-item" data-scene="catppuccin" data-ultra="true">
-                  <span class="pop-dot" style="background: #cba6f7; outline: 2px solid #cba6f755;"></span>
-                  <span class="pop-name">終末谷 HD (Catppuccin Ultra)</span>
-                  <span class="pop-rom">1080p · High RAM</span>
-                </button>
-                <button class="pop-item" data-scene="cyberpunk" data-ultra="true">
-                  <span class="pop-dot" style="background: #00f0ff; outline: 2px solid #00f0ff55;"></span>
-                  <span class="pop-name">電脳都市 HD (Cyberpunk Ultra)</span>
-                  <span class="pop-rom">1080p · High RAM</span>
-                </button>
+                <!-- Popover Header Bar -->
+                <div class="pop-header-title-bar">
+                  <div class="pop-header-tag">SYS // WALLPAPER ARCHIVE</div>
+                  <span class="pop-header-mode-status" id="pop-header-mode-status">LIVE VIDEO</span>
+                </div>
+
+                <!-- Segmented Control Bar: Presets (Live | Static) || Custom -->
+                <div class="wallpaper-mode-switch" id="wallpaper-mode-switch" role="tablist" aria-label="Wallpaper categories">
+                  <div class="mode-switch-group presets-group">
+                    <button type="button" class="mode-tab active" data-category="live" id="mode-tab-live" role="tab" aria-selected="true" title="動的映像プリセット (Live Loops)">
+                      <span class="mode-tab-icon">▶</span>
+                      <span class="mode-tab-label">動的</span>
+                      <span class="mode-tab-tag">LIVE</span>
+                    </button>
+                    <div class="mode-tab-divider" aria-hidden="true"></div>
+                    <button type="button" class="mode-tab" data-category="static" id="mode-tab-static" role="tab" aria-selected="false" title="静止画アートプリセット (Static Artworks)">
+                      <span class="mode-tab-icon">🖼</span>
+                      <span class="mode-tab-label">静止画</span>
+                      <span class="mode-tab-tag">STATIC</span>
+                    </button>
+                  </div>
+                  <div class="mode-group-divider" aria-hidden="true"></div>
+                  <div class="mode-switch-group custom-group">
+                    <button type="button" class="mode-tab mode-tab-custom" data-category="custom" id="mode-tab-custom" role="tab" aria-selected="false" title="ユーザーカスタムライブラリ (Custom Library)">
+                      <span class="mode-tab-icon">📁</span>
+                      <span class="mode-tab-label">カスタム</span>
+                      <span class="mode-tab-tag" id="custom-pill-count">0</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Category 1: Live Video Scenes (Presets) -->
+                <div class="wallpaper-category-panel" id="panel-live">
+                  <div class="pop-section-hdr">
+                    <span class="pop-section-title">既定動的映像 · SYSTEM LIVE LOOPS</span>
+                    <span class="pop-section-count" id="live-count-badge">5</span>
+                  </div>
+                  <button type="button" class="pop-restore-banner" id="restore-live-btn" style="display: none;" title="削除された初期動画を復元">
+                    <span class="pop-restore-icon">↺</span>
+                    <span>削除された初期動画を復元</span>
+                  </button>
+                  <div class="wallpaper-list" id="list-live"></div>
+                </div>
+
+                <!-- Category 2: Static Artworks (Presets) -->
+                <div class="wallpaper-category-panel" id="panel-static" style="display: none;">
+                  <div class="pop-section-hdr">
+                    <span class="pop-section-title">既定静止画 · SYSTEM STATIC ARTWORKS</span>
+                    <span class="pop-section-count" id="static-count-badge">5</span>
+                  </div>
+                  <button type="button" class="pop-restore-banner" id="restore-static-btn" style="display: none;" title="削除された初期静止画を復元">
+                    <span class="pop-restore-icon">↺</span>
+                    <span>削除された初期静止画を復元</span>
+                  </button>
+                  <div class="wallpaper-list" id="list-static"></div>
+                </div>
+
+                <!-- Category 3: Custom Wallpapers (Uploaded Files & Web URLs) -->
+                <div class="wallpaper-category-panel" id="panel-custom" style="display: none;">
+                  <!-- Custom Quick Actions Bar -->
+                  <div class="wallpaper-action-row" id="wallpaper-action-row">
+                    <button type="button" class="pop-action-btn primary" id="upload-wallpaper-btn" title="動画・画像を追加 (Upload files)">
+                      <span class="pop-action-icon">＋</span>
+                      <span>ファイル追加</span>
+                      <span class="pop-action-hint">MP4 · PNG · JPG · GIF</span>
+                    </button>
+                    <button type="button" class="pop-action-btn" id="url-wallpaper-btn" title="オンラインURLを追加 (Add Web URL)">
+                      <span class="pop-action-icon">🔗</span>
+                      <span>Web URL</span>
+                    </button>
+                    <button type="button" class="pop-action-btn pop-restore-btn" id="restore-defaults-btn" title="初期壁紙を復元 (Restore Default Wallpapers)" style="display: none;">
+                      <span class="pop-action-icon">↺</span>
+                      <span>初期復元</span>
+                    </button>
+                    <input type="file" id="wallpaper-file-input" accept="image/*,video/mp4,video/webm" multiple style="display: none;" />
+                  </div>
+
+                  <!-- Empty State Message -->
+                  <div class="pop-empty-msg" id="custom-empty-msg" style="display: none;">
+                    <div class="empty-icon" style="font-size: 1.4rem; margin-bottom: 4px;">📁</div>
+                    <div class="empty-title" style="font-weight: 700; color: #ffffff;">カスタム壁紙がありません</div>
+                    <div class="empty-desc" style="opacity: 0.6; font-size: 0.65rem; margin-top: 2px;">「＋ ファイル追加」から複数動画や画像を追加できます</div>
+                  </div>
+
+                  <!-- Subsection A: Custom Live Videos (Separated from Static!) -->
+                  <div class="custom-subsection" id="custom-sub-live">
+                    <div class="pop-section-hdr">
+                      <span class="pop-section-title"><span class="hdr-icon">▶</span> カスタム動的映像 · CUSTOM VIDEOS</span>
+                      <span class="pop-section-count" id="custom-live-count">0</span>
+                    </div>
+                    <div class="wallpaper-list" id="list-custom-live"></div>
+                  </div>
+
+                  <!-- Subsection B: Custom Static Images (Separated from Live!) -->
+                  <div class="custom-subsection" id="custom-sub-static">
+                    <div class="pop-section-hdr">
+                      <span class="pop-section-title"><span class="hdr-icon">🖼</span> カスタム静止画 · CUSTOM IMAGES</span>
+                      <span class="pop-section-count" id="custom-static-count">0</span>
+                    </div>
+                    <div class="wallpaper-list" id="list-custom-static"></div>
+                  </div>
+
+                  <!-- Subsection C: Custom Web URLs -->
+                  <div class="custom-subsection" id="custom-sub-web">
+                    <div class="pop-section-hdr">
+                      <span class="pop-section-title"><span class="hdr-icon">🔗</span> オンラインリンク · WEB URLS</span>
+                      <span class="pop-section-count" id="custom-web-count">0</span>
+                    </div>
+                    <div class="wallpaper-list" id="list-custom-web"></div>
+                  </div>
+                </div>
               </div>
             </div>
+
+            <!-- Atmospheric Particles Toggle (Sakura / Embers / Sparks / Rain) -->
+            <button class="tool-pill active" id="particles-toggle-btn" title="浮遊粒子・桜吹雪切替 / Atmospheric Particles (Hotkey: 'b')">
+              <span class="tool-icon" id="particles-status-icon">🌸</span>
+              <div class="tool-label-stack">
+                <span class="tool-label-main" id="particles-status-text">粒子: ON</span>
+                <span class="tool-label-sub">FX</span>
+              </div>
+            </button>
 
             <!-- Film Grain / CRT Effect Toggle -->
             <button class="tool-pill" id="grain-toggle-btn" title="CRT走査線・フィルム粒子切替 / CRT Filter (Hotkey: 'g')">
@@ -655,8 +777,8 @@
             <tr>
               <td><span class="shortcut-kbd">s</span> / <span class="shortcut-kbd">w</span></td>
               <td>
-                <div class="shortcut-action">Cycle Scene</div>
-                <div class="shortcut-desc">背景映像ステージ切替 / Switch live video scene</div>
+                <div class="shortcut-action">Cycle Wallpaper</div>
+                <div class="shortcut-desc">背景壁紙切替（動画 / 静止画） / Switch wallpaper (Live / Static)</div>
               </td>
             </tr>
             <tr>
@@ -678,6 +800,13 @@
               <td>
                 <div class="shortcut-action">CRT Scanlines</div>
                 <div class="shortcut-desc">CRT走査線・フィルムグレイン切替 / CRT scanline toggle</div>
+              </td>
+            </tr>
+            <tr>
+              <td><span class="shortcut-kbd">b</span></td>
+              <td>
+                <div class="shortcut-action">Atmospheric Particles</div>
+                <div class="shortcut-desc">浮遊粒子・桜吹雪・火の粉切替 / Particle FX toggle</div>
               </td>
             </tr>
             <tr>

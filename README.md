@@ -45,9 +45,15 @@
 
 ## ⚡ System Matrix & Features
 
-### 🎬 1. Cinematic Video Wallpapers
-- **5 Seamless 1080p/60fps Looping Anime Backgrounds**: Pre-packaged video stages featuring legendary scenes from Demon Slayer, Jujutsu Kaisen, Naruto Shippuden, and Cyberpunk: Edgerunners.
-- **Zero-Drop Playback Watchdog**: Intelligently auto-resumes video loops across tab switches, window minimization, or system sleep.
+### 🎬 1. Tri-Category Wallpaper Engine: Live Video, Static Artworks & Custom Library
+- **3 Dedicated Modes & Categories**:
+  - **動的 (Live)**: Hardware-accelerated looping video backdrops (`crimson.mp4`, `tokyonight.mp4`, `sakura.mp4`, `catppuccin.mp4`, `cyberpunk.mp4`, and Eco mode).
+  - **静止画 (Static)**: High-resolution static artworks (`crimson.png`, `tokyonight.png`, `sakura.png`, `catppuccin.png`, `cyberpunk.png`) with minimal RAM (~15MB).
+  - **カスタム (Custom)**: User library featuring multi-file uploads and online web URLs with live format badges and individual delete controls.
+- **Dynamic File Reading & Multiple Uploads**: Select and upload multiple files at once (`.mp4`, `.webm`, `.png`, `.jpg`, `.webp`, `.gif`). All wallpapers are dynamically read and rendered by actual filename from IndexedDB.
+- **Default Deletion & Restoration by Filename**: Delete default live or static scenes from the UI at will. Re-adding/uploading a file with the original name (e.g. `crimson.mp4`, `crimson.png`) or clicking `↺ 初期復元` instantly restores them.
+- **Enhanced Online Web URLs**: Add direct links to web images or videos with custom display names, saved directly into your Custom collection.
+- **Atmospheric Particle Fusion**: Sakura petals, rising embers, and retro CRT scanlines continue to render dynamically over all wallpapers.
 
 ### 🌸 2. Atmospheric Particle Dynamics (60 FPS Canvas)
 - Tailored dynamic particle canvas engine reacting to your selected anime faction:
@@ -55,6 +61,9 @@
   - **桜吹雪 (Sakura)**: Fluttering, rotating cherry blossom petals drifting with the wind.
   - **電脳都市 (Cyberpunk)**: Dual-tint neon cyan and hot-pink digital rain streaks.
   - **東京夜 / 終末谷 (TokyoNight / Catppuccin)**: Glowing spiritual energy orbs with cosmic auras.
+- **On/Off Toggle Control**: Easily toggle particles on and off with the new **`🌸 粒子: ON/OFF`** button in the top HUD toolbar (Tier 1) or by pressing <kbd>b</kbd>.
+- **True Zero CPU/GPU Cost When OFF**: Automatically terminates the `requestAnimationFrame` loop, unloads canvas VRAM, and hides the element.
+- **State Persistence & URL Override**: Choice is saved in `localStorage` (`shinsekai-particles`), supports `?particles=off` / `?particles=on` URL params, and is included in profile export/import backups.
 
 ### 🎙️ 3. Mecha Android Voice Greeting
 - Upon boot sequence completion, an onboard anime android voice announces system readiness:  
@@ -131,6 +140,7 @@ Switch factions instantly via the header dropdown or by pressing <kbd>t</kbd>:
 | **桜吹雪 · Sakura** | 侍道 · 桜散る (Ronin Way) | Cherry Pink `#f4b8e4` / Pastel Mist | Fluttering Sakura Petals | `assets/animated/sakura.mp4` |
 | **終末谷 · Catppuccin** | 螺旋輪廻 (Valley of the End) | Lavender `#cba6f7` / Sage Teal | Mystic Chakra Spheres | `assets/animated/catppuccin.mp4` |
 | **電脳都市 · Cyberpunk** | 攻殻機動 (Night City Cyber) | Neon Cyan `#00f0ff` / Hot Pink | Vertical Digital Matrix | `assets/animated/cyberpunk.mp4` |
+| **カスタム · Custom** | 独自調色 (Pilot Custom Spectrum) | Any HEX color (Live native picker 🎨) | Custom Color Prisms | User-defined or active wallpaper |
 
 ---
 
@@ -174,11 +184,12 @@ Navigate your startpage like a mecha cockpit with full keyboard controls:
 | Hotkey | Action | Tactical Description |
 |:---:|:---|:---|
 | <kbd>/</kbd> | **Katana Console** | Instantly focus the search bar from anywhere |
-| <kbd>t</kbd> | **Cycle Faction** | Rotate themes (*Crimson → TokyoNight → Sakura → Catppuccin → Cyberpunk*) |
+| <kbd>t</kbd> | **Cycle Faction** | Rotate themes (*Crimson → TokyoNight → Sakura → Catppuccin → Cyberpunk → Custom*) |
 | <kbd>s</kbd> / <kbd>w</kbd> | **Cycle Scene** | Switch live video stages on the fly |
 | <kbd>u</kbd> / <kbd>o</kbd> | **Operator Profile** | Launch the Operator Identity hub to customize pilot name & honorific |
 | <kbd>e</kbd> | **Link Matrix** | Launch the visual cyberpunk bookmark configuration dialog |
 | <kbd>g</kbd> | **CRT Scanlines** | Toggle vintage anime monitor scanlines and film grain |
+| <kbd>b</kbd> | **Particle FX** | Toggle floating particles, cherry blossom petals, or burning flame embers |
 | <kbd>c</kbd> | **Clock Format** | Toggle 12-hour (AM/PM) and military 24-hour chrono formats |
 | <kbd>p</kbd> | **Lock Drawer** | Pin the holographic bookmark drawer open |
 | <kbd>v</kbd> | **Voice Comms** | Re-trigger the mecha android audio greeting |
@@ -196,16 +207,18 @@ Configure or bookmark Shinsekai with pre-configured startup states directly thro
 | Query Parameter | Example Value | Description |
 |:---|:---|:---|
 | `?scene=` | `?scene=tokyonight` | Select background scene (`crimson`, `tokyonight`, `sakura`, `catppuccin`, `cyberpunk`, `eco` or aliases `gojo`, `eyes`, `sasuke`) |
-| `?theme=` | `?theme=catppuccin` | Select color faction theme |
+| `?theme=` | `?theme=catppuccin` | Select color faction theme (`crimson`, `tokyonight`, `sakura`, `catppuccin`, `cyberpunk`, `custom`) |
+| `?color=` | `?color=%23a6e3a1` | Custom theme hex accent color (e.g. `%2300f0ff` or `ff007f`) |
 | `?user=` / `?operator=` | `?user=LEVI` | Override pilot callsign name |
 | `?honorific=` / `?title=` | `?honorific=-SENPAI` | Set Japanese honorific (`-SAMA`, `-SAN`, `-SENPAI`, `-KUN`, `none`, or custom) |
+| `?particles=` | `?particles=off` | Enable or disable atmospheric particle canvas (`on` or `off`) |
 | `?ultra=1` / `?hd=1` | `?ultra=1` | Force startup directly in HD Ultra (1080p) master mode |
 | `?pinned=1` | `?pinned=1` | Lock the holographic bookmark drawer open on boot |
 | `?noboot=1` | `?noboot=1` | Bypass the 1.5-second cinematic boot sequence for instant page display |
 | `?menu=` | `?menu=operator` | Auto-launch a modal on boot (`operator`, `links`, `shortcuts`, `theme`, `scene`) |
 
 *Example Command Link:*  
-`index.html?scene=crimson&ultra=1&user=RENGOKU&honorific=-SAMA&noboot=1`
+`index.html?theme=custom&color=%2300f0ff&scene=cyberpunk&ultra=1&user=RENGOKU&honorific=-SAMA&noboot=1`
 
 ---
 
@@ -282,7 +295,7 @@ Type any shortcut into the Katana search capsule followed by your query:
 1. Press <kbd>e</kbd> or click the **`⚙️ リンク編集`** button in the header.
 2. Select your category blade (**01 アニメ**, **02 電子遊戯**, **03 開発中枢**, **04 媒体通信**).
 3. Click **`✏️ 編集`** to modify, **`🗑️ 削除`** to delete, or add bookmarks using the bottom form with custom Japanese kanji seals (`観`, `遊`, `網`, `音`, etc.).
-4. Click **`⭳ 設定保存 (Export)`** to download a unified **`shinsekai-profile-<name>.json`** backup containing your complete setup: pinned links, operator name, honorific, active theme, scene, tier, and CRT filters.
+4. Click **`⭳ 設定保存 (Export)`** to download a unified **`shinsekai-profile-<name>.json`** backup containing your complete setup: pinned links, operator name, honorific, active theme, custom theme color, scene, tier, and CRT filters.
 5. Click **`⭱ 設定読込 (Import)`** to restore your complete profile anytime on any machine.
 
 ### 3. Custom Video Stages
@@ -305,7 +318,31 @@ assets/animated/
 └── cyberpunk.mp4       # Optional 1080p Ultra master
 ```
 
-### 4. Custom Welcome Voice
+### 4. Wallpaper Management (Live, Static & Custom)
+1. Click the wallpaper button in the top-right tool dock (or press <kbd>w</kbd> / <kbd>s</kbd> to cycle).
+2. Choose from the modern segmented control bar:
+   - **System Presets Group**:
+     - **`▶ 動的 (LIVE)`**: Hardware-accelerated anime video loops displayed by filename.
+     - **`🖼 静止画 (STATIC)`**: High-resolution static artworks displayed by filename.
+   - **Custom Library Group**:
+     - **`📁 カスタム (CUSTOM)`**: Displays a dynamic badge count of your personal collection.
+3. **Clean Custom Separation**: Inside the `カスタム` panel, items are strictly organized into dedicated subsections:
+   - **`▶ カスタム動的映像 (Custom Videos)`**: Displays uploaded `.mp4` and `.webm` files with exact file size badges.
+   - **`🖼 カスタム静止画 (Custom Images)`**: Displays uploaded `.png`, `.jpg`, `.webp`, and `.gif` files with format badges.
+   - **`🔗 オンラインリンク (Web URLs)`**: Displays external online image and video bookmarks.
+4. **Multi-File Upload**: Click **`＋ ファイル追加`** to select and upload multiple files at once. Files are stored safely in **IndexedDB** without 5MB storage limits.
+5. **Contextual Restores & Deletions**:
+   - Delete any preset or custom wallpaper at any time via the **`✕`** delete button on each item.
+   - Contextual restore banners (**`↺ 削除された初期動画を復元`** and **`↺ 削除された初期静止画を復元`**) appear directly within their respective panels whenever default items are deleted.
+   - Uploading a file with the original filename (e.g., `crimson.mp4` or `tokyonight.png`) also automatically restores that preset.
+
+> **Tip for Wayland / Hyprland users:** Shinsekai's companion desktop script also accepts arbitrary static wallpapers:
+> ```bash
+> ~/.config/hypr/scripts/wallpaper.sh static /path/to/wallpaper.png
+> ~/.config/hypr/scripts/wallpaper.sh static crimson   # Uses built-in theme PNG
+> ```
+
+### 5. Custom Welcome Voice
 Replace `assets/audio/welcome.mp3` with your favorite anime character dialogue or custom voice synthesis clip!
 
 ---

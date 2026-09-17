@@ -89,9 +89,12 @@
     const paramPinned = urlParams ? urlParams.get('pinned') : null;
     const paramUser = urlParams ? (urlParams.get('user') || urlParams.get('operator')) : null;
     const paramHonorific = urlParams ? (urlParams.get('honorific') || urlParams.get('title')) : null;
+    const paramParticles = urlParams ? urlParams.get('particles') : null;
+    const paramColor = urlParams ? (urlParams.get('color') || urlParams.get('hex')) : null;
 
     /* ─── 0. DOM ELEMENTS ─── */
     const bgVideo = document.getElementById('bg-video');
+    const bgStatic = document.getElementById('bg-static');
     const videoSource = document.getElementById('video-source');
     const canvas = document.getElementById('ambient-canvas');
 
@@ -111,12 +114,50 @@
     const themeLabel = document.getElementById('theme-label');
     const themeColorDot = document.getElementById('theme-color-dot');
     const themePopover = document.getElementById('theme-popover');
-    const themeItems = document.querySelectorAll('#theme-popover .pop-item');
+    const themeItems = document.querySelectorAll('#theme-popover .pop-item:not(.pop-item-custom)');
+    const customThemeItem = document.getElementById('custom-theme-item');
+    const customThemeDot = document.getElementById('custom-theme-dot');
+    const customThemeHex = document.getElementById('custom-theme-hex');
+    const customThemeColorInput = document.getElementById('custom-theme-color-input');
 
     const sceneBtn = document.getElementById('scene-btn');
     const sceneLabel = document.getElementById('scene-label');
+    const sceneLabelSub = document.getElementById('scene-label-sub');
+    const sceneToolIcon = document.getElementById('scene-tool-icon');
     const scenePopover = document.getElementById('scene-popover');
-    const sceneItems = document.querySelectorAll('#scene-popover .pop-item');
+    const wallpaperModeSwitch = document.getElementById('wallpaper-mode-switch');
+    const modeTabLive = document.getElementById('mode-tab-live');
+    const modeTabStatic = document.getElementById('mode-tab-static');
+    const modeTabCustom = document.getElementById('mode-tab-custom');
+    const uploadWallpaperBtn = document.getElementById('upload-wallpaper-btn');
+    const wallpaperFileInput = document.getElementById('wallpaper-file-input');
+    const urlWallpaperBtn = document.getElementById('url-wallpaper-btn');
+    const restoreDefaultsBtn = document.getElementById('restore-defaults-btn');
+    const restoreLiveBtn = document.getElementById('restore-live-btn');
+    const restoreStaticBtn = document.getElementById('restore-static-btn');
+    const panelLive = document.getElementById('panel-live');
+    const panelStatic = document.getElementById('panel-static');
+    const panelCustom = document.getElementById('panel-custom');
+    const listLive = document.getElementById('list-live');
+    const listStatic = document.getElementById('list-static');
+    const listCustomLive = document.getElementById('list-custom-live');
+    const listCustomStatic = document.getElementById('list-custom-static');
+    const listCustomWeb = document.getElementById('list-custom-web');
+    const customSubLive = document.getElementById('custom-sub-live');
+    const customSubStatic = document.getElementById('custom-sub-static');
+    const customSubWeb = document.getElementById('custom-sub-web');
+    const customLiveCount = document.getElementById('custom-live-count');
+    const customStaticCount = document.getElementById('custom-static-count');
+    const customWebCount = document.getElementById('custom-web-count');
+    const customEmptyMsg = document.getElementById('custom-empty-msg');
+    const customPillCount = document.getElementById('custom-pill-count');
+    const liveCountBadge = document.getElementById('live-count-badge');
+    const staticCountBadge = document.getElementById('static-count-badge');
+    const popHeaderModeStatus = document.getElementById('pop-header-mode-status');
+
+    const particlesToggleBtn = document.getElementById('particles-toggle-btn');
+    const particlesStatusIcon = document.getElementById('particles-status-icon');
+    const particlesStatusText = document.getElementById('particles-status-text');
 
     const grainToggleBtn = document.getElementById('grain-toggle-btn');
     const grainStatusText = document.getElementById('grain-status-text');
@@ -315,10 +356,67 @@
       try { return localStorage.getItem('shinsekai-theme') || 'crimson'; } catch (e) { return 'crimson'; }
     })();
 
+    function hexToRgb(hex) {
+      let c = (hex || '#a6e3a1').replace('#', '').trim();
+      if (c.length === 3) {
+        c = c[0] + c[0] + c[1] + c[1] + c[2] + c[2];
+      }
+      const num = parseInt(c, 16);
+      if (isNaN(num)) return { r: 166, g: 227, b: 161 };
+      return {
+        r: (num >> 16) & 255,
+        g: (num >> 8) & 255,
+        b: num & 255
+      };
+    }
+
+    const THEME_PARTICLE_ICONS = {
+      crimson: '🔥',
+      tokyonight: '✨',
+      sakura: '🌸',
+      catppuccin: '🌌',
+      cyberpunk: '⚡',
+      custom: '🎨'
+    };
+
+    let particlesActive = (() => {
+      if (paramParticles === '0' || paramParticles === 'off' || paramParticles === 'false') return false;
+      if (paramParticles === '1' || paramParticles === 'on' || paramParticles === 'true') return true;
+      return safeStorage.getItem('shinsekai-particles') !== 'off';
+    })();
+
     let startCanvasAnim = () => {};
     let stopCanvasAnim = () => {};
     let refreshParticleColors = () => {};
     let respawnParticles = () => {};
+
+    function setParticles(active) {
+      particlesActive = !!active;
+      safeStorage.setItem('shinsekai-particles', particlesActive ? 'on' : 'off');
+      document.body.setAttribute('data-particles', particlesActive ? 'on' : 'off');
+
+      const themeIcon = THEME_PARTICLE_ICONS[currentThemeKey] || '🌸';
+      if (particlesStatusIcon) {
+        particlesStatusIcon.textContent = particlesActive ? themeIcon : '✧';
+      }
+      if (particlesStatusText) {
+        particlesStatusText.textContent = particlesActive ? '粒子: ON' : '粒子: OFF';
+      }
+      if (particlesToggleBtn) {
+        particlesToggleBtn.classList.toggle('active', particlesActive);
+      }
+
+      if (particlesActive) {
+        if (typeof respawnParticles === 'function') respawnParticles();
+        if (typeof startCanvasAnim === 'function') startCanvasAnim();
+      } else {
+        if (typeof stopCanvasAnim === 'function') stopCanvasAnim();
+        if (canvas) {
+          const ctx = canvas.getContext('2d');
+          if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+      }
+    }
 
     function initCanvas() {
       if (!canvas) return;
@@ -331,7 +429,11 @@
         const scale = 0.5;
         canvas.width = Math.max(320, Math.floor(window.innerWidth * scale));
         canvas.height = Math.max(180, Math.floor(window.innerHeight * scale));
-        spawnParticles();
+        if (particlesActive) {
+          spawnParticles();
+        } else {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
       }
 
       function updateParticleColors() {
@@ -354,11 +456,20 @@
             p.glowColor = `rgba(122, 162, 247, ${(p.opacity * 0.28).toFixed(3)})`;
             p.coreColor = `rgba(122, 162, 247, ${p.opacity.toFixed(3)})`;
           }
+        } else if (currentThemeKey === 'custom') {
+          const hex = safeStorage.getItem('shinsekai-custom-theme-color') || '#a6e3a1';
+          const { r, g, b } = hexToRgb(hex);
+          for (let i = 0; i < len; i++) {
+            const p = particles[i];
+            p.glowColor = `rgba(${r}, ${g}, ${b}, ${(p.opacity * 0.35).toFixed(3)})`;
+            p.coreColor = `rgba(${r}, ${g}, ${b}, ${p.opacity.toFixed(3)})`;
+          }
         }
       }
 
       function spawnParticles() {
         particles = [];
+        if (!particlesActive) return;
         const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         if (prefersReduced) return;
 
@@ -394,6 +505,12 @@
       let lastFrameTime = performance.now();
 
       function render(timestamp) {
+        if (!particlesActive) {
+          stopAnimation();
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          return;
+        }
+
         const now = timestamp || performance.now();
         // Frame throttle: cap at max ~60 FPS (15.1ms) to prevent burning GPU/CPU on 120Hz/144Hz/240Hz screens without dropping frames on 60Hz displays
         if (now - lastFrameTime < 15.1) {
@@ -479,6 +596,7 @@
       }
 
       function startAnimation() {
+        if (!particlesActive) return;
         if (!animFrameId && particles.length > 0) {
           lastFrameTime = performance.now();
           animFrameId = requestAnimationFrame(render);
@@ -497,10 +615,19 @@
       refreshParticleColors = updateParticleColors;
       respawnParticles = spawnParticles;
 
-      startAnimation();
+      if (particlesActive) {
+        startAnimation();
+      }
     }
 
     initCanvas();
+    setParticles(particlesActive);
+
+    if (particlesToggleBtn) {
+      particlesToggleBtn.addEventListener('click', () => {
+        setParticles(!particlesActive);
+      });
+    }
 
     /* ─── 3. CINEMATIC SUBTITLE DIALOGUE SYSTEM ─── */
     const animeQuotes = [
@@ -665,14 +792,172 @@
       setTimeout(() => { startQuoteTimer(); }, 2000);
     }
 
-    /* ─── 4. VIDEO SCENE CONTROLLER ─── */
-    const scenes = [
-      { key: 'crimson',    label: '映像: 紅蓮',     labelEn: 'Crimson',       video: { default: 'assets/animated/720p/crimson.mp4',    ultra: 'assets/animated/crimson.mp4'    } },
-      { key: 'tokyonight', label: '映像: 東京夜',   labelEn: 'TokyoNight',    video: { default: 'assets/animated/720p/tokyonight.mp4', ultra: 'assets/animated/tokyonight.mp4' } },
-      { key: 'sakura',     label: '映像: 桜吹雪',   labelEn: 'Sakura',        video: { default: 'assets/animated/720p/sakura.mp4',    ultra: 'assets/animated/sakura.mp4'    } },
-      { key: 'catppuccin', label: '映像: 終末谷',   labelEn: 'Catppuccin',    video: { default: 'assets/animated/720p/catppuccin.mp4', ultra: 'assets/animated/catppuccin.mp4' } },
-      { key: 'cyberpunk',  label: '映像: 電脳都市', labelEn: 'Cyberpunk',     video: { default: 'assets/animated/720p/cyberpunk.mp4', ultra: 'assets/animated/cyberpunk.mp4' } },
-      { key: 'eco',        label: '省電力: 静止画', labelEn: 'Eco (Low RAM)', video: null }
+    /* ─── 4. VIDEO & STATIC WALLPAPER CONTROLLER ─── */
+    /* ─── 4.0. INDEXEDDB MULTI-FILE STORAGE FOR CUSTOM WALLPAPERS (MP4 / WEBM / PNG / JPG / WEBP / GIF) ─── */
+    const IDB_NAME = 'shinsekai-wallpaper-db';
+    const IDB_VERSION = 2;
+    const IDB_STORE_CUSTOM = 'custom_wallpapers';
+    const IDB_STORE_LEGACY = 'wallpapers';
+
+    let currentCustomObjectUrl = null;
+
+    function revokeCustomObjectUrl() {
+      if (currentCustomObjectUrl) {
+        try {
+          URL.revokeObjectURL(currentCustomObjectUrl);
+        } catch (e) {}
+        currentCustomObjectUrl = null;
+      }
+    }
+
+    function openWallpaperDB() {
+      return new Promise((resolve, reject) => {
+        if (typeof indexedDB === 'undefined') return reject(new Error('IndexedDB not supported'));
+        const req = indexedDB.open(IDB_NAME, IDB_VERSION);
+        req.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains(IDB_STORE_CUSTOM)) {
+            db.createObjectStore(IDB_STORE_CUSTOM, { keyPath: 'id' });
+          }
+          if (!db.objectStoreNames.contains(IDB_STORE_LEGACY)) {
+            db.createObjectStore(IDB_STORE_LEGACY);
+          }
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    if (typeof navigator !== 'undefined' && navigator.storage && navigator.storage.persist) {
+      navigator.storage.persist().catch(() => {});
+    }
+
+    function addCustomWallpaperToDB(file) {
+      return openWallpaperDB().then(db => {
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(IDB_STORE_CUSTOM, 'readwrite');
+          const store = tx.objectStore(IDB_STORE_CUSTOM);
+          const isVideo = file.type.startsWith('video/') || /\.(mp4|webm)$/i.test(file.name);
+          const record = {
+            id: 'cust_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+            name: file.name,
+            type: isVideo ? 'live' : 'static',
+            mimeType: file.type || (isVideo ? 'video/mp4' : 'image/png'),
+            size: file.size,
+            blob: file,
+            addedAt: Date.now()
+          };
+          const req = store.put(record);
+          req.onsuccess = () => resolve(record);
+          req.onerror = () => reject(req.error);
+        });
+      });
+    }
+
+    function getAllCustomWallpapersFromDB() {
+      return openWallpaperDB().then(db => {
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(IDB_STORE_CUSTOM, 'readonly');
+          const store = tx.objectStore(IDB_STORE_CUSTOM);
+          const req = store.getAll();
+          req.onsuccess = () => {
+            const list = Array.isArray(req.result) ? req.result : [];
+            list.sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0));
+            resolve(list);
+          };
+          req.onerror = () => resolve([]);
+        });
+      }).catch(() => []);
+    }
+
+    function getCustomWallpaperByIdFromDB(id) {
+      return openWallpaperDB().then(db => {
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(IDB_STORE_CUSTOM, 'readonly');
+          const store = tx.objectStore(IDB_STORE_CUSTOM);
+          const req = store.get(id);
+          req.onsuccess = () => resolve(req.result || null);
+          req.onerror = () => resolve(null);
+        });
+      }).catch(() => null);
+    }
+
+    function deleteCustomWallpaperFromDB(id) {
+      return openWallpaperDB().then(db => {
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(IDB_STORE_CUSTOM, 'readwrite');
+          const store = tx.objectStore(IDB_STORE_CUSTOM);
+          const req = store.delete(id);
+          req.onsuccess = () => resolve(true);
+          req.onerror = () => reject(req.error);
+        });
+      }).catch(() => false);
+    }
+
+    /* ─── WEB URL CUSTOM WALLPAPERS STORAGE ─── */
+    function getCustomWebWallpapers() {
+      try {
+        const raw = safeStorage.getItem('shinsekai-custom-web-wallpapers');
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveCustomWebWallpapers(list) {
+      safeStorage.setItem('shinsekai-custom-web-wallpapers', JSON.stringify(list));
+    }
+
+    function addCustomWebWallpaper(url, name = null) {
+      const list = getCustomWebWallpapers();
+      const isVideo = /\.(mp4|webm)($|\?)/i.test(url);
+      let displayName = name ? name.trim() : '';
+      if (!displayName) {
+        try {
+          const u = new URL(url);
+          const pathParts = u.pathname.split('/').filter(Boolean);
+          displayName = pathParts.length ? pathParts[pathParts.length - 1] : u.hostname;
+        } catch (e) {
+          displayName = url.slice(0, 24);
+        }
+      }
+      const record = {
+        id: 'web_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+        name: displayName,
+        url: url.trim(),
+        type: isVideo ? 'live' : 'static',
+        addedAt: Date.now()
+      };
+      list.unshift(record);
+      saveCustomWebWallpapers(list);
+      return record;
+    }
+
+    function deleteCustomWebWallpaper(id) {
+      const list = getCustomWebWallpapers().filter(it => it.id !== id);
+      saveCustomWebWallpapers(list);
+    }
+
+    /* ─── DEFAULT LIVE SCENES & STATIC ARTWORKS ─── */
+    const DEFAULT_LIVE_SCENES = [
+      { key: 'crimson',    fileName: 'crimson.mp4',    label: '映像: 紅蓮',     labelEn: 'Crimson',       badge: '720p / 1080p MP4', video: { default: 'assets/animated/720p/crimson.mp4',    ultra: 'assets/animated/crimson.mp4'    }, preview: 'assets/previews/crimson.png' },
+      { key: 'tokyonight', fileName: 'tokyonight.mp4', label: '映像: 東京夜',   labelEn: 'TokyoNight',    badge: '720p / 1080p MP4', video: { default: 'assets/animated/720p/tokyonight.mp4', ultra: 'assets/animated/tokyonight.mp4' }, preview: 'assets/previews/tokyonight.png' },
+      { key: 'sakura',     fileName: 'sakura.mp4',     label: '映像: 桜吹雪',   labelEn: 'Sakura',        badge: '720p / 1080p MP4', video: { default: 'assets/animated/720p/sakura.mp4',    ultra: 'assets/animated/sakura.mp4'    }, preview: 'assets/previews/sakura.png' },
+      { key: 'catppuccin', fileName: 'catppuccin.mp4', label: '映像: 終末谷',   labelEn: 'Catppuccin',    badge: '720p / 1080p MP4', video: { default: 'assets/animated/720p/catppuccin.mp4', ultra: 'assets/animated/catppuccin.mp4' }, preview: 'assets/previews/catppuccin.png' },
+      { key: 'cyberpunk',  fileName: 'cyberpunk.mp4',  label: '映像: 電脳都市', labelEn: 'Cyberpunk',     badge: '720p / 1080p MP4', video: { default: 'assets/animated/720p/cyberpunk.mp4', ultra: 'assets/animated/cyberpunk.mp4' }, preview: 'assets/previews/cyberpunk.png' },
+      { key: 'eco',        fileName: 'eco',            label: '省電力: 静止画', labelEn: 'Eco (Low RAM)', badge: 'ECO / LOW RAM',    video: null, preview: null }
+    ];
+
+    const scenes = DEFAULT_LIVE_SCENES;
+
+    const DEFAULT_STATIC_ARTWORKS = [
+      { key: 'crimson',    fileName: 'crimson.png',    label: '静止画: 紅蓮',     labelEn: 'Crimson',    badge: 'PNG · 1080p', src: 'assets/previews/crimson.png' },
+      { key: 'tokyonight', fileName: 'tokyonight.png', label: '静止画: 東京夜',   labelEn: 'TokyoNight', badge: 'PNG · 1080p', src: 'assets/previews/tokyonight.png' },
+      { key: 'sakura',     fileName: 'sakura.png',     label: '静止画: 桜吹雪',   labelEn: 'Sakura',     badge: 'PNG · 1080p', src: 'assets/previews/sakura.png' },
+      { key: 'catppuccin', fileName: 'catppuccin.png', label: '静止画: 終末谷',   labelEn: 'Catppuccin', badge: 'PNG · 1080p', src: 'assets/previews/catppuccin.png' },
+      { key: 'cyberpunk',  fileName: 'cyberpunk.png',  label: '静止画: 電脳都市', labelEn: 'Cyberpunk',  badge: 'PNG · 1080p', src: 'assets/previews/cyberpunk.png' }
     ];
 
     const sceneAliasMap = {
@@ -682,42 +967,514 @@
       rengoku: 'crimson',
       sukuna: 'crimson'
     };
+
     let currentSceneIdx = 0;
     const rawSavedScene = paramScene || safeStorage.getItem('shinsekai-scene') || 'crimson';
     const savedScene = sceneAliasMap[rawSavedScene] || rawSavedScene;
     const foundScene = scenes.findIndex(s => s.key === savedScene);
     if (foundScene !== -1) currentSceneIdx = foundScene;
 
-    function applyScene(sceneKey, isUltra = null) {
-      const resolvedKey = sceneAliasMap[sceneKey] || sceneKey;
-      const s = scenes.find(item => item.key === resolvedKey) || scenes[0];
-      currentSceneIdx = scenes.indexOf(s);
-      safeStorage.setItem('shinsekai-scene', s.key);
-      document.body.setAttribute('data-scene', s.key);
+    /* ─── DELETED DEFAULTS TRACKING ─── */
+    function getDeletedDefaultsLive() {
+      try {
+        const raw = safeStorage.getItem('shinsekai-deleted-defaults-live');
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) { return []; }
+    }
 
-      // If isUltra is not explicitly passed, check URL params or stored preference
+    function saveDeletedDefaultsLive(list) {
+      safeStorage.setItem('shinsekai-deleted-defaults-live', JSON.stringify(list));
+    }
+
+    function getDeletedDefaultsStatic() {
+      try {
+        const raw = safeStorage.getItem('shinsekai-deleted-defaults-static');
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) { return []; }
+    }
+
+    function saveDeletedDefaultsStatic(list) {
+      safeStorage.setItem('shinsekai-deleted-defaults-static', JSON.stringify(list));
+    }
+
+    function deleteDefaultLive(key) {
+      const list = getDeletedDefaultsLive();
+      if (!list.includes(key)) {
+        list.push(key);
+        saveDeletedDefaultsLive(list);
+      }
+    }
+
+    function deleteDefaultStatic(key) {
+      const list = getDeletedDefaultsStatic();
+      if (!list.includes(key)) {
+        list.push(key);
+        saveDeletedDefaultsStatic(list);
+      }
+    }
+
+    function restoreAllDefaults() {
+      safeStorage.removeItem('shinsekai-deleted-defaults-live');
+      safeStorage.removeItem('shinsekai-deleted-defaults-static');
+    }
+
+    function restoreDefaultsLive() {
+      safeStorage.removeItem('shinsekai-deleted-defaults-live');
+    }
+
+    function restoreDefaultsStatic() {
+      safeStorage.removeItem('shinsekai-deleted-defaults-static');
+    }
+
+    /* ─── ACTIVE WALLPAPER STATE ─── */
+    let activeWallpaper = {
+      source: 'default-live', // 'default-live' | 'default-static' | 'custom-file' | 'custom-url'
+      id: 'crimson',
+      name: 'crimson.mp4',
+      type: 'live' // 'live' | 'static'
+    };
+
+    let currentWallpaperMode = (urlParams ? urlParams.get('mode') : null) || safeStorage.getItem('shinsekai-wallpaper-mode') || 'live';
+    let isCustomWallpaper = false;
+
+    function saveActiveWallpaperState(item) {
+      activeWallpaper = Object.assign({}, item);
+      safeStorage.setItem('shinsekai-active-wallpaper', JSON.stringify(activeWallpaper));
+      safeStorage.setItem('shinsekai-wallpaper-mode', activeWallpaper.type);
+      if (activeWallpaper.source === 'default-live' || activeWallpaper.source === 'default-static') {
+        safeStorage.setItem('shinsekai-scene', activeWallpaper.id);
+      }
+    }
+
+    function formatFileSize(bytes) {
+      if (!bytes || isNaN(bytes)) return '';
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    function switchWallpaperCategoryTab(cat) {
+      if (modeTabLive) {
+        modeTabLive.classList.toggle('active', cat === 'live');
+        modeTabLive.setAttribute('aria-selected', cat === 'live' ? 'true' : 'false');
+      }
+      if (modeTabStatic) {
+        modeTabStatic.classList.toggle('active', cat === 'static');
+        modeTabStatic.setAttribute('aria-selected', cat === 'static' ? 'true' : 'false');
+      }
+      if (modeTabCustom) {
+        modeTabCustom.classList.toggle('active', cat === 'custom');
+        modeTabCustom.setAttribute('aria-selected', cat === 'custom' ? 'true' : 'false');
+      }
+
+      if (panelLive) panelLive.style.display = (cat === 'live' ? 'block' : 'none');
+      if (panelStatic) panelStatic.style.display = (cat === 'static' ? 'block' : 'none');
+      if (panelCustom) panelCustom.style.display = (cat === 'custom' ? 'block' : 'none');
+    }
+
+    function updateWallpaperListHighlights() {
+      if (popHeaderModeStatus) {
+        if (activeWallpaper.source === 'default-live') {
+          popHeaderModeStatus.textContent = '▶ LIVE VIDEO';
+        } else if (activeWallpaper.source === 'default-static') {
+          popHeaderModeStatus.textContent = '🖼 STATIC ARTWORK';
+        } else if (activeWallpaper.source === 'custom-file') {
+          popHeaderModeStatus.textContent = activeWallpaper.type === 'live' ? '▶ CUSTOM VIDEO' : '🖼 CUSTOM IMAGE';
+        } else if (activeWallpaper.source === 'custom-url') {
+          popHeaderModeStatus.textContent = '🔗 WEB URL';
+        } else {
+          popHeaderModeStatus.textContent = 'WALLPAPER';
+        }
+      }
+
+      const allRows = document.querySelectorAll('.pop-wallpaper-row');
+      allRows.forEach(row => {
+        let isActive = false;
+        if (activeWallpaper.source === 'default-live' && row.dataset.category === 'live' && row.dataset.key === activeWallpaper.id) {
+          isActive = true;
+        } else if (activeWallpaper.source === 'default-static' && row.dataset.category === 'static' && row.dataset.key === activeWallpaper.id) {
+          isActive = true;
+        } else if (activeWallpaper.source === 'custom-file' && row.dataset.category === 'custom' && row.dataset.id === activeWallpaper.id) {
+          isActive = true;
+        } else if (activeWallpaper.source === 'custom-url' && row.dataset.category === 'custom' && row.dataset.id === activeWallpaper.id) {
+          isActive = true;
+        }
+        row.classList.toggle('active', isActive);
+      });
+    }
+
+    /* ─── DYNAMIC WALLPAPER LIST RENDERING ─── */
+    async function renderWallpaperLists() {
+      const deletedLive = getDeletedDefaultsLive();
+      const deletedStatic = getDeletedDefaultsStatic();
+
+      // Update header status text based on active wallpaper
+      if (popHeaderModeStatus) {
+        if (activeWallpaper.source === 'default-live') {
+          popHeaderModeStatus.textContent = '▶ LIVE VIDEO';
+        } else if (activeWallpaper.source === 'default-static') {
+          popHeaderModeStatus.textContent = '🖼 STATIC ARTWORK';
+        } else if (activeWallpaper.source === 'custom-file') {
+          popHeaderModeStatus.textContent = activeWallpaper.type === 'live' ? '▶ CUSTOM VIDEO' : '🖼 CUSTOM IMAGE';
+        } else if (activeWallpaper.source === 'custom-url') {
+          popHeaderModeStatus.textContent = '🔗 WEB URL';
+        } else {
+          popHeaderModeStatus.textContent = 'WALLPAPER';
+        }
+      }
+
+      // 1. Render Live Default Scenes
+      const visibleLive = DEFAULT_LIVE_SCENES.filter(s => !deletedLive.includes(s.key));
+      if (liveCountBadge) {
+        liveCountBadge.textContent = String(visibleLive.length);
+      }
+      if (restoreLiveBtn) {
+        restoreLiveBtn.style.display = deletedLive.length > 0 ? 'inline-flex' : 'none';
+      }
+
+      if (listLive) {
+        listLive.innerHTML = '';
+        if (visibleLive.length === 0) {
+          listLive.innerHTML = '<div class="pop-empty-msg">動的映像がありません<br><span style="opacity:0.6;font-size:0.65rem;">「初期動画を復元」または同名ファイル追加で復元</span></div>';
+        } else {
+          visibleLive.forEach(s => {
+            const row = document.createElement('div');
+            const isActive = activeWallpaper.source === 'default-live' && activeWallpaper.id === s.key;
+            row.className = 'pop-wallpaper-row' + (isActive ? ' active' : '');
+            row.dataset.key = s.key;
+            row.dataset.category = 'live';
+
+            const selBtn = document.createElement('button');
+            selBtn.type = 'button';
+            selBtn.className = 'pop-wallpaper-select';
+            selBtn.title = s.labelEn;
+            selBtn.innerHTML = `
+              <span class="pop-icon">${s.video ? '▶' : '🍃'}</span>
+              <div class="pop-wallpaper-info">
+                <span class="pop-wallpaper-name">${escapeHtml(s.fileName)}</span>
+                <span class="pop-wallpaper-badge">${escapeHtml(s.labelEn)} · ${escapeHtml(s.badge)}</span>
+              </div>
+            `;
+            selBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              applyDefaultLiveScene(s.key);
+              scenePopover.classList.remove('open');
+            });
+
+            const delBtn = document.createElement('button');
+            delBtn.type = 'button';
+            delBtn.className = 'pop-wallpaper-delete-btn';
+            delBtn.title = '削除 (Delete)';
+            delBtn.textContent = '✕';
+            delBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              deleteDefaultLive(s.key);
+              if (activeWallpaper.source === 'default-live' && activeWallpaper.id === s.key) {
+                const remaining = DEFAULT_LIVE_SCENES.filter(it => !getDeletedDefaultsLive().includes(it.key));
+                if (remaining.length > 0) {
+                  applyDefaultLiveScene(remaining[0].key);
+                } else {
+                  applyDefaultStaticScene('crimson');
+                }
+              }
+              renderWallpaperLists();
+            });
+
+            row.appendChild(selBtn);
+            row.appendChild(delBtn);
+            listLive.appendChild(row);
+          });
+        }
+      }
+
+      // 2. Render Static Artworks
+      const visibleStatic = DEFAULT_STATIC_ARTWORKS.filter(s => !deletedStatic.includes(s.key));
+      if (staticCountBadge) {
+        staticCountBadge.textContent = String(visibleStatic.length);
+      }
+      if (restoreStaticBtn) {
+        restoreStaticBtn.style.display = deletedStatic.length > 0 ? 'inline-flex' : 'none';
+      }
+
+      if (listStatic) {
+        listStatic.innerHTML = '';
+        if (visibleStatic.length === 0) {
+          listStatic.innerHTML = '<div class="pop-empty-msg">静止画アートワークがありません<br><span style="opacity:0.6;font-size:0.65rem;">「初期静止画を復元」または同名ファイル追加で復元</span></div>';
+        } else {
+          visibleStatic.forEach(s => {
+            const row = document.createElement('div');
+            const isActive = activeWallpaper.source === 'default-static' && activeWallpaper.id === s.key;
+            row.className = 'pop-wallpaper-row' + (isActive ? ' active' : '');
+            row.dataset.key = s.key;
+            row.dataset.category = 'static';
+
+            const selBtn = document.createElement('button');
+            selBtn.type = 'button';
+            selBtn.className = 'pop-wallpaper-select';
+            selBtn.title = s.labelEn;
+            selBtn.innerHTML = `
+              <span class="pop-icon">🖼</span>
+              <div class="pop-wallpaper-info">
+                <span class="pop-wallpaper-name">${escapeHtml(s.fileName)}</span>
+                <span class="pop-wallpaper-badge">${escapeHtml(s.labelEn)} · ${escapeHtml(s.badge)}</span>
+              </div>
+            `;
+            selBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              applyDefaultStaticScene(s.key);
+              scenePopover.classList.remove('open');
+            });
+
+            const delBtn = document.createElement('button');
+            delBtn.type = 'button';
+            delBtn.className = 'pop-wallpaper-delete-btn';
+            delBtn.title = '削除 (Delete)';
+            delBtn.textContent = '✕';
+            delBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              deleteDefaultStatic(s.key);
+              if (activeWallpaper.source === 'default-static' && activeWallpaper.id === s.key) {
+                const remaining = DEFAULT_STATIC_ARTWORKS.filter(it => !getDeletedDefaultsStatic().includes(it.key));
+                if (remaining.length > 0) {
+                  applyDefaultStaticScene(remaining[0].key);
+                } else {
+                  applyDefaultLiveScene('crimson');
+                }
+              }
+              renderWallpaperLists();
+            });
+
+            row.appendChild(selBtn);
+            row.appendChild(delBtn);
+            listStatic.appendChild(row);
+          });
+        }
+      }
+
+      if (restoreDefaultsBtn) {
+        const hasDeleted = deletedLive.length > 0 || deletedStatic.length > 0;
+        restoreDefaultsBtn.style.display = hasDeleted ? 'inline-flex' : 'none';
+      }
+
+      // 3. Render Custom Wallpapers (Divided into Live Videos, Static Images, and Web URLs)
+      const customFiles = await getAllCustomWallpapersFromDB();
+      const customWebUrls = getCustomWebWallpapers();
+
+      const customLiveFiles = customFiles.filter(f => f.type === 'live');
+      const customStaticFiles = customFiles.filter(f => f.type !== 'live');
+
+      const totalCustom = customFiles.length + customWebUrls.length;
+      if (customPillCount) {
+        customPillCount.textContent = String(totalCustom);
+      }
+
+      if (customEmptyMsg) {
+        customEmptyMsg.style.display = totalCustom === 0 ? 'block' : 'none';
+      }
+
+      // Subsection A: Custom Live Videos
+      if (customSubLive && listCustomLive) {
+        listCustomLive.innerHTML = '';
+        if (customLiveCount) customLiveCount.textContent = String(customLiveFiles.length);
+        if (customLiveFiles.length === 0) {
+          customSubLive.style.display = 'none';
+        } else {
+          customSubLive.style.display = 'block';
+          customLiveFiles.forEach(fileRec => {
+            const row = document.createElement('div');
+            const isActive = activeWallpaper.source === 'custom-file' && activeWallpaper.id === fileRec.id;
+            row.className = 'pop-wallpaper-row' + (isActive ? ' active' : '');
+            row.dataset.id = fileRec.id;
+            row.dataset.category = 'custom';
+
+            const selBtn = document.createElement('button');
+            selBtn.type = 'button';
+            selBtn.className = 'pop-wallpaper-select';
+            selBtn.title = fileRec.name;
+            selBtn.innerHTML = `
+              <span class="pop-icon">▶</span>
+              <div class="pop-wallpaper-info">
+                <span class="pop-wallpaper-name">${escapeHtml(fileRec.name)}</span>
+                <span class="pop-wallpaper-badge">MP4/WEBM · LIVE · ${formatFileSize(fileRec.size)}</span>
+              </div>
+            `;
+            selBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              applyCustomFileWallpaper(fileRec);
+              scenePopover.classList.remove('open');
+            });
+
+            const delBtn = document.createElement('button');
+            delBtn.type = 'button';
+            delBtn.className = 'pop-wallpaper-delete-btn';
+            delBtn.title = '削除 (Delete)';
+            delBtn.textContent = '✕';
+            delBtn.addEventListener('click', async (e) => {
+              e.stopPropagation();
+              await deleteCustomWallpaperFromDB(fileRec.id);
+              if (activeWallpaper.source === 'custom-file' && activeWallpaper.id === fileRec.id) {
+                safeStorage.removeItem('shinsekai-custom-wallpaper-thumb');
+                applyDefaultLiveScene('crimson');
+              }
+              renderWallpaperLists();
+            });
+
+            row.appendChild(selBtn);
+            row.appendChild(delBtn);
+            listCustomLive.appendChild(row);
+          });
+        }
+      }
+
+      // Subsection B: Custom Static Images
+      if (customSubStatic && listCustomStatic) {
+        listCustomStatic.innerHTML = '';
+        if (customStaticCount) customStaticCount.textContent = String(customStaticFiles.length);
+        if (customStaticFiles.length === 0) {
+          customSubStatic.style.display = 'none';
+        } else {
+          customSubStatic.style.display = 'block';
+          customStaticFiles.forEach(fileRec => {
+            const row = document.createElement('div');
+            const isActive = activeWallpaper.source === 'custom-file' && activeWallpaper.id === fileRec.id;
+            row.className = 'pop-wallpaper-row' + (isActive ? ' active' : '');
+            row.dataset.id = fileRec.id;
+            row.dataset.category = 'custom';
+
+            const isGif = fileRec.mimeType === 'image/gif';
+            const typeBadge = isGif ? 'GIF · ANIM' : 'IMAGE · STATIC';
+
+            const selBtn = document.createElement('button');
+            selBtn.type = 'button';
+            selBtn.className = 'pop-wallpaper-select';
+            selBtn.title = fileRec.name;
+            selBtn.innerHTML = `
+              <span class="pop-icon">🖼</span>
+              <div class="pop-wallpaper-info">
+                <span class="pop-wallpaper-name">${escapeHtml(fileRec.name)}</span>
+                <span class="pop-wallpaper-badge">${escapeHtml(typeBadge)} · ${formatFileSize(fileRec.size)}</span>
+              </div>
+            `;
+            selBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              applyCustomFileWallpaper(fileRec);
+              scenePopover.classList.remove('open');
+            });
+
+            const delBtn = document.createElement('button');
+            delBtn.type = 'button';
+            delBtn.className = 'pop-wallpaper-delete-btn';
+            delBtn.title = '削除 (Delete)';
+            delBtn.textContent = '✕';
+            delBtn.addEventListener('click', async (e) => {
+              e.stopPropagation();
+              await deleteCustomWallpaperFromDB(fileRec.id);
+              if (activeWallpaper.source === 'custom-file' && activeWallpaper.id === fileRec.id) {
+                safeStorage.removeItem('shinsekai-custom-wallpaper-thumb');
+                applyDefaultLiveScene('crimson');
+              }
+              renderWallpaperLists();
+            });
+
+            row.appendChild(selBtn);
+            row.appendChild(delBtn);
+            listCustomStatic.appendChild(row);
+          });
+        }
+      }
+
+      // Subsection C: Custom Web URLs
+      if (customSubWeb && listCustomWeb) {
+        listCustomWeb.innerHTML = '';
+        if (customWebCount) customWebCount.textContent = String(customWebUrls.length);
+        if (customWebUrls.length === 0) {
+          customSubWeb.style.display = 'none';
+        } else {
+          customSubWeb.style.display = 'block';
+          customWebUrls.forEach(webRec => {
+            const row = document.createElement('div');
+            const isActive = activeWallpaper.source === 'custom-url' && activeWallpaper.id === webRec.id;
+            row.className = 'pop-wallpaper-row' + (isActive ? ' active' : '');
+            row.dataset.id = webRec.id;
+            row.dataset.category = 'custom';
+
+            const selBtn = document.createElement('button');
+            selBtn.type = 'button';
+            selBtn.className = 'pop-wallpaper-select';
+            selBtn.title = webRec.url;
+            selBtn.innerHTML = `
+              <span class="pop-icon">🔗</span>
+              <div class="pop-wallpaper-info">
+                <span class="pop-wallpaper-name">${escapeHtml(webRec.name)}</span>
+                <span class="pop-wallpaper-badge">WEB · ${(webRec.type || 'static').toUpperCase()}</span>
+              </div>
+            `;
+            selBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              applyCustomWebWallpaper(webRec);
+              scenePopover.classList.remove('open');
+            });
+
+            const delBtn = document.createElement('button');
+            delBtn.type = 'button';
+            delBtn.className = 'pop-wallpaper-delete-btn';
+            delBtn.title = '削除 (Delete)';
+            delBtn.textContent = '✕';
+            delBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              deleteCustomWebWallpaper(webRec.id);
+              if (activeWallpaper.source === 'custom-url' && activeWallpaper.id === webRec.id) {
+                applyDefaultLiveScene('crimson');
+              }
+              renderWallpaperLists();
+            });
+
+            row.appendChild(selBtn);
+            row.appendChild(delBtn);
+            listCustomWeb.appendChild(row);
+          });
+        }
+      }
+    }
+
+    /* ─── WALLPAPER ACTIVATION CONTROLLER ─── */
+    function applyDefaultLiveScene(sceneKey, isUltra = null) {
+      const resolvedKey = sceneAliasMap[sceneKey] || sceneKey;
+      let s = DEFAULT_LIVE_SCENES.find(it => it.key === resolvedKey);
+      if (!s) s = DEFAULT_LIVE_SCENES[0];
+      currentSceneIdx = DEFAULT_LIVE_SCENES.indexOf(s);
+
+      saveActiveWallpaperState({
+        source: 'default-live',
+        id: s.key,
+        name: s.fileName,
+        type: s.key === 'eco' ? 'static' : 'live'
+      });
+
+      isCustomWallpaper = false;
+      currentWallpaperMode = 'live';
+      document.body.setAttribute('data-wallpaper-mode', 'live');
+      document.body.setAttribute('data-scene', s.key);
+      if (sceneToolIcon) sceneToolIcon.textContent = s.key === 'eco' ? '🍃' : '▶';
+
+      revokeCustomObjectUrl();
+      if (bgStatic) bgStatic.style.opacity = '0';
+
       const ultraActive = isUltra !== null
         ? !!isUltra
         : ((urlParams && (urlParams.get('ultra') === '1' || urlParams.get('hd') === '1')) || safeStorage.getItem('shinsekai-ultra') === 'true');
-
       safeStorage.setItem('shinsekai-ultra', ultraActive ? 'true' : 'false');
 
-      // Resolve video source: .default (720p) is always the unconditional default;
-      // .ultra is only used when explicitly requested via the HD popover items or stored preference.
       const videoSrc = (ultraActive && s.video && s.video.ultra)
         ? s.video.ultra
         : (s.video ? (s.video.default || s.video[currentTier] || s.video.mid) : null);
 
       if (sceneLabel) sceneLabel.textContent = s.label + (ultraActive ? ' HD' : '');
-      const sceneLabelSub = document.getElementById('scene-label-sub');
       if (sceneLabelSub) sceneLabelSub.textContent = (s.labelEn || s.key.toUpperCase()) + (ultraActive ? ' (1080p)' : '');
 
       if (bgVideo) {
-        // Set poster matching the scene key (if preview exists)
-        bgVideo.poster = `assets/previews/${s.key}.png`;
-
+        bgVideo.poster = s.preview || '';
         if (!videoSrc) {
-          // Eco Mode: Halt video decoding entirely to free GPU & system RAM
           bgVideo.pause();
           bgVideo.removeAttribute('src');
           if (videoSource) videoSource.removeAttribute('src');
@@ -761,20 +1518,212 @@
         }
       }
 
-      sceneItems.forEach(item => {
-        const matchesScene = item.dataset.scene === s.key;
-        const matchesUltra = ultraActive ? item.dataset.ultra === 'true' : !item.dataset.ultra;
-        item.classList.toggle('active', matchesScene && matchesUltra);
+      updateWallpaperListHighlights();
+    }
+
+    function applyDefaultStaticScene(artKey) {
+      let s = DEFAULT_STATIC_ARTWORKS.find(it => it.key === artKey);
+      if (!s) s = DEFAULT_STATIC_ARTWORKS[0];
+
+      saveActiveWallpaperState({
+        source: 'default-static',
+        id: s.key,
+        name: s.fileName,
+        type: 'static'
       });
+
+      isCustomWallpaper = false;
+      currentWallpaperMode = 'static';
+      document.body.setAttribute('data-wallpaper-mode', 'static');
+      document.body.setAttribute('data-scene', s.key);
+      if (sceneToolIcon) sceneToolIcon.textContent = '🖼';
+
+      revokeCustomObjectUrl();
+
+      if (bgVideo) {
+        if (!bgVideo.paused) bgVideo.pause();
+        bgVideo.style.opacity = '0';
+      }
+
+      if (bgStatic) {
+        bgStatic.src = s.src;
+        bgStatic.style.opacity = '1';
+      }
+
+      if (sceneLabel) sceneLabel.textContent = s.label;
+      if (sceneLabelSub) sceneLabelSub.textContent = (s.labelEn || s.key.toUpperCase()) + ' (PNG)';
+
+      updateWallpaperListHighlights();
+    }
+
+    async function applyCustomFileWallpaper(recordOrId) {
+      let record = recordOrId;
+      if (typeof recordOrId === 'string') {
+        record = await getCustomWallpaperByIdFromDB(recordOrId);
+      }
+      if (!record || !record.blob) {
+        applyDefaultLiveScene('crimson');
+        return;
+      }
+
+      revokeCustomObjectUrl();
+      currentCustomObjectUrl = URL.createObjectURL(record.blob);
+
+      saveActiveWallpaperState({
+        source: 'custom-file',
+        id: record.id,
+        name: record.name,
+        type: record.type || 'static'
+      });
+
+      isCustomWallpaper = true;
+      currentWallpaperMode = record.type || 'static';
+      document.body.setAttribute('data-wallpaper-mode', currentWallpaperMode);
+
+      const displayName = record.name.length > 14 ? record.name.slice(0, 12) + '…' : record.name;
+
+      if (record.type === 'live') {
+        if (sceneToolIcon) sceneToolIcon.textContent = '▶';
+        if (bgStatic) bgStatic.style.opacity = '0';
+        if (bgVideo) {
+          bgVideo.muted = true;
+          bgVideo.defaultMuted = true;
+          bgVideo.playsInline = true;
+          bgVideo.setAttribute('muted', '');
+          bgVideo.setAttribute('playsinline', '');
+          bgVideo.src = currentCustomObjectUrl;
+          bgVideo.playbackRate = 1.0;
+          bgVideo.load();
+          bgVideo.play().catch(() => {});
+          bgVideo.style.opacity = '1';
+        }
+        if (sceneLabel) sceneLabel.textContent = 'カスタム: ' + displayName;
+        if (sceneLabelSub) sceneLabelSub.textContent = 'CUSTOM VIDEO';
+      } else {
+        if (sceneToolIcon) sceneToolIcon.textContent = '🖼';
+        if (bgVideo) {
+          if (!bgVideo.paused) bgVideo.pause();
+          bgVideo.style.opacity = '0';
+        }
+        if (bgStatic) {
+          bgStatic.src = currentCustomObjectUrl;
+          bgStatic.style.opacity = '1';
+        }
+        if (sceneLabel) sceneLabel.textContent = 'カスタム: ' + displayName;
+        if (sceneLabelSub) sceneLabelSub.textContent = 'CUSTOM IMAGE';
+      }
+
+      updateWallpaperListHighlights();
+    }
+
+    function applyCustomWebWallpaper(recordOrId) {
+      let record = recordOrId;
+      if (typeof recordOrId === 'string') {
+        const list = getCustomWebWallpapers();
+        record = list.find(it => it.id === recordOrId);
+      }
+      if (!record || !record.url) {
+        applyDefaultLiveScene('crimson');
+        return;
+      }
+
+      revokeCustomObjectUrl();
+
+      saveActiveWallpaperState({
+        source: 'custom-url',
+        id: record.id,
+        name: record.name,
+        url: record.url,
+        type: record.type || 'static'
+      });
+
+      isCustomWallpaper = true;
+      currentWallpaperMode = record.type || 'static';
+      document.body.setAttribute('data-wallpaper-mode', currentWallpaperMode);
+
+      const displayName = record.name.length > 14 ? record.name.slice(0, 12) + '…' : record.name;
+
+      if (record.type === 'live') {
+        if (sceneToolIcon) sceneToolIcon.textContent = '▶';
+        if (bgStatic) bgStatic.style.opacity = '0';
+        if (bgVideo) {
+          bgVideo.muted = true;
+          bgVideo.defaultMuted = true;
+          bgVideo.playsInline = true;
+          bgVideo.setAttribute('muted', '');
+          bgVideo.setAttribute('playsinline', '');
+          bgVideo.src = record.url;
+          bgVideo.playbackRate = 1.0;
+          bgVideo.load();
+          bgVideo.play().catch(() => {});
+          bgVideo.style.opacity = '1';
+        }
+        if (sceneLabel) sceneLabel.textContent = 'Web: ' + displayName;
+        if (sceneLabelSub) sceneLabelSub.textContent = 'ONLINE VIDEO';
+      } else {
+        if (sceneToolIcon) sceneToolIcon.textContent = '🖼';
+        if (bgVideo) {
+          if (!bgVideo.paused) bgVideo.pause();
+          bgVideo.style.opacity = '0';
+        }
+        if (bgStatic) {
+          bgStatic.src = record.url;
+          bgStatic.style.opacity = '1';
+        }
+        if (sceneLabel) sceneLabel.textContent = 'Web: ' + displayName;
+        if (sceneLabelSub) sceneLabelSub.textContent = 'ONLINE IMAGE';
+      }
+
+      updateWallpaperListHighlights();
+    }
+
+    // Bridge functions for backward compatibility with existing engine calls
+    function applyScene(sceneKey, isUltra = null) {
+      applyDefaultLiveScene(sceneKey, isUltra);
+    }
+
+    function applyStaticWallpaper(specificSrc = null, sceneKey = null) {
+      if (sceneKey) {
+        applyDefaultStaticScene(sceneKey);
+      } else if (specificSrc) {
+        const webRec = addCustomWebWallpaper(specificSrc, 'Custom Image');
+        applyCustomWebWallpaper(webRec);
+      } else {
+        applyDefaultStaticScene(DEFAULT_STATIC_ARTWORKS[0].key);
+      }
+    }
+
+    function setWallpaperMode(mode) {
+      if (mode === 'static') {
+        switchWallpaperCategoryTab('static');
+        applyDefaultStaticScene(DEFAULT_STATIC_ARTWORKS[0].key);
+      } else if (mode === 'custom') {
+        switchWallpaperCategoryTab('custom');
+      } else {
+        switchWallpaperCategoryTab('live');
+        applyDefaultLiveScene(DEFAULT_LIVE_SCENES[0].key);
+      }
     }
 
     if (typeof window !== 'undefined') {
       window.applyScene = applyScene;
+      window.setWallpaperMode = setWallpaperMode;
+      window.applyStaticWallpaper = applyStaticWallpaper;
+      window.renderWallpaperLists = renderWallpaperLists;
+    }
+
+    function isVideoActive() {
+      return (
+        (currentWallpaperMode === 'live' || activeWallpaper.type === 'live') &&
+        activeWallpaper.id !== 'eco' &&
+        document.body.getAttribute('data-scene') !== 'eco' &&
+        !!bgVideo
+      );
     }
 
     /* ─── 4.1. BULLETPROOF VIDEO AUTO-RESUME & FREEZE-RECOVERY ─── */
     function ensureVideoPlayback() {
-      if (!bgVideo || document.body.getAttribute('data-scene') === 'eco') return;
+      if (!isVideoActive()) return;
       bgVideo.muted = true;
       bgVideo.defaultMuted = true;
       bgVideo.playsInline = true;
@@ -804,9 +1753,12 @@
     }
 
     function resumeAllEngines() {
-      // Never resume if document is hidden or link editor is open
+      // Never resume if document is hidden or any blocking modal is open
       if (document.hidden) return;
-      if (linkEditorModal && linkEditorModal.classList.contains('open')) return;
+      const blockingModalOpen = [linkEditorModal, operatorModal, shortcutsModal]
+        .some(m => m && m.classList.contains('open'));
+      if (blockingModalOpen) return;
+
       isAppSuspended = false;
       lastClockMainStr = '';
       lastDateDay = -1;
@@ -824,7 +1776,7 @@
       if (document.hidden) {
         pauseAllEngines();
         deepSuspendTimer = setTimeout(() => {
-          if (document.hidden && bgVideo && document.body.getAttribute('data-scene') !== 'eco') {
+          if (document.hidden && isVideoActive()) {
             bgVideo.pause();
             bgVideo.removeAttribute('src');
             if (videoSource) videoSource.removeAttribute('src');
@@ -836,7 +1788,16 @@
         clearTimeout(deepSuspendTimer);
         if (bgVideo && bgVideo.dataset.deepSuspended === 'true') {
           delete bgVideo.dataset.deepSuspended;
-          applyScene(scenes[currentSceneIdx].key);
+          if (isVideoActive()) {
+            if (activeWallpaper && (activeWallpaper.source === 'custom-file' || activeWallpaper.source === 'custom-url')) {
+              initActiveWallpaper();
+            } else {
+              const sceneKey = (scenes && scenes[currentSceneIdx]) ? scenes[currentSceneIdx].key : (activeWallpaper.id || 'crimson');
+              applyScene(sceneKey);
+            }
+          } else {
+            resumeAllEngines();
+          }
         } else {
           resumeAllEngines();
         }
@@ -862,9 +1823,9 @@
 
       // Auto-resume if paused unexpectedly while page is visible
       bgVideo.addEventListener('pause', () => {
-        if (!document.hidden && !isAppSuspended) {
+        if (!document.hidden && !isAppSuspended && isVideoActive()) {
           setTimeout(() => {
-            if (!document.hidden && !isAppSuspended && bgVideo.paused) {
+            if (!document.hidden && !isAppSuspended && isVideoActive() && bgVideo.paused) {
               ensureVideoPlayback();
             }
           }, 120);
@@ -879,23 +1840,24 @@
 
       // Recover from decoder stalls or waiting state
       bgVideo.addEventListener('stalled', () => {
-        if (!document.hidden && !isAppSuspended) ensureVideoPlayback();
+        if (!document.hidden && !isAppSuspended && isVideoActive()) ensureVideoPlayback();
       });
       bgVideo.addEventListener('waiting', () => {
-        if (!document.hidden && !isAppSuspended) ensureVideoPlayback();
+        if (!document.hidden && !isAppSuspended && isVideoActive()) ensureVideoPlayback();
       });
       let videoErrorCount = 0;
       bgVideo.addEventListener('playing', () => { videoErrorCount = 0; });
       bgVideo.addEventListener('error', () => {
+        if (!isVideoActive()) return;
         if (++videoErrorCount >= 2) { applyScene('eco'); return; }
         try { bgVideo.load(); ensureVideoPlayback(); } catch (e) {}
       });
 
-      // Watchdog: checks every 4s to unfreeze video if frame gets stuck (dormant when paused/hidden/eco)
+      // Watchdog: checks every 4s to unfreeze video if frame gets stuck (dormant when paused/hidden/eco/static)
       let lastVideoTime = -1;
       let freezeCount = 0;
       setInterval(() => {
-        if (document.hidden || isAppSuspended || !bgVideo || document.body.getAttribute('data-scene') === 'eco') return;
+        if (document.hidden || isAppSuspended || !isVideoActive()) return;
         if (bgVideo.paused) {
           ensureVideoPlayback();
           return;
@@ -917,27 +1879,286 @@
     }
 
     function cycleScene() {
-      currentSceneIdx = (currentSceneIdx + 1) % scenes.length;
-      applyScene(scenes[currentSceneIdx].key);
+      if (activeWallpaper.source === 'default-static') {
+        const deletedStatic = getDeletedDefaultsStatic();
+        const visibleStatic = DEFAULT_STATIC_ARTWORKS.filter(s => !deletedStatic.includes(s.key));
+        if (visibleStatic.length === 0) return;
+        const currentKey = activeWallpaper.id;
+        let idx = visibleStatic.findIndex(s => s.key === currentKey);
+        const nextIdx = (idx + 1) % visibleStatic.length;
+        applyDefaultStaticScene(visibleStatic[nextIdx].key);
+        applyTheme(visibleStatic[nextIdx].key, false);
+      } else {
+        const deletedLive = getDeletedDefaultsLive();
+        const visibleLive = DEFAULT_LIVE_SCENES.filter(s => !deletedLive.includes(s.key));
+        if (visibleLive.length === 0) return;
+        const currentKey = activeWallpaper.id;
+        let idx = visibleLive.findIndex(s => s.key === currentKey);
+        const nextIdx = (idx + 1) % visibleLive.length;
+        applyDefaultLiveScene(visibleLive[nextIdx].key);
+      }
     }
 
+    /* ─── WALLPAPER POPOVER & ACTION HANDLERS ─── */
     if (sceneBtn && scenePopover) {
       sceneBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         if (themePopover) themePopover.classList.remove('open');
         scenePopover.classList.toggle('open');
+        if (scenePopover.classList.contains('open')) {
+          renderWallpaperLists();
+        }
       });
 
-      sceneItems.forEach(item => {
-        item.addEventListener('click', () => {
-          const isUltra = item.dataset.ultra === 'true';
-          applyScene(item.dataset.scene, isUltra);
-          scenePopover.classList.remove('open');
+      // Segmented mode switcher tabs: Live vs Static vs Custom
+      if (modeTabLive) {
+        modeTabLive.addEventListener('click', (e) => {
+          e.stopPropagation();
+          switchWallpaperCategoryTab('live');
         });
-      });
+      }
+      if (modeTabStatic) {
+        modeTabStatic.addEventListener('click', (e) => {
+          e.stopPropagation();
+          switchWallpaperCategoryTab('static');
+        });
+      }
+      if (modeTabCustom) {
+        modeTabCustom.addEventListener('click', (e) => {
+          e.stopPropagation();
+          switchWallpaperCategoryTab('custom');
+        });
+      }
+
+      // Restore default wallpapers button
+      if (restoreDefaultsBtn) {
+        restoreDefaultsBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          restoreAllDefaults();
+          renderWallpaperLists();
+        });
+      }
+
+      if (restoreLiveBtn) {
+        restoreLiveBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          restoreDefaultsLive();
+          renderWallpaperLists();
+        });
+      }
+
+      if (restoreStaticBtn) {
+        restoreStaticBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          restoreDefaultsStatic();
+          renderWallpaperLists();
+        });
+      }
+
+      // Multi-file upload handler (MP4, WebM, PNG, JPG, WebP, GIF)
+      if (uploadWallpaperBtn && wallpaperFileInput) {
+        uploadWallpaperBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          wallpaperFileInput.click();
+        });
+
+        wallpaperFileInput.addEventListener('change', async () => {
+          const files = Array.from(wallpaperFileInput.files || []);
+          if (!files.length) return;
+
+          const MAX_WALLPAPER_SIZE = 35 * 1024 * 1024; // 35 MB max limit
+          let addedCount = 0;
+          let restoredCount = 0;
+          let lastAddedCustom = null;
+          let lastRestoredDefault = null;
+
+          const deletedLive = getDeletedDefaultsLive();
+          const deletedStatic = getDeletedDefaultsStatic();
+
+          for (const file of files) {
+            if (file.size > MAX_WALLPAPER_SIZE) {
+              alert(`ファイル "${file.name}" が大きすぎます (最大35MB)。\nFile exceeds 35MB limit: ${file.name}`);
+              continue;
+            }
+
+            const isVideo = file.type.startsWith('video/') || /\.(mp4|webm)$/i.test(file.name);
+            const isImage = file.type.startsWith('image/') || /\.(png|jpe?g|webp|gif|svg|avif)$/i.test(file.name);
+
+            if (!isVideo && !isImage) {
+              alert(`対応していないファイル形式です: ${file.name}\nSupported formats: MP4, WebM, PNG, JPG, WebP, GIF.`);
+              continue;
+            }
+
+            const cleanFileName = file.name.trim().toLowerCase();
+            const baseName = file.name.replace(/\.[^/.]+$/, '').trim().toLowerCase();
+
+            // Check if matches a deleted default live video
+            if (isVideo) {
+              const matched = DEFAULT_LIVE_SCENES.find(s => deletedLive.includes(s.key) && (s.fileName.toLowerCase() === cleanFileName || s.key.toLowerCase() === baseName));
+              if (matched) {
+                const updated = getDeletedDefaultsLive().filter(k => k !== matched.key);
+                saveDeletedDefaultsLive(updated);
+                restoredCount++;
+                lastRestoredDefault = { type: 'live', key: matched.key };
+                continue;
+              }
+            } else if (isImage) {
+              // Check if matches a deleted default static artwork
+              const matched = DEFAULT_STATIC_ARTWORKS.find(s => deletedStatic.includes(s.key) && (s.fileName.toLowerCase() === cleanFileName || s.key.toLowerCase() === baseName));
+              if (matched) {
+                const updated = getDeletedDefaultsStatic().filter(k => k !== matched.key);
+                saveDeletedDefaultsStatic(updated);
+                restoredCount++;
+                lastRestoredDefault = { type: 'static', key: matched.key };
+                continue;
+              }
+            }
+
+            // Not a deleted default: store in Custom collection
+            try {
+              const record = await addCustomWallpaperToDB(file);
+              addedCount++;
+              lastAddedCustom = record;
+
+              // Generate lightweight low-res thumbnail for synchronous zero-flash boot
+              if (isImage && file.type !== 'image/gif') {
+                try {
+                  const img = new Image();
+                  const tempUrl = URL.createObjectURL(file);
+                  img.onload = () => {
+                    try {
+                      const cvs = document.createElement('canvas');
+                      cvs.width = 64;
+                      cvs.height = 36;
+                      const ctx = cvs.getContext('2d');
+                      if (ctx) {
+                        ctx.drawImage(img, 0, 0, 64, 36);
+                        safeStorage.setItem('shinsekai-custom-wallpaper-thumb', cvs.toDataURL('image/webp', 0.5));
+                      }
+                    } catch (e) {}
+                    URL.revokeObjectURL(tempUrl);
+                  };
+                  img.src = tempUrl;
+                } catch (e) {}
+              }
+            } catch (err) {
+              console.error('Failed to save custom wallpaper:', err);
+            }
+          }
+
+          wallpaperFileInput.value = '';
+
+          if (addedCount > 0 && lastAddedCustom) {
+            switchWallpaperCategoryTab('custom');
+            applyCustomFileWallpaper(lastAddedCustom);
+          } else if (restoredCount > 0 && lastRestoredDefault) {
+            if (lastRestoredDefault.type === 'live') {
+              switchWallpaperCategoryTab('live');
+              applyDefaultLiveScene(lastRestoredDefault.key);
+            } else {
+              switchWallpaperCategoryTab('static');
+              applyDefaultStaticScene(lastRestoredDefault.key);
+            }
+          }
+
+          await renderWallpaperLists();
+        });
+      }
+
+      // Online Web URL input
+      if (urlWallpaperBtn) {
+        urlWallpaperBtn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const inputUrl = prompt('壁紙のURLを入力してください (Enter Image or Video URL):\nSupports PNG, JPG, WebP, GIF, or MP4/WebM direct links');
+          if (!inputUrl) return;
+          const cleanUrl = inputUrl.trim();
+          if (!cleanUrl) return;
+
+          let defaultTitle = '';
+          try {
+            const u = new URL(cleanUrl);
+            const parts = u.pathname.split('/').filter(Boolean);
+            defaultTitle = parts.length ? parts[parts.length - 1] : u.hostname;
+          } catch (e) {
+            defaultTitle = cleanUrl.slice(0, 20);
+          }
+
+          const inputTitle = prompt('表示名を入力してください (Optional Display Name):', defaultTitle);
+          const finalTitle = (inputTitle && inputTitle.trim()) ? inputTitle.trim() : defaultTitle;
+
+          const record = addCustomWebWallpaper(cleanUrl, finalTitle);
+          switchWallpaperCategoryTab('custom');
+          applyCustomWebWallpaper(record);
+          await renderWallpaperLists();
+        });
+      }
     }
 
-    applyScene(scenes[currentSceneIdx].key);
+    /* ─── INITIALIZE ACTIVE WALLPAPER ON BOOT ─── */
+    function initActiveWallpaper() {
+      let savedActive = null;
+      try {
+        const raw = safeStorage.getItem('shinsekai-active-wallpaper');
+        if (raw) savedActive = JSON.parse(raw);
+      } catch (e) {}
+
+      if (!savedActive) {
+        const savedMode = (urlParams ? urlParams.get('mode') : null) || safeStorage.getItem('shinsekai-wallpaper-mode') || 'live';
+        const legacyCustomUrl = safeStorage.getItem('shinsekai-custom-wallpaper-url');
+        const rawSavedScene = paramScene || safeStorage.getItem('shinsekai-scene') || 'crimson';
+        const sceneKey = sceneAliasMap[rawSavedScene] || rawSavedScene;
+
+        if (savedMode === 'static') {
+          if (legacyCustomUrl) {
+            const webRec = addCustomWebWallpaper(legacyCustomUrl, 'Saved Online Image');
+            applyCustomWebWallpaper(webRec);
+            switchWallpaperCategoryTab('custom');
+          } else {
+            applyDefaultStaticScene(sceneKey);
+            switchWallpaperCategoryTab('static');
+          }
+        } else {
+          applyDefaultLiveScene(sceneKey);
+          switchWallpaperCategoryTab('live');
+        }
+        renderWallpaperLists();
+        return;
+      }
+
+      if (savedActive.source === 'custom-file') {
+        getCustomWallpaperByIdFromDB(savedActive.id).then(record => {
+          if (record) {
+            applyCustomFileWallpaper(record);
+            switchWallpaperCategoryTab('custom');
+          } else {
+            applyDefaultLiveScene('crimson');
+            switchWallpaperCategoryTab('live');
+          }
+          renderWallpaperLists();
+        });
+      } else if (savedActive.source === 'custom-url') {
+        const webList = getCustomWebWallpapers();
+        const found = webList.find(w => w.id === savedActive.id) || (savedActive.url ? addCustomWebWallpaper(savedActive.url, savedActive.name) : null);
+        if (found) {
+          applyCustomWebWallpaper(found);
+          switchWallpaperCategoryTab('custom');
+        } else {
+          applyDefaultLiveScene('crimson');
+          switchWallpaperCategoryTab('live');
+        }
+        renderWallpaperLists();
+      } else if (savedActive.source === 'default-static') {
+        applyDefaultStaticScene(savedActive.id || 'crimson');
+        switchWallpaperCategoryTab('static');
+        renderWallpaperLists();
+      } else {
+        applyDefaultLiveScene(savedActive.id || 'crimson');
+        switchWallpaperCategoryTab('live');
+        renderWallpaperLists();
+      }
+    }
+
+    initActiveWallpaper();
 
     /* ─── 5. THEME FACTION CONTROLLER ─── */
     const themes = [
@@ -945,7 +2166,8 @@
       { key: 'tokyonight', label: '東京夜', labelEn: 'TokyoNight', color: '#7aa2f7', defaultScene: 'tokyonight' },
       { key: 'sakura',     label: '桜吹雪', labelEn: 'Sakura',     color: '#f4b8e4', defaultScene: 'sakura' },
       { key: 'catppuccin', label: '終末谷', labelEn: 'Catppuccin', color: '#cba6f7', defaultScene: 'catppuccin' },
-      { key: 'cyberpunk',  label: '電脳都市', labelEn: 'Cyberpunk',  color: '#00f0ff', defaultScene: 'cyberpunk' }
+      { key: 'cyberpunk',  label: '電脳都市', labelEn: 'Cyberpunk',  color: '#00f0ff', defaultScene: 'cyberpunk' },
+      { key: 'custom',     label: 'カスタム', labelEn: 'Custom',     color: '#a6e3a1', defaultScene: null }
     ];
 
     /* ─── OPERATOR IDENTITY PROTOCOL ─── */
@@ -1001,6 +2223,12 @@
         kanji: '電脳都市 · 超限界',
         subTemplate: 'SYNCHRONIZING CYBERPUNK NEON MATRIX // {OPERATOR}',
         step: '[BOOT 03/04] 電脳都市 NEON COGNITION ONLINE // SYNC RATE: 99.8%'
+      },
+      custom: {
+        tag: 'SHINSEKAI // カスタム SPECTRUM CORE',
+        kanji: '領域展開 · カスタム',
+        subTemplate: 'SYNCHRONIZING CUSTOM SPECTRUM MATRIX // {OPERATOR}',
+        step: '[BOOT 03/04] カスタム SPECTRUM ONLINE // SYNC RATE: 99.8%'
       }
     };
 
@@ -1009,7 +2237,8 @@
       tokyonight: { ...themeBootLoreTemplates.tokyonight, sub: '' },
       sakura:     { ...themeBootLoreTemplates.sakura, sub: '' },
       catppuccin: { ...themeBootLoreTemplates.catppuccin, sub: '' },
-      cyberpunk:  { ...themeBootLoreTemplates.cyberpunk, sub: '' }
+      cyberpunk:  { ...themeBootLoreTemplates.cyberpunk, sub: '' },
+      custom:     { ...themeBootLoreTemplates.custom, sub: '' }
     };
 
     let currentThemeIdx = 0;
@@ -1031,7 +2260,90 @@
     refreshThemeBootLore();
     updateOperatorPill();
 
+    /* ─── CUSTOM COLOR THEME CONTROLLER ─── */
+    function applyCustomThemeColor(hex) {
+      const { r, g, b } = hexToRgb(hex);
+      const root = document.documentElement;
+
+      root.style.setProperty('--theme-base', `rgb(${Math.max(4, Math.floor(r * 0.05))}, ${Math.max(5, Math.floor(g * 0.05))}, ${Math.max(10, Math.floor(b * 0.06))})`);
+      root.style.setProperty('--accent', hex);
+      root.style.setProperty('--accent-glow', `rgba(${r}, ${g}, ${b}, 0.55)`);
+      root.style.setProperty('--accent-soft', `rgba(${r}, ${g}, ${b}, 0.18)`);
+      root.style.setProperty('--accent-alt', `rgb(${Math.min(255, Math.floor(r * 1.15))}, ${Math.min(255, Math.floor(g * 0.85))}, ${Math.min(255, Math.floor(b * 1.15))})`);
+      root.style.setProperty('--accent-cyan', `rgb(${Math.min(255, Math.floor(r * 0.85))}, ${Math.min(255, Math.floor(g * 1.15))}, ${Math.min(255, Math.floor(b * 1.15))})`);
+      root.style.setProperty('--glass-bg', `rgba(${Math.max(6, Math.floor(r * 0.07))}, ${Math.max(8, Math.floor(g * 0.07))}, ${Math.max(16, Math.floor(b * 0.08))}, 0.80)`);
+      root.style.setProperty('--glass-border', `rgba(${r}, ${g}, ${b}, 0.35)`);
+      root.style.setProperty('--glass-border-hover', `rgba(${r}, ${g}, ${b}, 0.85)`);
+      root.style.setProperty('--particle-color', `rgba(${r}, ${g}, ${b}, 0.75)`);
+    }
+
+    function removeCustomThemeStyles() {
+      const root = document.documentElement;
+      root.style.removeProperty('--theme-base');
+      root.style.removeProperty('--accent');
+      root.style.removeProperty('--accent-glow');
+      root.style.removeProperty('--accent-soft');
+      root.style.removeProperty('--accent-alt');
+      root.style.removeProperty('--accent-cyan');
+      root.style.removeProperty('--glass-bg');
+      root.style.removeProperty('--glass-border');
+      root.style.removeProperty('--glass-border-hover');
+      root.style.removeProperty('--particle-color');
+    }
+
+    function applyCustomTheme(hexColor, syncScene = false) {
+      let rawHex = String(hexColor || safeStorage.getItem('shinsekai-custom-theme-color') || '#a6e3a1').trim();
+      if (!rawHex.startsWith('#')) rawHex = '#' + rawHex;
+      if (rawHex.length === 4) rawHex = '#' + rawHex[1] + rawHex[1] + rawHex[2] + rawHex[2] + rawHex[3] + rawHex[3];
+      const hex = /^#[0-9a-fA-F]{6}$/.test(rawHex) ? rawHex : '#a6e3a1';
+      currentThemeKey = 'custom';
+      currentThemeIdx = themes.findIndex(t => t.key === 'custom');
+      if (currentThemeIdx === -1) currentThemeIdx = themes.length - 1;
+      themes[currentThemeIdx].color = hex;
+
+      safeStorage.setItem('shinsekai-theme', 'custom');
+      safeStorage.setItem('shinsekai-custom-theme-color', hex);
+
+      document.documentElement.setAttribute('data-theme', 'custom');
+      document.body.setAttribute('data-theme', 'custom');
+
+      applyCustomThemeColor(hex);
+
+      if (themeLabel) themeLabel.textContent = 'カスタム';
+      const themeLabelSub = document.getElementById('theme-label-sub');
+      if (themeLabelSub) themeLabelSub.textContent = 'Custom';
+      if (themeColorDot) themeColorDot.style.background = hex;
+
+      if (customThemeDot) customThemeDot.style.background = hex;
+      if (customThemeHex) customThemeHex.textContent = hex.toUpperCase() + ' · Custom';
+      if (customThemeColorInput && customThemeColorInput.value.toLowerCase() !== hex.toLowerCase()) {
+        customThemeColorInput.value = hex;
+      }
+
+      const lore = themeBootLore.custom || themeBootLoreTemplates.custom;
+      if (bootPill) bootPill.textContent = lore.tag;
+      if (bootKanji) bootKanji.textContent = lore.kanji;
+      if (bootSub) bootSub.textContent = lore.sub || ('SYNCHRONIZING CUSTOM SPECTRUM // ' + getOperatorFormattedName());
+
+      themeItems.forEach(item => {
+        item.classList.remove('active');
+      });
+      if (customThemeItem) customThemeItem.classList.add('active');
+
+      refreshParticleColors();
+      if (particlesStatusIcon && particlesActive) {
+        particlesStatusIcon.textContent = '🎨';
+      }
+    }
+
     function applyTheme(themeKey, syncScene = false) {
+      if (themeKey === 'custom') {
+        const savedHex = safeStorage.getItem('shinsekai-custom-theme-color') || '#a6e3a1';
+        applyCustomTheme(savedHex, syncScene);
+        return;
+      }
+
+      removeCustomThemeStyles();
       const t = themes.find(item => item.key === themeKey) || themes[0];
       currentThemeIdx = themes.indexOf(t);
       currentThemeKey = t.key;
@@ -1052,17 +2364,36 @@
       themeItems.forEach(item => {
         item.classList.toggle('active', item.dataset.theme === t.key);
       });
+      if (customThemeItem) customThemeItem.classList.remove('active');
 
       refreshParticleColors();
+      if (particlesStatusIcon && particlesActive) {
+        particlesStatusIcon.textContent = THEME_PARTICLE_ICONS[t.key] || '🌸';
+      }
 
       if (syncScene && t.defaultScene) {
-        applyScene(t.defaultScene);
+        if (currentWallpaperMode === 'static') {
+          if (!isCustomWallpaper) {
+            applyStaticWallpaper(null, t.defaultScene);
+            const s = scenes.find(it => it.key === t.defaultScene) || scenes[0];
+            currentSceneIdx = scenes.indexOf(s);
+            safeStorage.setItem('shinsekai-scene', s.key);
+            document.body.setAttribute('data-scene', s.key);
+          }
+        } else {
+          applyScene(t.defaultScene);
+        }
       }
     }
 
     function cycleTheme() {
       currentThemeIdx = (currentThemeIdx + 1) % themes.length;
-      applyTheme(themes[currentThemeIdx].key, true);
+      const nextTheme = themes[currentThemeIdx];
+      if (nextTheme.key === 'custom') {
+        applyCustomTheme(safeStorage.getItem('shinsekai-custom-theme-color') || '#a6e3a1', true);
+      } else {
+        applyTheme(nextTheme.key, true);
+      }
     }
 
     if (themeBtn && themePopover) {
@@ -1078,9 +2409,41 @@
           themePopover.classList.remove('open');
         });
       });
+
+      if (customThemeItem) {
+        customThemeItem.addEventListener('click', (e) => {
+          if (e.target.closest('.custom-color-picker-label')) return;
+          const currentColor = (customThemeColorInput && customThemeColorInput.value) || safeStorage.getItem('shinsekai-custom-theme-color') || '#a6e3a1';
+          applyCustomTheme(currentColor, false);
+          themePopover.classList.remove('open');
+        });
+        customThemeItem.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            const currentColor = (customThemeColorInput && customThemeColorInput.value) || safeStorage.getItem('shinsekai-custom-theme-color') || '#a6e3a1';
+            applyCustomTheme(currentColor, false);
+            themePopover.classList.remove('open');
+          }
+        });
+      }
+
+      if (customThemeColorInput) {
+        customThemeColorInput.addEventListener('input', (e) => {
+          applyCustomTheme(e.target.value, false);
+        });
+        customThemeColorInput.addEventListener('change', (e) => {
+          applyCustomTheme(e.target.value, false);
+        });
+      }
     }
 
-    applyTheme(themes[currentThemeIdx].key, false);
+    const initialTheme = paramTheme || safeStorage.getItem('shinsekai-theme') || 'crimson';
+    if (initialTheme === 'custom') {
+      const initialColor = paramColor || safeStorage.getItem('shinsekai-custom-theme-color') || '#a6e3a1';
+      applyCustomTheme(initialColor, false);
+    } else {
+      applyTheme(initialTheme, false);
+    }
 
     /* ─── 6. CRT SCANLINES & FILM GRAIN TOGGLE ─── */
     let grainActive = safeStorage.getItem('shinsekai-grain') !== 'off';
@@ -1090,6 +2453,7 @@
       safeStorage.setItem('shinsekai-grain', active ? 'on' : 'off');
       document.body.setAttribute('data-grain', active ? 'on' : 'off');
       if (grainStatusText) grainStatusText.textContent = active ? 'CRT: ON' : 'CRT: OFF';
+      if (grainToggleBtn) grainToggleBtn.classList.toggle('active', active);
     }
 
     if (grainToggleBtn) {
@@ -1711,10 +3075,15 @@
           },
           settings: {
             theme: currentThemeKey,
+            customThemeColor: safeStorage.getItem('shinsekai-custom-theme-color') || '#a6e3a1',
             scene: (scenes && scenes[currentSceneIdx]) ? scenes[currentSceneIdx].key : 'crimson',
+            wallpaperMode: currentWallpaperMode,
+            activeWallpaper: activeWallpaper,
+            customWallpaperUrl: safeStorage.getItem('shinsekai-custom-wallpaper-url') || null,
             ultra: safeStorage.getItem('shinsekai-ultra') === 'true',
             tier: currentTier,
             grain: grainActive,
+            particles: particlesActive,
             dockPinned: dockPinned
           },
           links: currentLinks
@@ -1784,11 +3153,31 @@
                 }
 
                 if (parsed.settings && typeof parsed.settings === 'object') {
-                  if (parsed.settings.theme) applyTheme(parsed.settings.theme);
-                  if (parsed.settings.scene) applyScene(parsed.settings.scene, parsed.settings.ultra === true);
-                  if (typeof parsed.settings.grain === 'boolean') setGrain(parsed.settings.grain);
-                  if (typeof parsed.settings.dockPinned === 'boolean') setDockPinned(parsed.settings.dockPinned);
+                  if (parsed.settings.customThemeColor && /^#[0-9a-fA-F]{6}$/.test(parsed.settings.customThemeColor)) {
+                    safeStorage.setItem('shinsekai-custom-theme-color', parsed.settings.customThemeColor);
+                  }
                   if (parsed.settings.tier) applyTierPreset(parsed.settings.tier);
+                  if (parsed.settings.theme) {
+                    if (parsed.settings.theme === 'custom') {
+                      applyCustomTheme(parsed.settings.customThemeColor || safeStorage.getItem('shinsekai-custom-theme-color') || '#a6e3a1');
+                    } else {
+                      applyTheme(parsed.settings.theme);
+                    }
+                  }
+                  if (parsed.settings.activeWallpaper && typeof parsed.settings.activeWallpaper === 'object') {
+                    safeStorage.setItem('shinsekai-active-wallpaper', JSON.stringify(parsed.settings.activeWallpaper));
+                    initActiveWallpaper();
+                  } else {
+                    if (parsed.settings.wallpaperMode) setWallpaperMode(parsed.settings.wallpaperMode);
+                    if (parsed.settings.customWallpaperUrl) {
+                      safeStorage.setItem('shinsekai-custom-wallpaper-url', parsed.settings.customWallpaperUrl);
+                      if (parsed.settings.wallpaperMode === 'static') applyStaticWallpaper(parsed.settings.customWallpaperUrl);
+                    }
+                    if (parsed.settings.scene) applyScene(parsed.settings.scene, parsed.settings.ultra === true);
+                  }
+                  if (typeof parsed.settings.grain === 'boolean') setGrain(parsed.settings.grain);
+                  if (typeof parsed.settings.particles === 'boolean') setParticles(parsed.settings.particles);
+                  if (typeof parsed.settings.dockPinned === 'boolean') setDockPinned(parsed.settings.dockPinned);
                 }
 
                 resetEditorForm();
@@ -2152,7 +3541,9 @@
             const term = query.slice(2).trim();
             window.location.href = term ? searchEngines.wikipedia + encodeURIComponent(term) : 'https://en.wikipedia.org';
           } else if (/^https?:\/\//i.test(query) || (query.includes('.') && !query.includes(' '))) {
-            window.location.href = query.startsWith('http') ? query : 'https://' + query;
+            const dest = query.startsWith('http') ? query : 'https://' + query;
+            const safe = sanitizeUrl(dest);
+            window.location.href = safe !== '#' ? safe : (searchEngines.google + encodeURIComponent(query));
           } else {
             window.location.href = searchEngines.google + encodeURIComponent(query);
           }
@@ -2397,6 +3788,8 @@
         cycleQuote();
       } else if (key === 'g') {
         setGrain(!grainActive);
+      } else if (key === 'b' || key === 'a') {
+        setParticles(!particlesActive);
       } else if (key === 'p') {
         setDockPinned(!dockPinned);
       } else if (key === 'v') {
@@ -2442,6 +3835,7 @@
     // Offline icon persistence: background sync ONLY when online and system is idle
     setTimeout(syncAllIconsOffline, 2500);
     window.addEventListener('online', syncAllIconsOffline);
+    window.addEventListener('beforeunload', revokeCustomObjectUrl);
 
     /* ─── RUNTIME FPS WATCHDOG (auto-downgrade tier on sustained low FPS) ─── */
     (function fpsWatchdog() {
