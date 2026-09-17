@@ -332,6 +332,15 @@
               </div>
             </button>
 
+            <!-- Keyboard Shortcuts Matrix Trigger -->
+            <button class="tool-pill" id="shortcuts-btn" title="操作一覧・ショートカット / Keybindings Matrix (Hotkey: '?')">
+              <span class="tool-icon">⌨</span>
+              <div class="tool-label-stack">
+                <span class="tool-label-main">操作一覧</span>
+                <span class="tool-label-sub">Help '?'</span>
+              </div>
+            </button>
+
           </div>
 
         </div>
@@ -613,6 +622,121 @@
         </div>
       </div>
 
+    </div>
+  </div>
+
+  <!-- 7. KEYBOARD SHORTCUTS CHEAT SHEET HUD MODAL -->
+  <div class="link-editor-backdrop" id="shortcuts-modal" aria-hidden="true">
+    <div class="link-editor-dialog shortcuts-dialog">
+      <div class="editor-header">
+        <div class="editor-header-left">
+          <span class="editor-pill">SHINSEKAI_HUD // COMMAND_MATRIX</span>
+          <h2 class="editor-title">操作一覧 · Mecha Cockpit Keybindings</h2>
+        </div>
+        <button class="editor-close-btn" id="shortcuts-close-btn" title="閉じる (Esc)">✕</button>
+      </div>
+      <div class="shortcuts-modal-body" style="padding: 1rem 1.4rem; max-height: 72vh; overflow-y: auto;">
+        <table class="shortcuts-table">
+          <tbody>
+            <tr>
+              <td style="width: 25%;"><span class="shortcut-kbd">/</span></td>
+              <td>
+                <div class="shortcut-action">Katana Console</div>
+                <div class="shortcut-desc">検索バーに即座にフォーカス / Focus search console</div>
+              </td>
+            </tr>
+            <tr>
+              <td><span class="shortcut-kbd">t</span></td>
+              <td>
+                <div class="shortcut-action">Cycle Faction</div>
+                <div class="shortcut-desc">アニメ陣営テーマ切替 / Rotate theme factions</div>
+              </td>
+            </tr>
+            <tr>
+              <td><span class="shortcut-kbd">s</span> / <span class="shortcut-kbd">w</span></td>
+              <td>
+                <div class="shortcut-action">Cycle Scene</div>
+                <div class="shortcut-desc">背景映像ステージ切替 / Switch live video scene</div>
+              </td>
+            </tr>
+            <tr>
+              <td><span class="shortcut-kbd">u</span> / <span class="shortcut-kbd">o</span></td>
+              <td>
+                <div class="shortcut-action">Operator Profile</div>
+                <div class="shortcut-desc">操縦士識別・敬称設定 / Pilot callsign & honorific hub</div>
+              </td>
+            </tr>
+            <tr>
+              <td><span class="shortcut-kbd">e</span></td>
+              <td>
+                <div class="shortcut-action">Link Matrix Editor</div>
+                <div class="shortcut-desc">ピン留めリンク編集・入出力 / Bookmark configuration hub</div>
+              </td>
+            </tr>
+            <tr>
+              <td><span class="shortcut-kbd">g</span></td>
+              <td>
+                <div class="shortcut-action">CRT Scanlines</div>
+                <div class="shortcut-desc">CRT走査線・フィルムグレイン切替 / CRT scanline toggle</div>
+              </td>
+            </tr>
+            <tr>
+              <td><span class="shortcut-kbd">c</span></td>
+              <td>
+                <div class="shortcut-action">Clock Format</div>
+                <div class="shortcut-desc">12時間(AM/PM)・24時間軍事表記切替 / Chronometer format</div>
+              </td>
+            </tr>
+            <tr>
+              <td><span class="shortcut-kbd">p</span></td>
+              <td>
+                <div class="shortcut-action">Pin Dock</div>
+                <div class="shortcut-desc">ホログラムブレード固定 / Lock bookmark drawer open</div>
+              </td>
+            </tr>
+            <tr>
+              <td><span class="shortcut-kbd">v</span></td>
+              <td>
+                <div class="shortcut-action">Voice Comms</div>
+                <div class="shortcut-desc">機体音声アナウンス再生 / Replay mecha welcome audio</div>
+              </td>
+            </tr>
+            <tr>
+              <td><span class="shortcut-kbd">q</span></td>
+              <td>
+                <div class="shortcut-action">Cycle Dialogue</div>
+                <div class="shortcut-desc">名言字幕送り / Advance to next anime subtitle quote</div>
+              </td>
+            </tr>
+            <tr>
+              <td><span class="shortcut-kbd">1</span> - <span class="shortcut-kbd">4</span></td>
+              <td>
+                <div class="shortcut-action">Deploy Sector</div>
+                <div class="shortcut-desc">セクターブレード即時展開 / Jump to category sector</div>
+              </td>
+            </tr>
+            <tr>
+              <td><span class="shortcut-kbd">?</span></td>
+              <td>
+                <div class="shortcut-action">Shortcuts Matrix</div>
+                <div class="shortcut-desc">この操作一覧を表示・閉じる / Toggle this help matrix</div>
+              </td>
+            </tr>
+            <tr>
+              <td><span class="shortcut-kbd">Esc</span></td>
+              <td>
+                <div class="shortcut-action">Disengage</div>
+                <div class="shortcut-desc">検索解除・モーダル閉じる / Dismiss search focus & modals</div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="editor-footer" style="padding: 0.8rem 1.4rem; justify-content: flex-end;">
+        <button type="button" class="editor-btn editor-btn-primary" id="shortcuts-done-btn">
+          ✕ 閉じる / CLOSE
+        </button>
+      </div>
     </div>
   </div>
 

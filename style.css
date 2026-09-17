@@ -2454,4 +2454,56 @@ body.boot-active .anime-subtitles-bar {
   }
 }
 
+/* ─── SHORTCUTS HELP MODAL STYLES ─── */
+.shortcuts-dialog {
+  width: min(640px, 94vw);
+}
+
+.shortcuts-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.shortcuts-table tr {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.shortcuts-table tr:last-child {
+  border-bottom: none;
+}
+
+.shortcuts-table td {
+  padding: 0.65rem 0.6rem;
+  vertical-align: middle;
+}
+
+.shortcut-kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.85rem;
+  height: 1.85rem;
+  padding: 0 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--accent);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border);
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.shortcut-action {
+  font-weight: 700;
+  color: var(--text-bright);
+  font-size: 0.85rem;
+  margin-bottom: 0.15rem;
+}
+
+.shortcut-desc {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
 

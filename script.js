@@ -69,7 +69,7 @@
       const cfg = TIER_CONFIG[tier] || TIER_CONFIG.mid;
       document.body.style.setProperty('--blur-px', cfg.blurPx + 'px');
       if (!cfg.grain) setGrain(false);
-      if (startCanvasAnim !== undefined) initCanvas(); // re-run so spawnParticles picks up new count
+      if (typeof respawnParticles === 'function') respawnParticles(); // Directly respawn particles matching count without re-running initCanvas() or adding resize listeners
     }
 
     if (typeof window !== 'undefined') {
@@ -186,6 +186,11 @@
     const navToLinksBtn = document.getElementById('nav-to-links-btn');
     const linkModalNavToOperator = document.getElementById('link-modal-nav-to-operator');
     const linkModalNavToLinks = document.getElementById('link-modal-nav-to-links');
+
+    const shortcutsBtn = document.getElementById('shortcuts-btn');
+    const shortcutsModal = document.getElementById('shortcuts-modal');
+    const shortcutsCloseBtn = document.getElementById('shortcuts-close-btn');
+    const shortcutsDoneBtn = document.getElementById('shortcuts-done-btn');
 
     const subtitlesBar = document.getElementById('subtitles-bar');
     const subSpeaker = document.getElementById('sub-speaker');
@@ -313,6 +318,7 @@
     let startCanvasAnim = () => {};
     let stopCanvasAnim = () => {};
     let refreshParticleColors = () => {};
+    let respawnParticles = () => {};
 
     function initCanvas() {
       if (!canvas) return;
@@ -489,6 +495,7 @@
       startCanvasAnim = startAnimation;
       stopCanvasAnim = stopAnimation;
       refreshParticleColors = updateParticleColors;
+      respawnParticles = spawnParticles;
 
       startAnimation();
     }
@@ -1136,7 +1143,7 @@
       if (/^(javascript|data|vbscript):/i.test(trimmed)) {
         return '#';
       }
-      if (!/^https?:\/\/|^\/|^#/i.test(trimmed)) {
+      if (!/^https?:\/\/|^\/|^#|^mailto:|^tel:/i.test(trimmed)) {
         return 'https://' + trimmed;
       }
       return trimmed;
@@ -1146,10 +1153,10 @@
     const ICON_CACHE_PREFIX = 'shinsekai-icon-';
 
     function getHostname(href) {
-      if (!href || href === '#') return '';
+      if (!href || href === '#' || href.startsWith('mailto:') || href.startsWith('tel:')) return '';
       try {
         const clean = sanitizeUrl(href);
-        if (!clean || clean === '#' || clean.startsWith('javascript:')) return '';
+        if (!clean || clean === '#' || clean.startsWith('javascript:') || clean.startsWith('mailto:') || clean.startsWith('tel:')) return '';
         const { hostname } = new URL(clean);
         return hostname || '';
       } catch (e) {
@@ -1288,17 +1295,27 @@
 
     /**
      * Iterates all links and caches their icons for offline use.
-     * ONLY runs when online.
+     * ONLY runs when online, debounced and rate-limited to avoid request bursts.
      */
+    let iconSyncTimer = null;
     function syncAllIconsOffline() {
       if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
-      currentLinks.forEach(sec => {
-        (sec.items || []).forEach(item => {
-          if (item.url) {
-            cacheIconForOffline(item.url);
-          }
+      if (iconSyncTimer) clearTimeout(iconSyncTimer);
+      iconSyncTimer = setTimeout(async () => {
+        const urls = [];
+        currentLinks.forEach(sec => {
+          (sec.items || []).forEach(item => {
+            if (item.url) urls.push(item.url);
+          });
         });
-      });
+        for (const url of urls) {
+          if (typeof navigator !== 'undefined' && navigator.onLine === false) break;
+          try {
+            await cacheIconForOffline(url);
+          } catch (e) {}
+          await new Promise(r => setTimeout(r, 120));
+        }
+      }, 350);
     }
 
     function getInitialLinks() {
@@ -1685,11 +1702,28 @@
 
     if (editorExportBtn) {
       editorExportBtn.addEventListener('click', () => {
-        const blob = new Blob([JSON.stringify(currentLinks, null, 2)], { type: 'application/json' });
+        const fullProfile = {
+          version: 'shinsekai-v2',
+          exportedAt: new Date().toISOString(),
+          operator: {
+            name: currentOperatorName,
+            honorific: currentOperatorHonorific
+          },
+          settings: {
+            theme: currentThemeKey,
+            scene: (scenes && scenes[currentSceneIdx]) ? scenes[currentSceneIdx].key : 'crimson',
+            ultra: safeStorage.getItem('shinsekai-ultra') === 'true',
+            tier: currentTier,
+            grain: grainActive,
+            dockPinned: dockPinned
+          },
+          links: currentLinks
+        };
+        const blob = new Blob([JSON.stringify(fullProfile, null, 2)], { type: 'application/json' });
         const dlUrl = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = dlUrl;
-        a.download = 'shinsekai-links.json';
+        a.download = `shinsekai-profile-${(currentOperatorName || 'pilot').toLowerCase()}.json`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -1709,8 +1743,9 @@
         reader.onload = (evt) => {
           try {
             const parsed = JSON.parse(evt.target.result);
-            if (Array.isArray(parsed) && parsed.length > 0) {
-              const validData = parsed
+            const rawLinks = Array.isArray(parsed) ? parsed : (Array.isArray(parsed.links) ? parsed.links : null);
+            if (rawLinks && rawLinks.length > 0) {
+              const validData = rawLinks
                 .filter(sec => sec && typeof sec === 'object' && Array.isArray(sec.items))
                 .map((sec, sIdx) => ({
                   id: String(sec.id || `sector-${sIdx}`).trim(),
@@ -1732,6 +1767,30 @@
               if (validData.length > 0) {
                 currentLinks = validData;
                 saveLinks();
+
+                // Restore operator & station settings if unified profile format was imported
+                if (parsed.operator && typeof parsed.operator === 'object') {
+                  if (parsed.operator.name) {
+                    currentOperatorName = String(parsed.operator.name).trim() || 'MIMOGU';
+                    safeStorage.setItem('shinsekai-operator-name', currentOperatorName);
+                  }
+                  if (parsed.operator.honorific !== undefined && parsed.operator.honorific !== null) {
+                    currentOperatorHonorific = String(parsed.operator.honorific).trim();
+                    safeStorage.setItem('shinsekai-operator-honorific', currentOperatorHonorific);
+                  }
+                  updateOperatorPill();
+                  refreshThemeBootLore();
+                  updateOperatorPreview();
+                }
+
+                if (parsed.settings && typeof parsed.settings === 'object') {
+                  if (parsed.settings.theme) applyTheme(parsed.settings.theme);
+                  if (parsed.settings.scene) applyScene(parsed.settings.scene, parsed.settings.ultra === true);
+                  if (typeof parsed.settings.grain === 'boolean') setGrain(parsed.settings.grain);
+                  if (typeof parsed.settings.dockPinned === 'boolean') setDockPinned(parsed.settings.dockPinned);
+                  if (parsed.settings.tier) applyTierPreset(parsed.settings.tier);
+                }
+
                 resetEditorForm();
                 renderEditorModal();
                 renderBladeLauncher(currentLinks);
@@ -1918,6 +1977,14 @@
       operatorResetBtn.addEventListener('click', resetOperatorSettings);
     }
 
+    if (operatorModal) {
+      operatorModal.addEventListener('click', (e) => {
+        if (e.target === operatorModal) {
+          closeOperatorModal();
+        }
+      });
+    }
+
     if (operatorNameInput) {
       operatorNameInput.addEventListener('input', () => {
         updateOperatorPreview();
@@ -1966,6 +2033,35 @@
       linkModalNavToOperator.addEventListener('click', () => {
         closeLinkEditor();
         openOperatorModal();
+      });
+    }
+
+    /* ─── SHORTCUTS HELP MODAL CONTROLLER ─── */
+    function openShortcutsModal() {
+      if (!shortcutsModal) return;
+      if (linkEditorModal && linkEditorModal.classList.contains('open')) closeLinkEditor();
+      if (operatorModal && operatorModal.classList.contains('open')) closeOperatorModal();
+      shortcutsModal.classList.add('open');
+      shortcutsModal.setAttribute('aria-hidden', 'false');
+      pauseAllEngines();
+    }
+
+    function closeShortcutsModal() {
+      if (!shortcutsModal) return;
+      shortcutsModal.classList.remove('open');
+      shortcutsModal.setAttribute('aria-hidden', 'true');
+      resumeAllEngines();
+    }
+
+    if (shortcutsBtn) shortcutsBtn.addEventListener('click', openShortcutsModal);
+    if (shortcutsCloseBtn) shortcutsCloseBtn.addEventListener('click', closeShortcutsModal);
+    if (shortcutsDoneBtn) shortcutsDoneBtn.addEventListener('click', closeShortcutsModal);
+
+    if (shortcutsModal) {
+      shortcutsModal.addEventListener('click', (e) => {
+        if (e.target === shortcutsModal) {
+          closeShortcutsModal();
+        }
       });
     }
 
@@ -2176,6 +2272,8 @@
           openOperatorModal();
         } else if (urlParams && (urlParams.get('menu') === 'links' || urlParams.get('menu') === 'edit')) {
           openLinkEditor();
+        } else if (urlParams && (urlParams.get('menu') === 'shortcuts' || urlParams.get('menu') === 'help')) {
+          openShortcutsModal();
         }
         playWelcomeVoice();
         if (typeof onDone === 'function') onDone();
@@ -2265,6 +2363,9 @@
       if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) {
         if (e.key === 'Escape') {
           document.activeElement.blur();
+          if (shortcutsModal && shortcutsModal.classList.contains('open')) {
+            closeShortcutsModal();
+          }
           if (operatorModal && operatorModal.classList.contains('open')) {
             closeOperatorModal();
           }
@@ -2306,7 +2407,18 @@
         openLinkEditor();
       } else if (key === 'c') {
         toggleClockFormat();
+      } else if (e.key === '?' || (e.shiftKey && e.key === '/')) {
+        e.preventDefault();
+        if (shortcutsModal && shortcutsModal.classList.contains('open')) {
+          closeShortcutsModal();
+        } else {
+          openShortcutsModal();
+        }
       } else if (e.key === 'Escape') {
+        if (shortcutsModal && shortcutsModal.classList.contains('open')) {
+          closeShortcutsModal();
+          return;
+        }
         if (operatorModal && operatorModal.classList.contains('open')) {
           closeOperatorModal();
           return;

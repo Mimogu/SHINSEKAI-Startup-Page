@@ -184,13 +184,34 @@ Navigate your startpage like a mecha cockpit with full keyboard controls:
 | <kbd>v</kbd> | **Voice Comms** | Re-trigger the mecha android audio greeting |
 | <kbd>q</kbd> | **Cycle Dialogue** | Advance to the next anime subtitle quote |
 | <kbd>1</kbd> - <kbd>4</kbd> | **Deploy Sector** | Jump directly to bookmark category (*Anime, Gaming, Dev, Media*) |
+| <kbd>?</kbd> | **Shortcuts Matrix** | Open the interactive in-cockpit keybindings cheatsheet HUD |
 | <kbd>Esc</kbd> | **Cancel / Disengage** | Dismiss search focus, close popovers or exit modals |
+
+---
+
+## 🌐 Tactical URL Query Parameters
+
+Configure or bookmark Shinsekai with pre-configured startup states directly through the URL:
+
+| Query Parameter | Example Value | Description |
+|:---|:---|:---|
+| `?scene=` | `?scene=tokyonight` | Select background scene (`crimson`, `tokyonight`, `sakura`, `catppuccin`, `cyberpunk`, `eco` or aliases `gojo`, `eyes`, `sasuke`) |
+| `?theme=` | `?theme=catppuccin` | Select color faction theme |
+| `?user=` / `?operator=` | `?user=LEVI` | Override pilot callsign name |
+| `?honorific=` / `?title=` | `?honorific=-SENPAI` | Set Japanese honorific (`-SAMA`, `-SAN`, `-SENPAI`, `-KUN`, `none`, or custom) |
+| `?ultra=1` / `?hd=1` | `?ultra=1` | Force startup directly in HD Ultra (1080p) master mode |
+| `?pinned=1` | `?pinned=1` | Lock the holographic bookmark drawer open on boot |
+| `?noboot=1` | `?noboot=1` | Bypass the 1.5-second cinematic boot sequence for instant page display |
+| `?menu=` | `?menu=operator` | Auto-launch a modal on boot (`operator`, `links`, `shortcuts`, `theme`, `scene`) |
+
+*Example Command Link:*  
+`index.html?scene=crimson&ultra=1&user=RENGOKU&honorific=-SAMA&noboot=1`
 
 ---
 
 ## ⚡ Performance, Memory & Lifecycle Architecture
 
-Shinsekai features an autonomous performance engine engineered to operate at an ultra-low memory footprint (~40–60 MB active, dropping to ~20 MB when inactive):
+Shinsekai features an autonomous performance engine engineered to operate at an ultra-low memory footprint (~35–50 MB active, dropping to ~20 MB when inactive):
 
 ### 🏎️ 1. Hardware Tier Presets (`high` / `mid` / `eco`)
 The engine autonomously detects your hardware environment (`deviceMemory`, `hardwareConcurrency`, screen width, data-saver flags, and `prefers-reduced-motion`) and adapts rendering parameters:
@@ -205,7 +226,7 @@ The engine autonomously detects your hardware environment (`deviceMemory`, `hard
 
 ### 📼 2. 720p Default with Optional HD Ultra (1080p)
 - **720p Default Transcodes**: All 5 anime scene loops are pre-encoded with high-efficiency `libx264`, `preset=slow`, `crf=20`, `scale=1280:720`, `lanczos` filtering, and `+faststart` web optimization, shrinking file sizes by 30–60% with zero perceived quality loss.
-- **HD Ultra (1080p) On-Demand**: Surfaced as explicit options in the scene selector (**紅蓮 HD**, **東京夜 HD**, etc.) for large high-DPI displays without imposing memory overhead on normal sessions.
+- **HD Ultra (1080p) On-Demand**: Surfaced as explicit options in the scene selector (**紅蓮 HD**, **東京夜 HD**, etc.) for large high-DPI displays without imposing memory overhead on normal sessions. The selection automatically persists in `localStorage` across new tabs.
 
 ### 💤 3. Deep-Suspend Tab Hibernation
 - When you switch away or minimize the tab, all animation loops, clocks, and quotes pause immediately.
@@ -216,6 +237,15 @@ The engine autonomously detects your hardware environment (`deviceMemory`, `hard
 - **Runtime FPS Watchdog**: Continuously measures frame delivery over 2-second windows. If FPS drops below 24 sustained (3 consecutive bad streaks), the engine auto-downgrades the tier to `mid`. If degradation continues, it safely transitions to `eco`.
 - **2-Strike Error & Freeze Recovery**: If video decoders stall or throw errors twice consecutively, Shinsekai cleanly falls back to `eco` static mode instead of entering an infinite retry loop.
 - **Zero-Latency Boot Loader**: An early inline script parses the URL/stored scene prior to DOM rendering, loading the exact video immediately and eliminating wasteful initial double-decodes.
+
+---
+
+## 🔒 Privacy, Offline & Network Transparency
+
+- **100% Private & Self-Hosted**: Zero trackers, zero telemetry, zero analytics scripts, and zero third-party telemetry beacons. Your bookmarks and pilot profile stay strictly inside your local browser `localStorage`.
+- **Network Requests**: External network activity is strictly limited to:
+  1. **Google Fonts**: Lightweight typography loading on cold boot (*JetBrains Mono*, *Plus Jakarta Sans*, *Zen Kaku Gothic New*).
+  2. **Favicon Cache Sync**: When you add new bookmarks, Shinsekai optionally resolves icons via Google / icon.horse and **stores compact 32×32 data-URIs permanently in localStorage**. Once cached, icons are served 100% offline with zero network requests. Icon syncing is sequentially rate-limited (120ms delays) and completely dormant when offline.
 
 ---
 
@@ -233,7 +263,7 @@ Type any shortcut into the Katana search capsule followed by your query:
 | `!d` | DuckDuckGo Privacy | `!d neovim lua setup` |
 | `!w` | Wikipedia Archive | `!w artificial intelligence` |
 
-*Tip: Pasting or typing direct URLs (e.g., `github.com` or `https://archlinux.org`) will jump straight to the destination.*  
+*Tip: Pasting or typing direct URLs (e.g., `github.com`, `mailto:pilot@shinsekai.org`, or `https://archlinux.org`) will jump straight to the destination.*  
 *Operator Command Tip: Type `:user <name>` or `:settings` in the search bar to immediately configure your pilot identity.*
 
 ---
@@ -248,27 +278,31 @@ Type any shortcut into the Katana search capsule followed by your query:
 5. Click **`▶ 起動シミュレーション (Test Boot)`** to immediately experience the cinematic mecha boot sequence and audio greeting with your custom name!
 6. *Optional URL Override:* You can also pass `?user=YourName` or `?operator=YourName` directly in the browser address bar.
 
-### 2. Visual Link Editor (No Coding Required)
+### 2. Unified Profile & Link Matrix Editor (No Coding Required)
 1. Press <kbd>e</kbd> or click the **`⚙️ リンク編集`** button in the header.
 2. Select your category blade (**01 アニメ**, **02 電子遊戯**, **03 開発中枢**, **04 媒体通信**).
 3. Click **`✏️ 編集`** to modify, **`🗑️ 削除`** to delete, or add bookmarks using the bottom form with custom Japanese kanji seals (`観`, `遊`, `網`, `音`, etc.).
-4. Click **`⭳ 設定保存 (Export)`** to backup your JSON bookmark profile or **`⭱ 設定読込 (Import)`** to restore anytime.
+4. Click **`⭳ 設定保存 (Export)`** to download a unified **`shinsekai-profile-<name>.json`** backup containing your complete setup: pinned links, operator name, honorific, active theme, scene, tier, and CRT filters.
+5. Click **`⭱ 設定読込 (Import)`** to restore your complete profile anytime on any machine.
 
 ### 3. Custom Video Stages
-Drop any looping `.mp4` video into `assets/animated/` (1080p) or `assets/animated/720p/` (720p) and rename it to match your target theme:
+To add or replace video stages, drop your looping `.mp4` into the respective tier folder matching the theme name:
+- **Default 720p Loop** (standard playback): Place in `assets/animated/720p/<theme>.mp4`
+- **HD Ultra 1080p Loop** (optional high-res mode): Place in `assets/animated/<theme>.mp4`
+
 ```
 assets/animated/
-├── 720p/               # Fast, lightweight default loops
+├── 720p/               # Default 720p30 loops (CRF 20, Lanczos)
 │   ├── crimson.mp4
 │   ├── tokyonight.mp4
 │   ├── sakura.mp4
 │   ├── catppuccin.mp4
 │   └── cyberpunk.mp4
-├── crimson.mp4         # HD Ultra 1080p master
-├── tokyonight.mp4      # HD Ultra 1080p master
-├── sakura.mp4          # HD Ultra 1080p master
-├── catppuccin.mp4      # HD Ultra 1080p master
-└── cyberpunk.mp4       # HD Ultra 1080p master
+├── crimson.mp4         # Optional 1080p Ultra master
+├── tokyonight.mp4      # Optional 1080p Ultra master
+├── sakura.mp4          # Optional 1080p Ultra master
+├── catppuccin.mp4      # Optional 1080p Ultra master
+└── cyberpunk.mp4       # Optional 1080p Ultra master
 ```
 
 ### 4. Custom Welcome Voice
