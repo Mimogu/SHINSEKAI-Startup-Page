@@ -176,13 +176,46 @@ Navigate your startpage like a mecha cockpit with full keyboard controls:
 | <kbd>/</kbd> | **Katana Console** | Instantly focus the search bar from anywhere |
 | <kbd>t</kbd> | **Cycle Faction** | Rotate themes (*Crimson → TokyoNight → Sakura → Catppuccin → Cyberpunk*) |
 | <kbd>s</kbd> / <kbd>w</kbd> | **Cycle Scene** | Switch live video stages on the fly |
+| <kbd>u</kbd> / <kbd>o</kbd> | **Operator Profile** | Launch the Operator Identity hub to customize pilot name & honorific |
 | <kbd>e</kbd> | **Link Matrix** | Launch the visual cyberpunk bookmark configuration dialog |
 | <kbd>g</kbd> | **CRT Scanlines** | Toggle vintage anime monitor scanlines and film grain |
+| <kbd>c</kbd> | **Clock Format** | Toggle 12-hour (AM/PM) and military 24-hour chrono formats |
 | <kbd>p</kbd> | **Lock Drawer** | Pin the holographic bookmark drawer open |
 | <kbd>v</kbd> | **Voice Comms** | Re-trigger the mecha android audio greeting |
 | <kbd>q</kbd> | **Cycle Dialogue** | Advance to the next anime subtitle quote |
 | <kbd>1</kbd> - <kbd>4</kbd> | **Deploy Sector** | Jump directly to bookmark category (*Anime, Gaming, Dev, Media*) |
 | <kbd>Esc</kbd> | **Cancel / Disengage** | Dismiss search focus, close popovers or exit modals |
+
+---
+
+## ⚡ Performance, Memory & Lifecycle Architecture
+
+Shinsekai features an autonomous performance engine engineered to operate at an ultra-low memory footprint (~40–60 MB active, dropping to ~20 MB when inactive):
+
+### 🏎️ 1. Hardware Tier Presets (`high` / `mid` / `eco`)
+The engine autonomously detects your hardware environment (`deviceMemory`, `hardwareConcurrency`, screen width, data-saver flags, and `prefers-reduced-motion`) and adapts rendering parameters:
+
+| Tier | Ambient Particles | Backdrop Blur (`--blur-px`) | Film Grain | Video Decoding Stage |
+|:---|:---:|:---:|:---:|:---|
+| **High** | 30 | `16px` | Enabled | 720p30 Loop (or optional 1080p Ultra) |
+| **Mid** *(Default)* | 18 | `8px` | Enabled | 720p30 Loop |
+| **Eco** | 0 | `0px` *(flat)* | Disabled | Zero Video Decoding (Static High-Res Backdrop, ~20MB RAM) |
+
+*Manual Override:* Set your preferred tier anytime via DevTools console (`applyTierPreset('eco')`) or let the runtime FPS watchdog manage it dynamically.
+
+### 📼 2. 720p Default with Optional HD Ultra (1080p)
+- **720p Default Transcodes**: All 5 anime scene loops are pre-encoded with high-efficiency `libx264`, `preset=slow`, `crf=20`, `scale=1280:720`, `lanczos` filtering, and `+faststart` web optimization, shrinking file sizes by 30–60% with zero perceived quality loss.
+- **HD Ultra (1080p) On-Demand**: Surfaced as explicit options in the scene selector (**紅蓮 HD**, **東京夜 HD**, etc.) for large high-DPI displays without imposing memory overhead on normal sessions.
+
+### 💤 3. Deep-Suspend Tab Hibernation
+- When you switch away or minimize the tab, all animation loops, clocks, and quotes pause immediately.
+- After **20 seconds in the background**, the video stream is completely unloaded from the DOM (`removeAttribute('src')` and `bgVideo.load()`), releasing decoded frame buffers from GPU VRAM and system memory.
+- Upon returning to the tab, playback seamlessly resumes from the 720p default stream without delay.
+
+### 🛡️ 4. Dual Watchdogs & Error Recovery
+- **Runtime FPS Watchdog**: Continuously measures frame delivery over 2-second windows. If FPS drops below 24 sustained (3 consecutive bad streaks), the engine auto-downgrades the tier to `mid`. If degradation continues, it safely transitions to `eco`.
+- **2-Strike Error & Freeze Recovery**: If video decoders stall or throw errors twice consecutively, Shinsekai cleanly falls back to `eco` static mode instead of entering an infinite retry loop.
+- **Zero-Latency Boot Loader**: An early inline script parses the URL/stored scene prior to DOM rendering, loading the exact video immediately and eliminating wasteful initial double-decodes.
 
 ---
 
@@ -200,30 +233,45 @@ Type any shortcut into the Katana search capsule followed by your query:
 | `!d` | DuckDuckGo Privacy | `!d neovim lua setup` |
 | `!w` | Wikipedia Archive | `!w artificial intelligence` |
 
-*Tip: Pasting or typing direct URLs (e.g., `github.com` or `https://archlinux.org`) will jump straight to the destination.*
+*Tip: Pasting or typing direct URLs (e.g., `github.com` or `https://archlinux.org`) will jump straight to the destination.*  
+*Operator Command Tip: Type `:user <name>` or `:settings` in the search bar to immediately configure your pilot identity.*
 
 ---
 
 ## 🛠️ Customizing Your Station
 
-### 1. Visual Link Editor (No Coding Required)
+### 1. Custom Operator / Pilot Name & Identity
+1. Press <kbd>u</kbd> (or click **`👤 OPERATOR`** in the top bar).
+2. Enter your desired pilot callsign / name (e.g. `ALEX`, `SHADOW`, `LEVI`, `ZERO`).
+3. Select your preferred Japanese honorific protocol (`-SAMA`, `-SAN`, `-SENPAI`, `-KUN`, `NONE / 敬称なし`, or a `CUSTOM` title).
+4. Watch the real-time mecha boot telemetry preview update live as you type.
+5. Click **`▶ 起動シミュレーション (Test Boot)`** to immediately experience the cinematic mecha boot sequence and audio greeting with your custom name!
+6. *Optional URL Override:* You can also pass `?user=YourName` or `?operator=YourName` directly in the browser address bar.
+
+### 2. Visual Link Editor (No Coding Required)
 1. Press <kbd>e</kbd> or click the **`⚙️ リンク編集`** button in the header.
 2. Select your category blade (**01 アニメ**, **02 電子遊戯**, **03 開発中枢**, **04 媒体通信**).
 3. Click **`✏️ 編集`** to modify, **`🗑️ 削除`** to delete, or add bookmarks using the bottom form with custom Japanese kanji seals (`観`, `遊`, `網`, `音`, etc.).
 4. Click **`⭳ 設定保存 (Export)`** to backup your JSON bookmark profile or **`⭱ 設定読込 (Import)`** to restore anytime.
 
-### 2. Custom Video Stages
-Drop any looping `.mp4` video into `assets/animated/` and rename it to match your target theme:
+### 3. Custom Video Stages
+Drop any looping `.mp4` video into `assets/animated/` (1080p) or `assets/animated/720p/` (720p) and rename it to match your target theme:
 ```
 assets/animated/
-├── crimson.mp4       # 紅蓮 Stage
-├── tokyonight.mp4    # 東京夜 Stage
-├── sakura.mp4        # 桜吹雪 Stage
-├── catppuccin.mp4    # 終末谷 Stage
-└── cyberpunk.mp4     # 電脳都市 Stage
+├── 720p/               # Fast, lightweight default loops
+│   ├── crimson.mp4
+│   ├── tokyonight.mp4
+│   ├── sakura.mp4
+│   ├── catppuccin.mp4
+│   └── cyberpunk.mp4
+├── crimson.mp4         # HD Ultra 1080p master
+├── tokyonight.mp4      # HD Ultra 1080p master
+├── sakura.mp4          # HD Ultra 1080p master
+├── catppuccin.mp4      # HD Ultra 1080p master
+└── cyberpunk.mp4       # HD Ultra 1080p master
 ```
 
-### 3. Custom Welcome Voice
+### 4. Custom Welcome Voice
 Replace `assets/audio/welcome.mp3` with your favorite anime character dialogue or custom voice synthesis clip!
 
 ---
@@ -233,12 +281,18 @@ Replace `assets/audio/welcome.mp3` with your favorite anime character dialogue o
 ```
 SHINSEKAI-Startup-Page/
 ├── assets/
-│   ├── animated/           # Seamless 1080p/60fps theme looping MP4s
-│   │   ├── catppuccin.mp4  # Valley of the End Chakra
-│   │   ├── crimson.mp4     # Flame Breathing Embers
-│   │   ├── cyberpunk.mp4   # Night City Rain
-│   │   ├── sakura.mp4      # Ronin Cherry Blossom
-│   │   └── tokyonight.mp4  # Infinite Void Cosmos
+│   ├── animated/           # Theme looping MP4 stages
+│   │   ├── 720p/           # 720p30 CRF-20 default web-optimized loops (Faststart)
+│   │   │   ├── catppuccin.mp4
+│   │   │   ├── crimson.mp4
+│   │   │   ├── cyberpunk.mp4
+│   │   │   ├── sakura.mp4
+│   │   │   └── tokyonight.mp4
+│   │   ├── catppuccin.mp4  # HD Ultra 1080p Valley of the End Chakra
+│   │   ├── crimson.mp4     # HD Ultra 1080p Flame Breathing Embers
+│   │   ├── cyberpunk.mp4   # HD Ultra 1080p Night City Rain
+│   │   ├── sakura.mp4      # HD Ultra 1080p Ronin Cherry Blossom
+│   │   └── tokyonight.mp4  # HD Ultra 1080p Infinite Void Cosmos
 │   ├── audio/              # Mecha female voice welcome asset
 │   │   └── welcome.mp3     # 「ようこそ、ミモグ様」
 │   └── previews/           # High-resolution theme screenshots
@@ -247,12 +301,12 @@ SHINSEKAI-Startup-Page/
 │       ├── cyberpunk.png   # 電脳都市 Interface
 │       ├── sakura.png      # 桜吹雪 Interface
 │       └── tokyonight.png  # 東京夜 Interface
-├── index.html              # Clean semantic anime HUD viewport
+├── index.html              # Clean semantic anime HUD viewport & zero-latency loader
 ├── links.js                # Default pinned links & kanji seals
 ├── manifest.json           # Native Chromium Web Extension manifest (V3)
 ├── README.md               # Mission dossier & documentation
-├── script.js               # Reactive engine, particle physics & watchdog
-└── style.css               # Glassmorphism, GPU layer isolation & themes
+├── script.js               # Reactive engine, tier manager, particle physics & watchdogs
+└── style.css               # Glassmorphism, CSS variable blur, GPU isolation & themes
 ```
 
 ---

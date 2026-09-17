@@ -40,6 +40,56 @@
     document.title = 'shinsekai';
     let isAppSuspended = false;
 
+    /* ─── TIER CONFIG (performance presets) ─── */
+    const TIER_CONFIG = {
+      high: { particleCount: 30, blurPx: 16, grain: true  },
+      mid:  { particleCount: 18, blurPx: 8,  grain: true  },
+      eco:  { particleCount: 0,  blurPx: 0,  grain: false }
+    };
+
+    function detectTier() {
+      const dm = navigator.deviceMemory;
+      const hc = navigator.hardwareConcurrency || 4;
+      const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const saveData = navigator.connection && navigator.connection.saveData;
+      const smallScreen = window.innerWidth < 900;
+      if (reducedMotion) return 'eco';
+      if (saveData || (dm && dm <= 4) || smallScreen) return 'mid';
+      if (dm === undefined) return 'mid'; // Firefox/Safari don't expose deviceMemory
+      if (dm >= 8 && hc >= 8) return 'high';
+      return 'mid';
+    }
+
+    let currentTier = safeStorage.getItem('shinsekai-tier') || detectTier();
+    if (!safeStorage.getItem('shinsekai-tier')) safeStorage.setItem('shinsekai-tier', currentTier);
+
+    function applyTierPreset(tier) {
+      currentTier = tier;
+      safeStorage.setItem('shinsekai-tier', tier);
+      const cfg = TIER_CONFIG[tier] || TIER_CONFIG.mid;
+      document.body.style.setProperty('--blur-px', cfg.blurPx + 'px');
+      if (!cfg.grain) setGrain(false);
+      if (startCanvasAnim !== undefined) initCanvas(); // re-run so spawnParticles picks up new count
+    }
+
+    if (typeof window !== 'undefined') {
+      window.applyTierPreset = applyTierPreset;
+      window.detectTier = detectTier;
+    }
+
+    // Apply blur-px CSS var on boot from stored/detected tier
+    (function() {
+      const cfg = TIER_CONFIG[currentTier] || TIER_CONFIG.mid;
+      document.body.style.setProperty('--blur-px', cfg.blurPx + 'px');
+    })();
+
+    const urlParams = (typeof window !== 'undefined' && window.location) ? new URLSearchParams(window.location.search) : null;
+    const paramScene = urlParams ? urlParams.get('scene') : null;
+    const paramTheme = urlParams ? urlParams.get('theme') : null;
+    const paramPinned = urlParams ? urlParams.get('pinned') : null;
+    const paramUser = urlParams ? (urlParams.get('user') || urlParams.get('operator')) : null;
+    const paramHonorific = urlParams ? (urlParams.get('honorific') || urlParams.get('title')) : null;
+
     /* ─── 0. DOM ELEMENTS ─── */
     const bgVideo = document.getElementById('bg-video');
     const videoSource = document.getElementById('video-source');
@@ -113,6 +163,29 @@
     const editorImportBtn = document.getElementById('editor-import-btn');
     const editorImportFile = document.getElementById('editor-import-file');
     const editorResetBtn = document.getElementById('editor-reset-btn');
+
+    const operatorBtn = document.getElementById('operator-btn');
+    const operatorPillName = document.getElementById('operator-pill-name');
+    const operatorModal = document.getElementById('operator-modal');
+    const operatorCloseBtn = document.getElementById('operator-close-btn');
+    const operatorDoneBtn = document.getElementById('operator-done-btn');
+    const operatorNameInput = document.getElementById('operator-name-input');
+    const honorificChips = document.querySelectorAll('#honorific-chips .honorific-chip');
+    const customHonorificWrap = document.getElementById('custom-honorific-wrap');
+    const operatorCustomHonorific = document.getElementById('operator-custom-honorific');
+    const previewLineAuth = document.getElementById('preview-line-auth');
+    const previewLineStep = document.getElementById('preview-line-step');
+    const previewLineWelcome = document.getElementById('preview-line-welcome');
+    const previewLineMatrix = document.getElementById('preview-line-matrix');
+    const testBootBtn = document.getElementById('test-boot-btn');
+    const operatorResetBtn = document.getElementById('operator-reset-btn');
+    const operatorSaveBtn = document.getElementById('operator-save-btn');
+    const operatorSaveStatus = document.getElementById('operator-save-status');
+
+    const navToOperatorBtn = document.getElementById('nav-to-operator-btn');
+    const navToLinksBtn = document.getElementById('nav-to-links-btn');
+    const linkModalNavToOperator = document.getElementById('link-modal-nav-to-operator');
+    const linkModalNavToLinks = document.getElementById('link-modal-nav-to-links');
 
     const subtitlesBar = document.getElementById('subtitles-bar');
     const subSpeaker = document.getElementById('sub-speaker');
@@ -283,13 +356,8 @@
         const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         if (prefersReduced) return;
 
-        // Adaptive particle density based on device capability & screen size
-        const isMobile = window.innerWidth < 768;
-        const isLowEnd = typeof navigator !== 'undefined' && (
-          (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4) ||
-          (navigator.deviceMemory && navigator.deviceMemory <= 4)
-        );
-        const count = isMobile || isLowEnd ? 16 : 30;
+        // Tier-driven particle density (see TIER_CONFIG / detectTier)
+        const count = (TIER_CONFIG[currentTier] || TIER_CONFIG.mid).particleCount;
 
         for (let i = 0; i < count; i++) {
           particles.push({
@@ -592,18 +660,13 @@
 
     /* ─── 4. VIDEO SCENE CONTROLLER ─── */
     const scenes = [
-      { key: 'crimson',    label: '映像: 紅蓮',   labelEn: 'Crimson',    video: 'assets/animated/crimson.mp4' },
-      { key: 'tokyonight', label: '映像: 東京夜', labelEn: 'TokyoNight', video: 'assets/animated/tokyonight.mp4' },
-      { key: 'sakura',     label: '映像: 桜吹雪', labelEn: 'Sakura',     video: 'assets/animated/sakura.mp4' },
-      { key: 'catppuccin', label: '映像: 終末谷', labelEn: 'Catppuccin', video: 'assets/animated/catppuccin.mp4' },
-      { key: 'cyberpunk',  label: '映像: 電脳都市', labelEn: 'Cyberpunk',  video: 'assets/animated/cyberpunk.mp4' },
-      { key: 'eco',        label: '省電力: 静止画', labelEn: 'Eco (Low RAM)', video: '' }
+      { key: 'crimson',    label: '映像: 紅蓮',     labelEn: 'Crimson',       video: { default: 'assets/animated/720p/crimson.mp4',    ultra: 'assets/animated/crimson.mp4'    } },
+      { key: 'tokyonight', label: '映像: 東京夜',   labelEn: 'TokyoNight',    video: { default: 'assets/animated/720p/tokyonight.mp4', ultra: 'assets/animated/tokyonight.mp4' } },
+      { key: 'sakura',     label: '映像: 桜吹雪',   labelEn: 'Sakura',        video: { default: 'assets/animated/720p/sakura.mp4',    ultra: 'assets/animated/sakura.mp4'    } },
+      { key: 'catppuccin', label: '映像: 終末谷',   labelEn: 'Catppuccin',    video: { default: 'assets/animated/720p/catppuccin.mp4', ultra: 'assets/animated/catppuccin.mp4' } },
+      { key: 'cyberpunk',  label: '映像: 電脳都市', labelEn: 'Cyberpunk',     video: { default: 'assets/animated/720p/cyberpunk.mp4', ultra: 'assets/animated/cyberpunk.mp4' } },
+      { key: 'eco',        label: '省電力: 静止画', labelEn: 'Eco (Low RAM)', video: null }
     ];
-
-    const urlParams = (typeof window !== 'undefined' && window.location) ? new URLSearchParams(window.location.search) : null;
-    const paramScene = urlParams ? urlParams.get('scene') : null;
-    const paramTheme = urlParams ? urlParams.get('theme') : null;
-    const paramPinned = urlParams ? urlParams.get('pinned') : null;
 
     const sceneAliasMap = {
       eyes: 'crimson',
@@ -618,19 +681,28 @@
     const foundScene = scenes.findIndex(s => s.key === savedScene);
     if (foundScene !== -1) currentSceneIdx = foundScene;
 
-    function applyScene(sceneKey) {
+    function applyScene(sceneKey, isUltra = false) {
       const resolvedKey = sceneAliasMap[sceneKey] || sceneKey;
       const s = scenes.find(item => item.key === resolvedKey) || scenes[0];
       currentSceneIdx = scenes.indexOf(s);
       safeStorage.setItem('shinsekai-scene', s.key);
       document.body.setAttribute('data-scene', s.key);
 
-      if (sceneLabel) sceneLabel.textContent = s.label;
+      // Resolve video source: .default (720p) is always the unconditional default;
+      // .ultra is only used when explicitly requested via the HD popover items.
+      const videoSrc = (isUltra && s.video && s.video.ultra)
+        ? s.video.ultra
+        : (s.video ? (s.video.default || s.video[currentTier] || s.video.mid) : null);
+
+      if (sceneLabel) sceneLabel.textContent = s.label + (isUltra ? ' HD' : '');
       const sceneLabelSub = document.getElementById('scene-label-sub');
-      if (sceneLabelSub) sceneLabelSub.textContent = s.labelEn || s.key.toUpperCase();
+      if (sceneLabelSub) sceneLabelSub.textContent = (s.labelEn || s.key.toUpperCase()) + (isUltra ? ' (1080p)' : '');
 
       if (bgVideo) {
-        if (!s.video) {
+        // Set poster matching the scene key (if preview exists)
+        bgVideo.poster = `assets/previews/${s.key}.png`;
+
+        if (!videoSrc) {
           // Eco Mode: Halt video decoding entirely to free GPU & system RAM
           bgVideo.pause();
           bgVideo.removeAttribute('src');
@@ -645,10 +717,10 @@
           bgVideo.setAttribute('playsinline', '');
 
           const activeSrc = String(bgVideo.currentSrc || (videoSource ? videoSource.src : '') || '');
-          if (!activeSrc || !activeSrc.includes(s.video)) {
+          if (!activeSrc || !activeSrc.includes(videoSrc)) {
             bgVideo.style.opacity = '0.2';
-            bgVideo.src = s.video;
-            if (videoSource) videoSource.src = s.video;
+            bgVideo.src = videoSrc;
+            if (videoSource) videoSource.src = videoSrc;
             bgVideo.load();
             bgVideo.playbackRate = 1.15;
 
@@ -676,8 +748,14 @@
       }
 
       sceneItems.forEach(item => {
-        item.classList.toggle('active', item.dataset.scene === s.key);
+        const matchesScene = item.dataset.scene === s.key;
+        const matchesUltra = isUltra ? item.dataset.ultra === 'true' : !item.dataset.ultra;
+        item.classList.toggle('active', matchesScene && matchesUltra);
       });
+    }
+
+    if (typeof window !== 'undefined') {
+      window.applyScene = applyScene;
     }
 
     /* ─── 4.1. BULLETPROOF VIDEO AUTO-RESUME & FREEZE-RECOVERY ─── */
@@ -725,12 +803,29 @@
       startQuoteTimer();
     }
 
-    // Suspend execution when tab is hidden or minimized
+    // Deep-suspend: pause immediately on hide; after 20s hidden, unload src entirely to free GPU/RAM.
+    // On return, if deep-suspended, re-call applyScene to reload cleanly from the 720p default.
+    let deepSuspendTimer = null;
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
         pauseAllEngines();
+        deepSuspendTimer = setTimeout(() => {
+          if (document.hidden && bgVideo && document.body.getAttribute('data-scene') !== 'eco') {
+            bgVideo.pause();
+            bgVideo.removeAttribute('src');
+            if (videoSource) videoSource.removeAttribute('src');
+            bgVideo.load();
+            bgVideo.dataset.deepSuspended = 'true';
+          }
+        }, 20000);
       } else {
-        resumeAllEngines();
+        clearTimeout(deepSuspendTimer);
+        if (bgVideo && bgVideo.dataset.deepSuspended === 'true') {
+          delete bgVideo.dataset.deepSuspended;
+          applyScene(scenes[currentSceneIdx].key);
+        } else {
+          resumeAllEngines();
+        }
       }
     });
 
@@ -775,11 +870,11 @@
       bgVideo.addEventListener('waiting', () => {
         if (!document.hidden && !isAppSuspended) ensureVideoPlayback();
       });
+      let videoErrorCount = 0;
+      bgVideo.addEventListener('playing', () => { videoErrorCount = 0; });
       bgVideo.addEventListener('error', () => {
-        try {
-          bgVideo.load();
-          ensureVideoPlayback();
-        } catch (e) {}
+        if (++videoErrorCount >= 2) { applyScene('eco'); return; }
+        try { bgVideo.load(); ensureVideoPlayback(); } catch (e) {}
       });
 
       // Watchdog: checks every 4s to unfreeze video if frame gets stuck (dormant when paused/hidden/eco)
@@ -821,7 +916,8 @@
 
       sceneItems.forEach(item => {
         item.addEventListener('click', () => {
-          applyScene(item.dataset.scene);
+          const isUltra = item.dataset.ultra === 'true';
+          applyScene(item.dataset.scene, isUltra);
           scenePopover.classList.remove('open');
         });
       });
@@ -838,43 +934,88 @@
       { key: 'cyberpunk',  label: '電脳都市', labelEn: 'Cyberpunk',  color: '#00f0ff', defaultScene: 'cyberpunk' }
     ];
 
-    const themeBootLore = {
+    /* ─── OPERATOR IDENTITY PROTOCOL ─── */
+    let currentOperatorName = paramUser || safeStorage.getItem('shinsekai-operator-name') || 'MIMOGU';
+    let currentOperatorHonorific = paramHonorific !== null ? paramHonorific : safeStorage.getItem('shinsekai-operator-honorific');
+    if (currentOperatorHonorific === null) currentOperatorHonorific = '-SAMA';
+
+    function getOperatorFormattedName(name = currentOperatorName, honorific = currentOperatorHonorific) {
+      const cleanName = (name !== undefined && name !== null ? String(name) : '').trim() || 'MIMOGU';
+      const cleanHon = (honorific !== undefined && honorific !== null ? String(honorific) : '').trim();
+      if (!cleanHon || cleanHon === 'none') {
+        return cleanName;
+      }
+      if (cleanHon.startsWith('-') || cleanHon.startsWith(' ') || cleanHon.startsWith('・')) {
+        return `${cleanName}${cleanHon}`;
+      }
+      return `${cleanName}-${cleanHon}`;
+    }
+
+    function updateOperatorPill() {
+      if (operatorPillName) {
+        operatorPillName.textContent = currentOperatorName;
+      }
+    }
+
+    const themeBootLoreTemplates = {
       crimson: {
         tag: 'SHINSEKAI // 紅蓮 FLAME CORE',
         kanji: '紅蓮 · 炎獄始動',
-        sub: 'SYNCHRONIZING CRIMSON FLAME MATRIX // MIMOGU-SAMA',
+        subTemplate: 'SYNCHRONIZING CRIMSON FLAME MATRIX // {OPERATOR}',
         step: '[BOOT 03/04] 紅蓮 FLAME COGNITION ONLINE // SYNC RATE: 99.8%'
       },
       tokyonight: {
         tag: 'SHINSEKAI // 東京夜 CURSED CORE',
         kanji: '東京夜 · 無量空処',
-        sub: 'SYNCHRONIZING INFINITE VOID MATRIX // MIMOGU-SAMA',
+        subTemplate: 'SYNCHRONIZING INFINITE VOID MATRIX // {OPERATOR}',
         step: '[BOOT 03/04] 東京夜 VOID COGNITION ONLINE // SYNC RATE: 99.8%'
       },
       sakura: {
         tag: 'SHINSEKAI // 桜吹雪 RONIN CORE',
         kanji: '桜吹雪 · 侍刀一閃',
-        sub: 'SYNCHRONIZING SAKURA BLOSSOM MATRIX // MIMOGU-SAMA',
+        subTemplate: 'SYNCHRONIZING SAKURA BLOSSOM MATRIX // {OPERATOR}',
         step: '[BOOT 03/04] 桜吹雪 BLOSSOM COGNITION ONLINE // SYNC RATE: 99.8%'
       },
       catppuccin: {
         tag: 'SHINSEKAI // 終末谷 SPIRAL CORE',
         kanji: '終末谷 · 宿命螺旋',
-        sub: 'SYNCHRONIZING CATPPUCCIN SPIRAL MATRIX // MIMOGU-SAMA',
+        subTemplate: 'SYNCHRONIZING CATPPUCCIN SPIRAL MATRIX // {OPERATOR}',
         step: '[BOOT 03/04] 終末谷 SPIRAL COGNITION ONLINE // SYNC RATE: 99.8%'
       },
       cyberpunk: {
         tag: 'SHINSEKAI // 電脳都市 NEON CORE',
         kanji: '電脳都市 · 超限界',
-        sub: 'SYNCHRONIZING CYBERPUNK NEON MATRIX // MIMOGU-SAMA',
+        subTemplate: 'SYNCHRONIZING CYBERPUNK NEON MATRIX // {OPERATOR}',
         step: '[BOOT 03/04] 電脳都市 NEON COGNITION ONLINE // SYNC RATE: 99.8%'
       }
+    };
+
+    const themeBootLore = {
+      crimson:    { ...themeBootLoreTemplates.crimson, sub: '' },
+      tokyonight: { ...themeBootLoreTemplates.tokyonight, sub: '' },
+      sakura:     { ...themeBootLoreTemplates.sakura, sub: '' },
+      catppuccin: { ...themeBootLoreTemplates.catppuccin, sub: '' },
+      cyberpunk:  { ...themeBootLoreTemplates.cyberpunk, sub: '' }
     };
 
     let currentThemeIdx = 0;
     const savedTheme = paramTheme || safeStorage.getItem('shinsekai-theme') || 'crimson';
     const foundTheme = themes.findIndex(t => t.key === savedTheme);
     if (foundTheme !== -1) currentThemeIdx = foundTheme;
+
+    function refreshThemeBootLore() {
+      const formatted = getOperatorFormattedName();
+      Object.keys(themeBootLoreTemplates).forEach(k => {
+        themeBootLore[k].sub = themeBootLoreTemplates[k].subTemplate.replace('{OPERATOR}', formatted);
+      });
+      if (bootSub && typeof themes !== 'undefined' && themes[currentThemeIdx]) {
+        const lore = themeBootLore[themes[currentThemeIdx].key] || themeBootLore.crimson;
+        bootSub.textContent = lore.sub;
+      }
+    }
+
+    refreshThemeBootLore();
+    updateOperatorPill();
 
     function applyTheme(themeKey, syncScene = false) {
       const t = themes.find(item => item.key === themeKey) || themes[0];
@@ -1617,6 +1758,210 @@
       });
     }
 
+    /* ─── 8.5. OPERATOR IDENTITY & NAME SETTINGS MODAL ─── */
+    function updateOperatorPreview(tempName, tempHon) {
+      const name = tempName !== undefined ? tempName : (operatorNameInput ? operatorNameInput.value : currentOperatorName);
+      let honorific = tempHon;
+      if (honorific === undefined) {
+        const activeChip = document.querySelector('#honorific-chips .honorific-chip.active');
+        if (activeChip) {
+          const val = activeChip.dataset.honorific;
+          if (val === 'custom') {
+            honorific = operatorCustomHonorific ? operatorCustomHonorific.value : '';
+          } else {
+            honorific = val;
+          }
+        } else {
+          honorific = currentOperatorHonorific;
+        }
+      }
+
+      const formatted = getOperatorFormattedName(name, honorific);
+      if (previewLineAuth) previewLineAuth.textContent = `INIT_CORE: ${formatted} AUTHENTICATED`;
+      if (previewLineStep) previewLineStep.textContent = `${formatted} AUTHENTICATED // DEPLOYING INTERFACE...`;
+      if (previewLineWelcome) previewLineWelcome.textContent = `新世界 起動完了 // WELCOME ${formatted}`;
+      if (previewLineMatrix) {
+        const activeTheme = (themes && themes[currentThemeIdx]) ? themes[currentThemeIdx].key.toUpperCase() : 'CRIMSON';
+        previewLineMatrix.textContent = `SYNCHRONIZING ${activeTheme} FLAME MATRIX // ${formatted}`;
+      }
+    }
+
+    function openOperatorModal() {
+      if (!operatorModal) return;
+      if (linkEditorModal && linkEditorModal.classList.contains('open')) {
+        closeLinkEditor();
+      }
+      operatorModal.classList.add('open');
+      operatorModal.setAttribute('aria-hidden', 'false');
+      pauseAllEngines();
+
+      if (operatorNameInput) {
+        operatorNameInput.value = currentOperatorName;
+      }
+
+      let matched = false;
+      honorificChips.forEach(chip => {
+        const h = chip.dataset.honorific;
+        if (h === currentOperatorHonorific) {
+          chip.classList.add('active');
+          matched = true;
+        } else {
+          chip.classList.remove('active');
+        }
+      });
+
+      if (!matched && currentOperatorHonorific !== null && currentOperatorHonorific !== undefined) {
+        honorificChips.forEach(chip => {
+          chip.classList.toggle('active', chip.dataset.honorific === 'custom');
+        });
+        if (customHonorificWrap) customHonorificWrap.style.display = 'block';
+        if (operatorCustomHonorific) operatorCustomHonorific.value = currentOperatorHonorific;
+      } else {
+        if (customHonorificWrap) customHonorificWrap.style.display = 'none';
+      }
+
+      updateOperatorPreview();
+      if (operatorSaveStatus) operatorSaveStatus.textContent = '';
+      if (operatorNameInput) {
+        setTimeout(() => {
+          operatorNameInput.focus();
+          operatorNameInput.select();
+        }, 80);
+      }
+    }
+
+    function closeOperatorModal() {
+      if (!operatorModal) return;
+      operatorModal.classList.remove('open');
+      operatorModal.setAttribute('aria-hidden', 'true');
+      resumeAllEngines();
+    }
+
+    function saveOperatorSettings() {
+      const newName = (operatorNameInput ? operatorNameInput.value : '').trim() || 'MIMOGU';
+      let newHonorific = '-SAMA';
+      const activeChip = document.querySelector('#honorific-chips .honorific-chip.active');
+      if (activeChip) {
+        const val = activeChip.dataset.honorific;
+        if (val === 'custom') {
+          newHonorific = (operatorCustomHonorific ? operatorCustomHonorific.value : '').trim();
+        } else {
+          newHonorific = val;
+        }
+      }
+
+      currentOperatorName = newName;
+      currentOperatorHonorific = newHonorific;
+
+      safeStorage.setItem('shinsekai-operator-name', currentOperatorName);
+      safeStorage.setItem('shinsekai-operator-honorific', currentOperatorHonorific);
+
+      updateOperatorPill();
+      refreshThemeBootLore();
+      updateOperatorPreview();
+
+      if (operatorSaveStatus) {
+        operatorSaveStatus.textContent = '✓ 構成反映完了 / SAVED & APPLIED!';
+        operatorSaveStatus.style.color = 'var(--accent)';
+        setTimeout(() => {
+          if (operatorSaveStatus) operatorSaveStatus.textContent = '';
+        }, 3000);
+      }
+    }
+
+    function resetOperatorSettings() {
+      currentOperatorName = 'MIMOGU';
+      currentOperatorHonorific = '-SAMA';
+      safeStorage.removeItem('shinsekai-operator-name');
+      safeStorage.removeItem('shinsekai-operator-honorific');
+
+      if (operatorNameInput) operatorNameInput.value = 'MIMOGU';
+      honorificChips.forEach(chip => {
+        chip.classList.toggle('active', chip.dataset.honorific === '-SAMA');
+      });
+      if (customHonorificWrap) customHonorificWrap.style.display = 'none';
+      if (operatorCustomHonorific) operatorCustomHonorific.value = '';
+
+      updateOperatorPill();
+      refreshThemeBootLore();
+      updateOperatorPreview();
+
+      if (operatorSaveStatus) {
+        operatorSaveStatus.textContent = '↺ 初期値に戻しました / RESTORED DEFAULT';
+        operatorSaveStatus.style.color = 'var(--text-muted)';
+        setTimeout(() => {
+          if (operatorSaveStatus) operatorSaveStatus.textContent = '';
+        }, 3000);
+      }
+    }
+
+    if (operatorBtn) {
+      operatorBtn.addEventListener('click', openOperatorModal);
+    }
+    if (operatorCloseBtn) {
+      operatorCloseBtn.addEventListener('click', closeOperatorModal);
+    }
+    if (operatorDoneBtn) {
+      operatorDoneBtn.addEventListener('click', closeOperatorModal);
+    }
+    if (operatorSaveBtn) {
+      operatorSaveBtn.addEventListener('click', saveOperatorSettings);
+    }
+    if (operatorResetBtn) {
+      operatorResetBtn.addEventListener('click', resetOperatorSettings);
+    }
+
+    if (operatorNameInput) {
+      operatorNameInput.addEventListener('input', () => {
+        updateOperatorPreview();
+      });
+      operatorNameInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          saveOperatorSettings();
+        }
+      });
+    }
+
+    honorificChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        honorificChips.forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        const isCustom = chip.dataset.honorific === 'custom';
+        if (customHonorificWrap) {
+          customHonorificWrap.style.display = isCustom ? 'block' : 'none';
+          if (isCustom && operatorCustomHonorific) {
+            operatorCustomHonorific.focus();
+          }
+        }
+        updateOperatorPreview();
+      });
+    });
+
+    if (operatorCustomHonorific) {
+      operatorCustomHonorific.addEventListener('input', () => {
+        updateOperatorPreview();
+      });
+      operatorCustomHonorific.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          saveOperatorSettings();
+        }
+      });
+    }
+
+    // Modal navigation cross-links
+    if (navToLinksBtn) {
+      navToLinksBtn.addEventListener('click', () => {
+        closeOperatorModal();
+        openLinkEditor();
+      });
+    }
+    if (linkModalNavToOperator) {
+      linkModalNavToOperator.addEventListener('click', () => {
+        closeLinkEditor();
+        openOperatorModal();
+      });
+    }
+
     /* ─── 9. COMMAND SEARCH BAR & BANG LOGIC ─── */
     const searchEngines = {
       google: 'https://www.google.com/search?q=',
@@ -1662,6 +2007,26 @@
           if (!query) return;
 
           const lowerQuery = query.toLowerCase();
+          if (lowerQuery === ':user' || lowerQuery === ':settings' || lowerQuery === '!user' || lowerQuery === '!settings' || lowerQuery === '/user' || lowerQuery === '/settings') {
+            commandInput.value = '';
+            commandInput.blur();
+            openOperatorModal();
+            return;
+          } else if (lowerQuery.startsWith(':user ') || lowerQuery.startsWith(':name ') || lowerQuery.startsWith('/user ') || lowerQuery.startsWith('/name ')) {
+            const spaceIdx = query.indexOf(' ');
+            const rawName = query.slice(spaceIdx + 1).trim();
+            if (rawName) {
+              currentOperatorName = rawName;
+              safeStorage.setItem('shinsekai-operator-name', currentOperatorName);
+              updateOperatorPill();
+              refreshThemeBootLore();
+              commandInput.value = '';
+              commandInput.blur();
+              openOperatorModal();
+              return;
+            }
+          }
+
           if (lowerQuery === '!gh' || lowerQuery.startsWith('!gh ')) {
             const term = query.slice(3).trim();
             window.location.href = term ? searchEngines.github + encodeURIComponent(term) : 'https://github.com';
@@ -1735,25 +2100,64 @@
       });
     }
 
-    function runBootSequence() {
-      // Resolve initial theme immediately from storage or URL
+    function executeBootSequence(onDone) {
+      let overlay = document.getElementById('boot-overlay');
       const activeThemeKey = paramTheme || safeStorage.getItem('shinsekai-theme') || 'crimson';
       currentThemeKey = activeThemeKey;
       document.documentElement.setAttribute('data-theme', activeThemeKey);
       document.body.setAttribute('data-theme', activeThemeKey);
 
+      refreshThemeBootLore();
       const lore = themeBootLore[activeThemeKey] || themeBootLore.crimson;
-      if (bootPill) bootPill.textContent = lore.tag;
-      if (bootKanji) bootKanji.textContent = lore.kanji;
-      if (bootSub) bootSub.textContent = lore.sub;
+      const formatted = getOperatorFormattedName();
+
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.className = 'mecha-boot-overlay';
+        overlay.id = 'boot-overlay';
+        overlay.setAttribute('aria-hidden', 'true');
+        overlay.innerHTML = `
+          <div class="boot-matrix-grid"></div>
+          <div class="boot-scanner-laser"></div>
+          <div class="boot-terminal-card">
+            <div class="boot-card-header">
+              <span class="boot-pill" id="boot-pill">${escapeHtml(lore.tag)}</span>
+              <span class="boot-code">SYS.AUTH.OK</span>
+            </div>
+            <div class="boot-title-row">
+              <span class="boot-kanji" id="boot-kanji">${escapeHtml(lore.kanji)}</span>
+              <span class="boot-sub" id="boot-sub">${escapeHtml(lore.sub)}</span>
+            </div>
+            <div class="boot-progress-deck">
+              <div class="boot-bar-track">
+                <div class="boot-bar-fill" id="boot-progress-bar"></div>
+              </div>
+              <div class="boot-meta-row">
+                <span class="boot-log-text" id="boot-log">INIT_CORE: ${escapeHtml(formatted)} AUTHENTICATED</span>
+                <span class="boot-pct" id="boot-pct">0%</span>
+              </div>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(overlay);
+      }
+
+      const pBar = overlay.querySelector('#boot-progress-bar');
+      const pPct = overlay.querySelector('#boot-pct');
+      const pLog = overlay.querySelector('#boot-log');
+      const pill = overlay.querySelector('#boot-pill');
+      const kanji = overlay.querySelector('#boot-kanji');
+      const sub = overlay.querySelector('#boot-sub');
+
+      if (pill) pill.textContent = lore.tag;
+      if (kanji) kanji.textContent = lore.kanji;
+      if (sub) sub.textContent = lore.sub;
 
       const skipBoot = urlParams && (urlParams.get('noboot') === '1' || urlParams.get('noboot') === 'true');
-      if (!bootOverlay || skipBoot) {
-        if (bootOverlay) {
-          bootOverlay.classList.add('boot-completed');
-          if (bootOverlay.parentNode) {
-            bootOverlay.parentNode.removeChild(bootOverlay);
-          }
+      if (skipBoot) {
+        overlay.classList.add('boot-completed');
+        if (overlay.parentNode) {
+          overlay.parentNode.removeChild(overlay);
         }
         document.body.classList.remove('booting');
         document.body.classList.add('boot-ready');
@@ -1761,10 +2165,18 @@
           scenePopover.classList.add('open');
         } else if (urlParams && urlParams.get('menu') === 'theme' && themePopover) {
           themePopover.classList.add('open');
+        } else if (urlParams && (urlParams.get('menu') === 'operator' || urlParams.get('menu') === 'user')) {
+          openOperatorModal();
+        } else if (urlParams && (urlParams.get('menu') === 'links' || urlParams.get('menu') === 'edit')) {
+          openLinkEditor();
         }
         playWelcomeVoice();
+        if (typeof onDone === 'function') onDone();
         return;
       }
+
+      document.body.classList.remove('boot-ready', 'boot-active');
+      document.body.classList.add('booting');
 
       const bootDuration = 1500; // Exact 1.5 seconds
       let startTime = null;
@@ -1773,8 +2185,8 @@
         { pct: 25, log: '[BOOT 01/04] INITIALIZING SYSTEM KERNEL & CACHYOS LINUX CORE...' },
         { pct: 55, log: '[BOOT 02/04] COMPILING ANIME MECHA SHADERS & GPU COGNITIVE MATRIX...' },
         { pct: 85, log: lore.step },
-        { pct: 99, log: '[BOOT 04/04] MIMOGU-SAMA AUTHENTICATED // DEPLOYING INTERFACE...' },
-        { pct: 100, log: '新世界 起動完了 // WELCOME MIMOGU-SAMA' }
+        { pct: 99, log: `[BOOT 04/04] ${formatted} AUTHENTICATED // DEPLOYING INTERFACE...` },
+        { pct: 100, log: `新世界 起動完了 // WELCOME ${formatted}` }
       ];
 
       function updateBoot(timestamp) {
@@ -1786,34 +2198,35 @@
         const elapsed = now - startTime;
         const progress = Math.min(100, Math.floor((elapsed / bootDuration) * 100));
 
-        if (bootProgressBar) bootProgressBar.style.width = `${progress}%`;
-        if (bootPct) bootPct.textContent = `${progress}%`;
+        if (pBar) pBar.style.width = `${progress}%`;
+        if (pPct) pPct.textContent = `${progress}%`;
 
         const step = bootSteps.find(s => progress <= s.pct) || bootSteps[bootSteps.length - 1];
-        if (bootLog && step) bootLog.textContent = step.log;
+        if (pLog && step) pLog.textContent = step.log;
 
         if (elapsed < bootDuration) {
           requestAnimationFrame(updateBoot);
         } else {
           // Exactly at 1.5 seconds: loading has finished!
-          if (bootProgressBar) bootProgressBar.style.width = '100%';
-          if (bootPct) bootPct.textContent = '100%';
-          if (bootLog) bootLog.textContent = '新世界 起動完了 // WELCOME MIMOGU-SAMA';
+          if (pBar) pBar.style.width = '100%';
+          if (pPct) pPct.textContent = '100%';
+          if (pLog) pLog.textContent = `新世界 起動完了 // WELCOME ${formatted}`;
 
           // Play the female android voice the moment loading is finished!
           playWelcomeVoice();
 
           setTimeout(() => {
-            bootOverlay.classList.add('boot-completed');
+            overlay.classList.add('boot-completed');
             document.body.classList.remove('booting');
             document.body.classList.add('boot-active');
             setTimeout(() => {
               document.body.classList.add('boot-ready');
               document.body.classList.remove('boot-active');
               // Free boot DOM tree and internal laser/matrix shaders completely from memory
-              if (bootOverlay && bootOverlay.parentNode) {
-                bootOverlay.parentNode.removeChild(bootOverlay);
+              if (overlay && overlay.parentNode) {
+                overlay.parentNode.removeChild(overlay);
               }
+              if (typeof onDone === 'function') onDone();
             }, 600);
           }, 350);
         }
@@ -1822,8 +2235,16 @@
       requestAnimationFrame(updateBoot);
     }
 
+    if (testBootBtn) {
+      testBootBtn.addEventListener('click', () => {
+        saveOperatorSettings();
+        closeOperatorModal();
+        executeBootSequence();
+      });
+    }
+
     // Trigger 1.5-second theme-customized boot sequence on startup
-    runBootSequence();
+    executeBootSequence();
 
     /* ─── 11. GLOBAL CLICK & SHORTCUT HANDLERS ─── */
     document.addEventListener('click', (e) => {
@@ -1837,6 +2258,9 @@
       if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) {
         if (e.key === 'Escape') {
           document.activeElement.blur();
+          if (operatorModal && operatorModal.classList.contains('open')) {
+            closeOperatorModal();
+          }
           if (linkEditorModal && linkEditorModal.classList.contains('open')) {
             closeLinkEditor();
           }
@@ -1869,11 +2293,17 @@
         setDockPinned(!dockPinned);
       } else if (key === 'v') {
         playWelcomeVoice();
+      } else if (key === 'u' || key === 'o') {
+        openOperatorModal();
       } else if (key === 'e') {
         openLinkEditor();
       } else if (key === 'c') {
         toggleClockFormat();
       } else if (e.key === 'Escape') {
+        if (operatorModal && operatorModal.classList.contains('open')) {
+          closeOperatorModal();
+          return;
+        }
         if (linkEditorModal && linkEditorModal.classList.contains('open')) {
           closeLinkEditor();
           return;
@@ -1893,6 +2323,25 @@
     // Offline icon persistence: background sync ONLY when online and system is idle
     setTimeout(syncAllIconsOffline, 2500);
     window.addEventListener('online', syncAllIconsOffline);
+
+    /* ─── RUNTIME FPS WATCHDOG (auto-downgrade tier on sustained low FPS) ─── */
+    (function fpsWatchdog() {
+      let frames = 0, windowStart = performance.now(), badStreak = 0, downgraded = 0;
+      function step(now) {
+        frames++;
+        if (now - windowStart >= 2000) {
+          const fps = (frames * 1000) / (now - windowStart);
+          frames = 0; windowStart = now;
+          if (!document.hidden && !isAppSuspended && fps < 24) {
+            badStreak++;
+            if (badStreak >= 3 && downgraded === 0) { downgraded = 1; applyTierPreset('mid'); }
+            else if (badStreak >= 5 && downgraded === 1) { downgraded = 2; applyScene('eco'); }
+          } else { badStreak = 0; }
+        }
+        requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    })();
   }
 
   if (document.readyState === 'loading') {
