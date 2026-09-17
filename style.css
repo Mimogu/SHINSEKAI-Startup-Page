@@ -667,6 +667,13 @@ body[data-particles="off"] .ambient-canvas {
   z-index: 10000;
 }
 
+#theme-popover {
+  min-width: 300px;
+  max-width: 325px;
+  max-height: 580px;
+  padding: 10px 12px;
+}
+
 #scene-popover {
   min-width: 350px;
   max-width: 410px;
@@ -1225,25 +1232,346 @@ body[data-particles="off"] .ambient-canvas {
 
 .theme-custom-divider {
   height: 1px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.09);
   margin: 0.35rem 0.2rem;
 }
 
-.pop-item-custom {
-  position: relative;
-  cursor: pointer;
+.pop-theme-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.22rem;
 }
 
-.pop-custom-text {
+/* ─── SPECTRUM TUNER DECK (調色中枢 · RECEPTOR MATRIX) ─── */
+.spectrum-deck {
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 9px;
+  padding: 8px 10px;
+  margin-top: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.spectrum-deck.active {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 14px var(--accent-soft);
+}
+
+.spectrum-deck-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+  background: transparent;
+  border: 1px solid transparent;
+}
+
+.spectrum-deck-header:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.spectrum-deck-header.active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  border-left: 3px solid var(--accent);
+}
+
+.spectrum-beacon {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 8px currentColor;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.spectrum-header-text {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  flex: 1;
 }
 
-.pop-item-custom .pop-rom {
-  margin-left: 0;
-  margin-top: 1px;
-  font-size: 0.58rem;
+.spectrum-title-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.spectrum-status-tag {
+  font-family: var(--font-mono);
+  font-size: 0.52rem;
+  font-weight: 800;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.spectrum-deck-header.active .spectrum-status-tag {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  box-shadow: 0 0 6px var(--accent-glow);
+}
+
+.spectrum-status-rom {
+  font-family: var(--font-mono);
+  font-size: 0.52rem;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+}
+
+.spectrum-hex-chip {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 4px;
+  padding: 2px 6px;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.spectrum-hex-prefix {
+  color: var(--accent);
+  margin-right: 1px;
+}
+
+.spectrum-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.spectrum-sub-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.spectrum-sub-title {
+  font-family: var(--font-mono);
+  font-size: 0.52rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.spectrum-core-label {
+  font-family: var(--font-jp);
+  font-size: 0.56rem;
+  font-weight: 700;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+}
+
+.spectrum-crystals-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 7px;
+  margin: 6px 0 2px;
+}
+
+.chakra-crystal {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.22);
+  background: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.45) 0%, var(--crystal-c) 60%, rgba(0, 0, 0, 0.8) 100%);
+  cursor: pointer;
+  position: relative;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.chakra-crystal:hover {
+  transform: scale(1.22);
+  border-color: #ffffff;
+  box-shadow: 0 0 12px var(--crystal-c), 0 0 4px #ffffff;
+  z-index: 2;
+}
+
+.chakra-crystal:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+.chakra-crystal.active {
+  transform: scale(1.15);
+  border-color: #ffffff;
+  box-shadow: 0 0 14px var(--crystal-c), inset 0 0 4px #ffffff;
+}
+
+.chakra-crystal.active::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1px dashed var(--crystal-c);
+  animation: crystalSpin 6s linear infinite;
+}
+
+@keyframes crystalSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spectrum-slider-wrapper {
+  display: flex;
+  align-items: center;
+  padding: 3px 0;
+}
+
+.spectrum-hue-badge {
+  font-family: var(--font-mono);
+  font-size: 0.56rem;
+  font-weight: 800;
+  color: var(--accent);
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 3px;
+  padding: 1px 5px;
+}
+
+.spectrum-hue-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(to right, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
+  outline: none;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+}
+
+.spectrum-hue-slider:focus-visible {
+  border-color: var(--accent);
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+
+.spectrum-hue-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 18px;
+  border-radius: 3px;
+  background: #ffffff;
+  border: 2px solid #0a0e19;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.spectrum-hue-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+  box-shadow: 0 0 14px #ffffff;
+}
+
+.spectrum-hue-slider::-moz-range-thumb {
+  width: 14px;
+  height: 18px;
+  border-radius: 3px;
+  background: #ffffff;
+  border: 2px solid #0a0e19;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.spectrum-hue-slider::-moz-range-thumb:hover {
+  transform: scale(1.15);
+  box-shadow: 0 0 14px #ffffff;
+}
+
+.spectrum-input-block {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-direction: row;
+}
+
+.spectrum-input-wrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 6px;
+  padding: 2px 4px 2px 8px;
+  transition: all 0.2s ease;
+}
+
+.spectrum-input-wrapper:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+
+.spectrum-input-prefix {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin-right: 3px;
+}
+
+.spectrum-hex-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  min-width: 0;
+}
+
+.spectrum-sync-btn {
+  background: var(--accent-soft);
+  border: 1px solid var(--accent);
+  color: #ffffff;
+  font-family: var(--font-jp);
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.spectrum-sync-btn:hover {
+  background: var(--accent);
+  color: #000000;
+  box-shadow: 0 0 10px var(--accent-glow);
 }
 
 .custom-color-picker-label {
@@ -1252,8 +1580,8 @@ body[data-particles="off"] .ambient-canvas {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.22);

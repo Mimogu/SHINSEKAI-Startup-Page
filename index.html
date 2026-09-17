@@ -228,45 +228,92 @@
                   <span class="tool-label-sub" id="theme-label-sub">Crimson</span>
                 </div>
               </button>
-              <div class="anime-popover" id="theme-popover">
-                <button class="pop-item active" data-theme="crimson">
-                  <span class="pop-dot" style="background: #f7768e;"></span>
-                  <span class="pop-name">紅蓮 · 煉獄炎獄</span>
-                  <span class="pop-rom">Crimson Flame</span>
-                </button>
-                <button class="pop-item" data-theme="tokyonight">
-                  <span class="pop-dot" style="background: #7aa2f7;"></span>
-                  <span class="pop-name">東京夜 · 無量空処</span>
-                  <span class="pop-rom">TokyoNight</span>
-                </button>
-                <button class="pop-item" data-theme="sakura">
-                  <span class="pop-dot" style="background: #f4b8e4;"></span>
-                  <span class="pop-name">桜吹雪 · 侍刀一閃</span>
-                  <span class="pop-rom">Sakura Ronin</span>
-                </button>
-                <button class="pop-item" data-theme="catppuccin">
-                  <span class="pop-dot" style="background: #cba6f7;"></span>
-                  <span class="pop-name">終末谷 · 宿命螺旋</span>
-                  <span class="pop-rom">Catppuccin</span>
-                </button>
-                <button class="pop-item" data-theme="cyberpunk">
-                  <span class="pop-dot" style="background: #00f0ff;"></span>
-                  <span class="pop-name">電脳都市 · 超限界</span>
-                  <span class="pop-rom">Cyberpunk Neon</span>
-                </button>
+              <div class="anime-popover" id="theme-popover" role="dialog" aria-label="テーマ色彩調律 / Theme Spectrum Matrix">
+                <!-- Theme Popover Header Bar -->
+                <div class="pop-header-title-bar">
+                  <span class="pop-header-tag">陣営色彩 // THEME FACTION</span>
+                  <span class="pop-header-mode-status" id="theme-header-badge">OPTIMAL</span>
+                </div>
 
-                <!-- Custom Spectrum / Color Picker Option -->
+                <!-- 5 Core Anime Factions -->
+                <div class="pop-theme-list" role="group" aria-label="陣営プリセットテーマ">
+                  <button type="button" class="pop-item active" data-theme="crimson">
+                    <span class="pop-dot" style="background: #f7768e;"></span>
+                    <span class="pop-name">紅蓮 · 煉獄炎獄</span>
+                    <span class="pop-rom">Crimson Flame</span>
+                  </button>
+                  <button type="button" class="pop-item" data-theme="tokyonight">
+                    <span class="pop-dot" style="background: #7aa2f7;"></span>
+                    <span class="pop-name">東京夜 · 無量空処</span>
+                    <span class="pop-rom">TokyoNight</span>
+                  </button>
+                  <button type="button" class="pop-item" data-theme="sakura">
+                    <span class="pop-dot" style="background: #f4b8e4;"></span>
+                    <span class="pop-name">桜吹雪 · 侍刀一閃</span>
+                    <span class="pop-rom">Sakura Ronin</span>
+                  </button>
+                  <button type="button" class="pop-item" data-theme="catppuccin">
+                    <span class="pop-dot" style="background: #cba6f7;"></span>
+                    <span class="pop-name">終末谷 · 宿命螺旋</span>
+                    <span class="pop-rom">Catppuccin</span>
+                  </button>
+                  <button type="button" class="pop-item" data-theme="cyberpunk">
+                    <span class="pop-dot" style="background: #00f0ff;"></span>
+                    <span class="pop-name">電脳都市 · 超限界</span>
+                    <span class="pop-rom">Cyberpunk Neon</span>
+                  </button>
+                </div>
+
+                <!-- Custom Spectrum / Resonance Matrix -->
                 <div class="theme-custom-divider" aria-hidden="true"></div>
-                <div class="pop-item pop-item-custom" id="custom-theme-item" data-theme="custom" role="button" tabindex="0" title="カスタムカラー選択 / Custom Theme Color">
-                  <span class="pop-dot" id="custom-theme-dot" style="background: #a6e3a1;"></span>
-                  <div class="pop-custom-text">
-                    <span class="pop-name">カスタム配色</span>
-                    <span class="pop-rom" id="custom-theme-hex">#A6E3A1 · Custom</span>
+                <div class="spectrum-deck" id="spectrum-tuner">
+                  <!-- Spectrum Header Card / Switcher -->
+                  <div class="spectrum-deck-header pop-item-custom" id="custom-theme-item" data-theme="custom" role="button" tabindex="0" title="カスタム調色を有効化 / Activate Custom Spectrum">
+                    <span class="pop-dot spectrum-beacon" id="custom-theme-dot" style="background: #a6e3a1;"></span>
+                    <div class="spectrum-header-text">
+                      <div class="spectrum-title-line">
+                        <span class="pop-name">調色中枢 · 霊力波</span>
+                        <span class="spectrum-status-tag" id="spectrum-status-tag">STANDBY</span>
+                      </div>
+                      <span class="pop-rom spectrum-status-rom" id="spectrum-status-rom">RESONANCE MATRIX</span>
+                    </div>
+                    <div class="spectrum-hex-chip" id="spectrum-hex-chip" title="現在の色彩周波数">
+                      <span class="spectrum-hex-prefix">#</span><span id="custom-theme-hex">A6E3A1</span>
+                    </div>
                   </div>
-                  <label class="custom-color-picker-label" title="カラーパレットを開く (Open Color Palette)">
-                    <input type="color" id="custom-theme-color-input" value="#a6e3a1" class="custom-color-input" />
-                    <span class="color-picker-icon">🎨</span>
-                  </label>
+
+                  <!-- Chakra Cores (10 Iconic Anime Resonance Swatches) -->
+                  <div class="spectrum-block">
+                    <div class="spectrum-sub-header">
+                      <span class="spectrum-sub-title">霊力結晶 · CHAKRA CORES</span>
+                      <span class="spectrum-core-label" id="spectrum-core-label">カスタム周波数</span>
+                    </div>
+                    <div class="spectrum-crystals-grid" id="spectrum-crystals-grid" role="group" aria-label="アニメ霊力結晶カラー"></div>
+                  </div>
+
+                  <!-- Mecha Frequency Hue Resonator -->
+                  <div class="spectrum-block">
+                    <div class="spectrum-sub-header">
+                      <span class="spectrum-sub-title">周波数調律 · HUE RESONATOR</span>
+                      <span class="spectrum-hue-badge" id="spectrum-hue-badge">120° FREQ</span>
+                    </div>
+                    <div class="spectrum-slider-wrapper">
+                      <input type="range" min="0" max="360" value="120" class="spectrum-hue-slider" id="spectrum-hue-slider" aria-label="色彩周波数スライダー / Hue Resonator" />
+                    </div>
+                  </div>
+
+                  <!-- Terminal Coordinate Input & Palette Eyedropper -->
+                  <div class="spectrum-block spectrum-input-block">
+                    <div class="spectrum-input-wrapper">
+                      <span class="spectrum-input-prefix">#</span>
+                      <input type="text" id="spectrum-hex-text-input" class="spectrum-hex-input" maxlength="6" placeholder="A6E3A1" spellcheck="false" autocomplete="off" aria-label="色彩HEXコード入力 / Hex Color Code" />
+                      <button type="button" class="spectrum-sync-btn" id="spectrum-sync-btn" title="色彩周波数を適用 (Enter)">同期</button>
+                    </div>
+                    <label class="custom-color-picker-label spectrum-native-label" title="OS標準カラーパレット / System Color Palette">
+                      <input type="color" id="custom-theme-color-input" value="#a6e3a1" class="custom-color-input spectrum-native-input" />
+                      <span class="color-picker-icon spectrum-native-icon">🎨</span>
+                    </label>
+                  </div>
                 </div>
               </div>
             </div>

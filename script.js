@@ -125,11 +125,21 @@
     const themeLabel = document.getElementById('theme-label');
     const themeColorDot = document.getElementById('theme-color-dot');
     const themePopover = document.getElementById('theme-popover');
+    const themeHeaderBadge = document.getElementById('theme-header-badge');
     const themeItems = document.querySelectorAll('#theme-popover .pop-item:not(.pop-item-custom)');
     const customThemeItem = document.getElementById('custom-theme-item');
     const customThemeDot = document.getElementById('custom-theme-dot');
     const customThemeHex = document.getElementById('custom-theme-hex');
     const customThemeColorInput = document.getElementById('custom-theme-color-input');
+    const spectrumTuner = document.getElementById('spectrum-tuner');
+    const spectrumStatusTag = document.getElementById('spectrum-status-tag');
+    const spectrumHexChip = document.getElementById('spectrum-hex-chip');
+    const spectrumCoreLabel = document.getElementById('spectrum-core-label');
+    const spectrumCrystalsGrid = document.getElementById('spectrum-crystals-grid');
+    const spectrumHueSlider = document.getElementById('spectrum-hue-slider');
+    const spectrumHueBadge = document.getElementById('spectrum-hue-badge');
+    const spectrumHexTextInput = document.getElementById('spectrum-hex-text-input');
+    const spectrumSyncBtn = document.getElementById('spectrum-sync-btn');
 
     const sceneBtn = document.getElementById('scene-btn');
     const sceneLabel = document.getElementById('scene-label');
@@ -384,6 +394,40 @@
         g: (num >> 8) & 255,
         b: num & 255
       };
+    }
+
+    function hslToHex(h, s, l) {
+      s /= 100;
+      l /= 100;
+      const a = s * Math.min(l, 1 - l);
+      const f = n => {
+        const k = (n + h / 30) % 12;
+        const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+        return Math.round(255 * color).toString(16).padStart(2, '0');
+      };
+      return `#${f(0)}${f(8)}${f(4)}`;
+    }
+
+    function hexToHue(hex) {
+      const { r, g, b } = hexToRgb(hex);
+      const rNorm = r / 255;
+      const gNorm = g / 255;
+      const bNorm = b / 255;
+      const max = Math.max(rNorm, gNorm, bNorm);
+      const min = Math.min(rNorm, gNorm, bNorm);
+      const delta = max - min;
+      if (delta === 0) return 0;
+      let hue;
+      if (max === rNorm) {
+        hue = ((gNorm - bNorm) / delta) % 6;
+      } else if (max === gNorm) {
+        hue = (bNorm - rNorm) / delta + 2;
+      } else {
+        hue = (rNorm - gNorm) / delta + 4;
+      }
+      hue = Math.round(hue * 60);
+      if (hue < 0) hue += 360;
+      return hue;
     }
 
     const THEME_PARTICLE_ICONS = {
@@ -2306,7 +2350,20 @@
     refreshThemeBootLore();
     updateOperatorPill();
 
-    /* ─── CUSTOM COLOR THEME CONTROLLER ─── */
+    /* ─── ANIME CHAKRA CRYSTALS & SPECTRUM ENGINE (調色中枢 · RECEPTOR MATRIX) ─── */
+    const CHAKRA_CRYSTALS = [
+      { key: 'thunder',   kanji: '雷光・神速', rom: 'Thunder Gold',      color: '#fbbf24', desc: 'Zenitsu / Killua Godspeed' },
+      { key: 'wind',      kanji: '風神・翠緑', rom: 'Emerald Jade',      color: '#10b981', desc: 'Deku OFA / Wind Breathing' },
+      { key: 'water',     kanji: '碧羅・蒼波', rom: 'Azure Ocean',       color: '#06b6d4', desc: 'Tomioka Water Breathing' },
+      { key: 'void',      kanji: '虚式・紫電', rom: 'Hollow Purple',     color: '#c084fc', desc: 'Gojo Satoru Limitless' },
+      { key: 'eva',       kanji: '真紅・終焉', rom: 'Eva Crimson',       color: '#ff3366', desc: 'Asuka EVA-02 / Alucard' },
+      { key: 'sakura',    kanji: '幽玄・紅桜', rom: 'Phantom Lotus',     color: '#f43f5e', desc: 'Senbonzakura / Mitsuri' },
+      { key: 'flame',     kanji: '日輪・業火', rom: 'Solar Flame',       color: '#fb923c', desc: 'Rengoku 9th Form' },
+      { key: 'glacial',   kanji: '氷華・零度', rom: 'Glacial Frost',     color: '#38bdf8', desc: 'Hitsugaya Hyorinmaru' },
+      { key: 'venom',     kanji: '毒蝶・幻紫', rom: 'Venom Neon',        color: '#d946ef', desc: 'Shinobu Insect Dance' },
+      { key: 'starlight', kanji: '星骸・白金', rom: 'Starlight Platinum',  color: '#e2e8f0', desc: 'Star Platinum / Saitama' }
+    ];
+
     function applyCustomThemeColor(hex) {
       const { r, g, b } = hexToRgb(hex);
       const root = document.documentElement;
@@ -2321,6 +2378,8 @@
       root.style.setProperty('--glass-border', `rgba(${r}, ${g}, ${b}, 0.35)`);
       root.style.setProperty('--glass-border-hover', `rgba(${r}, ${g}, ${b}, 0.85)`);
       root.style.setProperty('--particle-color', `rgba(${r}, ${g}, ${b}, 0.75)`);
+      root.style.setProperty('--text-main', `rgb(${Math.min(255, Math.floor(225 + r * 0.10))}, ${Math.min(255, Math.floor(225 + g * 0.10))}, ${Math.min(255, Math.floor(230 + b * 0.10))})`);
+      root.style.setProperty('--text-muted', `rgb(${Math.min(255, Math.floor(130 + r * 0.25))}, ${Math.min(255, Math.floor(140 + g * 0.25))}, ${Math.min(255, Math.floor(160 + b * 0.25))})`);
     }
 
     function removeCustomThemeStyles() {
@@ -2335,13 +2394,35 @@
       root.style.removeProperty('--glass-border');
       root.style.removeProperty('--glass-border-hover');
       root.style.removeProperty('--particle-color');
+      root.style.removeProperty('--text-main');
+      root.style.removeProperty('--text-muted');
+    }
+
+    function updateActiveCrystalState(currentHex = safeStorage.getItem('shinsekai-custom-theme-color') || '#a6e3a1') {
+      const normHex = (currentHex.startsWith('#') ? currentHex : '#' + currentHex).toLowerCase();
+      let matched = null;
+      if (spectrumCrystalsGrid) {
+        const crystals = spectrumCrystalsGrid.querySelectorAll('.chakra-crystal');
+        crystals.forEach(cr => {
+          const isMatch = cr.dataset.color.toLowerCase() === normHex;
+          cr.classList.toggle('active', isMatch);
+          if (isMatch) matched = cr;
+        });
+      }
+      if (spectrumCoreLabel) {
+        if (matched) {
+          spectrumCoreLabel.textContent = `${matched.dataset.kanji} · ${matched.dataset.rom}`;
+        } else {
+          spectrumCoreLabel.textContent = 'カスタム周波数';
+        }
+      }
     }
 
     function applyCustomTheme(hexColor, syncScene = false) {
       let rawHex = String(hexColor || safeStorage.getItem('shinsekai-custom-theme-color') || '#a6e3a1').trim();
       if (!rawHex.startsWith('#')) rawHex = '#' + rawHex;
       if (rawHex.length === 4) rawHex = '#' + rawHex[1] + rawHex[1] + rawHex[2] + rawHex[2] + rawHex[3] + rawHex[3];
-      const hex = /^#[0-9a-fA-F]{6}$/.test(rawHex) ? rawHex : '#a6e3a1';
+      const hex = /^#[0-9a-fA-F]{6}$/.test(rawHex) ? rawHex.toLowerCase() : '#a6e3a1';
       currentThemeKey = 'custom';
       currentThemeIdx = themes.findIndex(t => t.key === 'custom');
       if (currentThemeIdx === -1) currentThemeIdx = themes.length - 1;
@@ -2358,13 +2439,35 @@
       if (themeLabel) themeLabel.textContent = 'カスタム';
       const themeLabelSub = document.getElementById('theme-label-sub');
       if (themeLabelSub) themeLabelSub.textContent = 'Custom';
-      if (themeColorDot) themeColorDot.style.background = hex;
+      if (themeColorDot) {
+        themeColorDot.style.background = hex;
+        themeColorDot.style.boxShadow = '0 0 8px ' + hex;
+      }
 
-      if (customThemeDot) customThemeDot.style.background = hex;
-      if (customThemeHex) customThemeHex.textContent = hex.toUpperCase() + ' · Custom';
-      if (customThemeColorInput && customThemeColorInput.value.toLowerCase() !== hex.toLowerCase()) {
+      if (customThemeDot) {
+        customThemeDot.style.background = hex;
+        customThemeDot.style.boxShadow = '0 0 8px ' + hex;
+      }
+      const upperHex = hex.replace('#', '').toUpperCase();
+      if (customThemeHex) customThemeHex.textContent = upperHex;
+      if (spectrumHexChip) spectrumHexChip.style.borderColor = hex;
+
+      if (customThemeColorInput && customThemeColorInput.value.toLowerCase() !== hex) {
         customThemeColorInput.value = hex;
       }
+      if (spectrumHexTextInput && document.activeElement !== spectrumHexTextInput) {
+        spectrumHexTextInput.value = upperHex;
+      }
+      const hue = hexToHue(hex);
+      if (spectrumHueSlider && document.activeElement !== spectrumHueSlider) {
+        spectrumHueSlider.value = hue;
+      }
+      if (spectrumHueBadge) {
+        spectrumHueBadge.textContent = `${hue}° FREQ`;
+      }
+
+      if (themeHeaderBadge) themeHeaderBadge.textContent = 'CUSTOM';
+      if (spectrumStatusTag) spectrumStatusTag.textContent = 'ACTIVE';
 
       const lore = themeBootLore.custom || themeBootLoreTemplates.custom;
       if (bootPill) bootPill.textContent = lore.tag;
@@ -2375,6 +2478,9 @@
         item.classList.remove('active');
       });
       if (customThemeItem) customThemeItem.classList.add('active');
+      if (spectrumTuner) spectrumTuner.classList.add('active');
+
+      updateActiveCrystalState(hex);
 
       refreshParticleColors();
       if (particlesStatusIcon && particlesActive) {
@@ -2400,7 +2506,10 @@
       if (themeLabel) themeLabel.textContent = t.label;
       const themeLabelSub = document.getElementById('theme-label-sub');
       if (themeLabelSub) themeLabelSub.textContent = t.labelEn || '';
-      if (themeColorDot) themeColorDot.style.background = t.color;
+      if (themeColorDot) {
+        themeColorDot.style.background = t.color;
+        themeColorDot.style.boxShadow = '0 0 6px ' + t.color;
+      }
 
       const lore = themeBootLore[t.key] || themeBootLore.crimson;
       if (bootPill) bootPill.textContent = lore.tag;
@@ -2411,6 +2520,9 @@
         item.classList.toggle('active', item.dataset.theme === t.key);
       });
       if (customThemeItem) customThemeItem.classList.remove('active');
+      if (spectrumTuner) spectrumTuner.classList.remove('active');
+      if (themeHeaderBadge) themeHeaderBadge.textContent = 'OPTIMAL';
+      if (spectrumStatusTag) spectrumStatusTag.textContent = 'STANDBY';
 
       refreshParticleColors();
       if (particlesStatusIcon && particlesActive) {
@@ -2442,45 +2554,179 @@
       }
     }
 
+    function initSpectrumTuner() {
+      // 1. Populate Chakra Crystals
+      if (spectrumCrystalsGrid && spectrumCrystalsGrid.children.length === 0) {
+        CHAKRA_CRYSTALS.forEach(c => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'chakra-crystal';
+          btn.dataset.color = c.color;
+          btn.dataset.key = c.key;
+          btn.dataset.kanji = c.kanji;
+          btn.dataset.rom = c.rom;
+          btn.title = `${c.kanji} (${c.rom}) - ${c.desc}`;
+          btn.setAttribute('aria-label', `${c.kanji} ${c.rom} (${c.color})`);
+          btn.style.setProperty('--crystal-c', c.color);
+
+          btn.addEventListener('mouseenter', () => {
+            if (spectrumCoreLabel) spectrumCoreLabel.textContent = `${c.kanji} · ${c.rom}`;
+          });
+          btn.addEventListener('mouseleave', () => {
+            updateActiveCrystalState();
+          });
+
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            applyCustomTheme(c.color, false);
+          });
+
+          spectrumCrystalsGrid.appendChild(btn);
+        });
+      }
+
+      // 2. Continuous Hue Frequency Slider (drag live)
+      if (spectrumHueSlider) {
+        spectrumHueSlider.addEventListener('input', (e) => {
+          e.stopPropagation();
+          const hue = parseInt(e.target.value, 10) || 0;
+          const hex = hslToHex(hue, 88, 62);
+          if (spectrumHueBadge) spectrumHueBadge.textContent = `${hue}° FREQ`;
+          if (spectrumHexTextInput) spectrumHexTextInput.value = hex.replace('#', '').toUpperCase();
+          if (customThemeColorInput) customThemeColorInput.value = hex;
+          applyCustomTheme(hex, false);
+        });
+        spectrumHueSlider.addEventListener('change', (e) => {
+          e.stopPropagation();
+          const hue = parseInt(e.target.value, 10) || 0;
+          const hex = hslToHex(hue, 88, 62);
+          applyCustomTheme(hex, false);
+        });
+      }
+
+      // 3. Hex Code Direct Terminal Input
+      if (spectrumHexTextInput) {
+        spectrumHexTextInput.addEventListener('input', (e) => {
+          e.stopPropagation();
+          let val = e.target.value.replace(/[^0-9a-fA-F]/g, '').slice(0, 6);
+          e.target.value = val.toUpperCase();
+          if (val.length === 6) {
+            applyCustomTheme('#' + val, false);
+          }
+        });
+
+        spectrumHexTextInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            e.stopPropagation();
+            let val = spectrumHexTextInput.value.replace(/[^0-9a-fA-F]/g, '').slice(0, 6);
+            if (val.length === 3) {
+              val = val[0] + val[0] + val[1] + val[1] + val[2] + val[2];
+            }
+            if (val.length === 6) {
+              applyCustomTheme('#' + val, false);
+            }
+          }
+        });
+      }
+
+      // 4. Sync Button
+      if (spectrumSyncBtn) {
+        spectrumSyncBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          let val = (spectrumHexTextInput ? spectrumHexTextInput.value : '').replace(/[^0-9a-fA-F]/g, '').slice(0, 6);
+          if (val.length === 3) {
+            val = val[0] + val[0] + val[1] + val[1] + val[2] + val[2];
+          }
+          if (val.length === 6) {
+            applyCustomTheme('#' + val, false);
+          }
+        });
+      }
+
+      // 5. System Palette Eyedropper (<input type="color">)
+      if (customThemeColorInput) {
+        customThemeColorInput.addEventListener('click', (e) => {
+          e.stopPropagation();
+        });
+        customThemeColorInput.addEventListener('input', (e) => {
+          e.stopPropagation();
+          applyCustomTheme(e.target.value, false);
+        });
+        customThemeColorInput.addEventListener('change', (e) => {
+          e.stopPropagation();
+          applyCustomTheme(e.target.value, false);
+        });
+      }
+
+      const nativePickerLabel = document.querySelector('.spectrum-native-label');
+      if (nativePickerLabel) {
+        nativePickerLabel.addEventListener('click', (e) => {
+          e.stopPropagation();
+        });
+      }
+
+      // 6. Custom Deck Header Row (Click activates custom theme without closing popover)
+      if (customThemeItem) {
+        customThemeItem.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const current = (spectrumHexTextInput && spectrumHexTextInput.value.length === 6 ? '#' + spectrumHexTextInput.value : null)
+            || (customThemeColorInput && customThemeColorInput.value)
+            || safeStorage.getItem('shinsekai-custom-theme-color')
+            || '#a6e3a1';
+          applyCustomTheme(current, false);
+        });
+        customThemeItem.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            e.stopPropagation();
+            const current = (spectrumHexTextInput && spectrumHexTextInput.value.length === 6 ? '#' + spectrumHexTextInput.value : null)
+              || (customThemeColorInput && customThemeColorInput.value)
+              || safeStorage.getItem('shinsekai-custom-theme-color')
+              || '#a6e3a1';
+            applyCustomTheme(current, false);
+          }
+        });
+      }
+
+      // 7. Prevent any clicks inside the spectrum deck from closing the popover
+      if (spectrumTuner) {
+        spectrumTuner.addEventListener('click', (e) => {
+          e.stopPropagation();
+        });
+      }
+
+      // 8. Preset Theme Button Clicks (apply and dismiss popover)
+      themeItems.forEach(item => {
+        item.addEventListener('click', () => {
+          applyTheme(item.dataset.theme, true);
+          if (themePopover) themePopover.classList.remove('open');
+        });
+      });
+
+      // 9. Initial calibration of spectrum controls
+      const savedHex = safeStorage.getItem('shinsekai-custom-theme-color') || '#a6e3a1';
+      const upper = savedHex.replace('#', '').toUpperCase();
+      if (spectrumHexTextInput) spectrumHexTextInput.value = upper;
+      if (customThemeHex) customThemeHex.textContent = upper;
+      if (customThemeDot) {
+        customThemeDot.style.background = savedHex;
+        customThemeDot.style.boxShadow = '0 0 8px ' + savedHex;
+      }
+      if (customThemeColorInput) customThemeColorInput.value = savedHex;
+      const hue = hexToHue(savedHex);
+      if (spectrumHueSlider) spectrumHueSlider.value = hue;
+      if (spectrumHueBadge) spectrumHueBadge.textContent = `${hue}° FREQ`;
+      updateActiveCrystalState(savedHex);
+    }
+
     if (themeBtn && themePopover) {
       themeBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         if (scenePopover) scenePopover.classList.remove('open');
         themePopover.classList.toggle('open');
       });
-
-      themeItems.forEach(item => {
-        item.addEventListener('click', () => {
-          applyTheme(item.dataset.theme, true);
-          themePopover.classList.remove('open');
-        });
-      });
-
-      if (customThemeItem) {
-        customThemeItem.addEventListener('click', (e) => {
-          if (e.target.closest('.custom-color-picker-label')) return;
-          const currentColor = (customThemeColorInput && customThemeColorInput.value) || safeStorage.getItem('shinsekai-custom-theme-color') || '#a6e3a1';
-          applyCustomTheme(currentColor, false);
-          themePopover.classList.remove('open');
-        });
-        customThemeItem.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            const currentColor = (customThemeColorInput && customThemeColorInput.value) || safeStorage.getItem('shinsekai-custom-theme-color') || '#a6e3a1';
-            applyCustomTheme(currentColor, false);
-            themePopover.classList.remove('open');
-          }
-        });
-      }
-
-      if (customThemeColorInput) {
-        customThemeColorInput.addEventListener('input', (e) => {
-          applyCustomTheme(e.target.value, false);
-        });
-        customThemeColorInput.addEventListener('change', (e) => {
-          applyCustomTheme(e.target.value, false);
-        });
-      }
+      initSpectrumTuner();
     }
 
     const initialTheme = paramTheme || safeStorage.getItem('shinsekai-theme') || 'crimson';
