@@ -1655,6 +1655,7 @@
       isCustomWallpaper = true;
       currentWallpaperMode = record.type || 'static';
       document.body.setAttribute('data-wallpaper-mode', currentWallpaperMode);
+      if (document.body.getAttribute('data-scene') === 'eco') document.body.setAttribute('data-scene', 'custom'); // Bugfix: custom wallpapers were staying invisible after Eco mode because the eco CSS rule (body[data-scene="eco"] .video-stage{display:none}) was never cleared
 
       const displayName = record.name.length > 14 ? record.name.slice(0, 12) + '…' : record.name;
 
@@ -1716,6 +1717,7 @@
       isCustomWallpaper = true;
       currentWallpaperMode = record.type || 'static';
       document.body.setAttribute('data-wallpaper-mode', currentWallpaperMode);
+      if (document.body.getAttribute('data-scene') === 'eco') document.body.setAttribute('data-scene', 'custom'); // Bugfix: custom wallpapers were staying invisible after Eco mode because the eco CSS rule (body[data-scene="eco"] .video-stage{display:none}) was never cleared
 
       const displayName = record.name.length > 14 ? record.name.slice(0, 12) + '…' : record.name;
 
@@ -2449,7 +2451,12 @@
       if (spectrumCrystalsGrid) {
         const crystals = spectrumCrystalsGrid.querySelectorAll('.chakra-crystal');
         crystals.forEach(cr => {
-          const isMatch = cr.dataset.color.toLowerCase() === normHex;
+          // Bugfix: only highlight a crystal as active when the "custom" theme is
+          // actually the one in effect. Previously this only compared the crystal's
+          // color to the last-saved custom hex, so switching to a default theme
+          // (e.g. crimson) after picking a color preset (e.g. gold) still showed
+          // that preset as "active" on hover, even though it wasn't applied anymore.
+          const isMatch = currentThemeKey === 'custom' && cr.dataset.color.toLowerCase() === normHex;
           cr.classList.toggle('active', isMatch);
           if (isMatch) matched = cr;
         });

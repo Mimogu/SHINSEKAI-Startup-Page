@@ -11,7 +11,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://www.google.com">
   <link rel="preconnect" href="https://icon.horse">
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Plus+Jakarta+Sans:wght@600;800&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap" rel="stylesheet">
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Plus+Jakarta+Sans:wght@600;800&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Plus+Jakarta+Sans:wght@600;800&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap"></noscript>
   <script src="theme-core.min.js?v=2.3"></script>
   <!-- Early Zero-Latency Theme & Profile Sync -->
   <script>
@@ -29,9 +30,27 @@
         document.documentElement.setAttribute('data-scene', s);
         document.documentElement.setAttribute('data-tier', tier);
 
+        // Sync mobile browser chrome (address bar / task switcher) color to the active theme
+        var THEME_BASE_COLORS = {
+          tokyonight: '#0b0f19',
+          crimson: '#0d080e',
+          sakura: '#140d18',
+          catppuccin: '#11111b',
+          cyberpunk: '#040710',
+          custom: '#080c14'
+        };
+        var metaThemeColor = document.querySelector('meta[name="theme-color"]');
+        if (!metaThemeColor) {
+          metaThemeColor = document.createElement('meta');
+          metaThemeColor.setAttribute('name', 'theme-color');
+          document.head.appendChild(metaThemeColor);
+        }
+        metaThemeColor.setAttribute('content', THEME_BASE_COLORS[t] || THEME_BASE_COLORS.crimson);
+
         if (t === 'custom' && window.SHINSEKAI_deriveThemeVars) {
           var c = (params && (params.get('color') || params.get('hex'))) || localStorage.getItem('shinsekai-custom-theme-color') || '#a6e3a1';
           var v = window.SHINSEKAI_deriveThemeVars(c);
+          metaThemeColor.setAttribute('content', v.themeBase);
           var root = document.documentElement;
           root.style.setProperty('--theme-base', v.themeBase, 'important');
           root.style.setProperty('--accent', v.accent, 'important');
