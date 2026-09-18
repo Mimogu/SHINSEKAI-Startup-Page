@@ -23,25 +23,26 @@
   --grain-size: 3px;
 }
 
-/* ─── ECO TIER: HARD KILL SWITCH FOR backdrop-filter (fix directive §4.1) ───
-   TIER_CONFIG.eco sets --blur-px to 0px, but backdrop-filter: blur(0px) is
-   NOT the same cost as no backdrop-filter at all — several engines still
-   allocate an isolated backdrop layer and re-sample everything behind it
-   every frame just because the property is present and non-`none`. That's
-   expensive here specifically because the live <video> background keeps
-   playing underneath ~10 stacked glass panels. script.js's applyTierPreset()
-   mirrors the active tier onto [data-tier] on <body> (and <html>, for the
-   pre-hydration boot script) precisely so this selector list can flip the
-   property off entirely on eco, not just zero its radius. Keep this in sync
-   with every rule below that declares backdrop-filter: blur(var(--blur-px)). */
-[data-tier="eco"] .anime-popover.open,
+/* ─── ECO TIER: FULLY DISABLE BACKDROP-FILTER ───
+   --blur-px is already set to 0 on the eco tier, but `backdrop-filter:
+   blur(0px)` is not guaranteed to be free — several engines still allocate
+   a full backdrop-root compositing layer and resample everything beneath
+   it for any non-`none` backdrop-filter value, blur radius aside. Since
+   the whole point of eco tier is to shed GPU cost (and the live <video>
+   background plays underneath most of these panels), remove the property
+   outright here instead of relying on a zeroed radius. data-tier is set
+   on <html>/<body> by the anti-FOUC boot script and by applyTierPreset()
+   in script.js, so this also applies immediately when switching tiers
+   live, not just after a reload. This mirrors the same opaque-background
+   fallback already used for the small-viewport / mobile breakpoint below. */
+[data-tier="eco"] .anime-popover,
 [data-tier="eco"] .search-capsule,
 [data-tier="eco"] .tab-blade,
 [data-tier="eco"] .hologram-drawer,
 [data-tier="eco"] .anime-subtitles-bar,
 [data-tier="eco"] .boot-terminal-card,
-[data-tier="eco"] .link-editor-backdrop.open,
-[data-tier="eco"] .link-editor-backdrop.open .link-editor-dialog {
+[data-tier="eco"] .link-editor-backdrop,
+[data-tier="eco"] .link-editor-dialog {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }
@@ -202,10 +203,7 @@ html, body {
   height: 100vh;
   object-fit: cover;
   object-position: center;
-  /* Fix directive §4.2: this is a static <img>, not a per-frame-animated
-     element (only its opacity transitions, on live/static mode switch) —
-     no GPU layer forced here, unlike .bg-video which genuinely needs one. */
-  transform: scale(1.02);
+  transform: translate3d(0, 0, 0) scale(1.02);
   backface-visibility: hidden;
   transition: opacity 0.4s ease;
   contain: strict;
@@ -1517,6 +1515,11 @@ body[data-particles="off"] .ambient-canvas {
   pointer-events: none;
 }
 
+.spectrum-sat-pad:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
 .spectrum-sat-cursor {
   position: absolute;
   top: 11%;
@@ -1948,21 +1951,17 @@ body[data-particles="off"] .ambient-canvas {
   backdrop-filter: blur(var(--blur-px));
   -webkit-backdrop-filter: blur(var(--blur-px));
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.6), 0 0 16px var(--accent-soft);
+  transform: translateZ(0);
   transition: all 0.22s var(--ease-cinematic);
   position: relative;
   overflow: hidden;
 }
 
-/* Fix directive §4.2: .tab-blade and its states are interaction-triggered
-   (hover/active), not continuously animated — the forced translateZ(0)
-   layer promotion here held a GPU backing store open the whole time this
-   tab existed, for no benefit while idle. Left off the base/active states;
-   :hover keeps its actual translateY lift, just without forcing a layer. */
 .tab-blade:hover {
   background: rgba(14, 20, 36, 0.9);
   border-color: var(--glass-border-hover);
   border-top-color: var(--accent);
-  transform: translateY(-2px);
+  transform: translateY(-2px) translateZ(0);
   box-shadow: 0 14px 36px rgba(0, 0, 0, 0.7), 0 0 24px var(--accent-glow);
 }
 
@@ -1970,6 +1969,7 @@ body[data-particles="off"] .ambient-canvas {
   background: rgba(14, 20, 36, 0.95);
   border-color: var(--accent);
   border-top-color: var(--accent);
+  transform: translateZ(0);
   box-shadow: 0 14px 40px rgba(0, 0, 0, 0.75), 0 0 28px var(--accent-glow);
 }
 
@@ -2040,9 +2040,7 @@ body[data-particles="off"] .ambient-canvas {
   width: 100%;
   max-height: 320px;
   opacity: 1;
-  /* Fix directive §4.2: opens/closes on interaction, not every frame —
-     translateZ(0) dropped, translateY(0) kept as the actual open-state value. */
-  transform: translateY(0);
+  transform: translateY(0) translateZ(0);
   background: rgba(10, 14, 26, 0.9);
   border: 1px solid var(--glass-border);
   border-top: 2px solid var(--accent);
@@ -2240,9 +2238,7 @@ body:not([data-dock-pinned="true"]) .blade-launcher-container:not(:hover):not(.o
   -webkit-backdrop-filter: blur(var(--blur-px));
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7), 0 0 20px var(--accent-soft);
   cursor: pointer;
-  /* Fix directive §4.2: static most of the time (only its dialogue text
-     content swaps via JS) — no per-frame animation here to justify a
-     forced GPU layer. */
+  transform: translateZ(0);
   transition: all 0.22s var(--ease-cinematic);
 }
 
@@ -3682,3 +3678,5 @@ body.boot-active .anime-subtitles-bar {
   font-size: 0.78rem;
   color: var(--text-muted);
 }
+
+

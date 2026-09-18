@@ -145,16 +145,16 @@ Switch factions instantly via the header dropdown or by pressing <kbd>t</kbd>:
 > ### 🎛️ 調色中枢 · SPECTRUM TUNER & CHAKRA MATRIX
 > Beside the 5 classic faction presets, Shinsekai includes an in-cockpit **Anime Spectrum Tuner** with real-time UI harmonization:
 > - **10 霊力結晶 (Chakra Crystals)**: Instant 1-click resonant anime color frequencies with animated targeting rings:
->   - ⚡ **雷光・神速 (`#fbbf24`)**: Zenitsu Agatsuma & Killua Zoldyck Godspeed
->   - 🍃 **風神・翠緑 (`#10b981`)**: Deku One For All & Wind Hashira Sanemi
->   - 🌊 **碧羅・蒼波 (`#06b6d4`)**: Giyu Tomioka Water Breathing & Gojo Azure
->   - 🔮 **虚式・紫電 (`#c084fc`)**: Satoru Gojo Limitless Hollow Technique: Purple
->   - 🩸 **真紅・終焉 (`#ff3366`)**: Asuka Langley EVA-02 & Alucard Blood Core
->   - 🌸 **幽玄・紅桜 (`#f43f5e`)**: Byakuya Kuchiki Senbonzakura & Mitsuri Kanroji
->   - 🔥 **日輪・業火 (`#fb923c`)**: Kyojuro Rengoku 9th Form Rengoku & Flame Alchemist
->   - ❄️ **氷華・零度 (`#38bdf8`)**: Toshiro Hitsugaya Daiguren Hyorinmaru & Glacial Frost
->   - ☣️ **毒蝶・幻紫 (`#d946ef`)**: Shinobu Kocho Insect Dance & EVA-01 Berserk Neon
->   - 🌌 **星骸・白金 (`#e2e8f0`)**: Star Platinum & Saitama Serious Series White
+>   - ⚡ **雷光・神速 (`#fbbf24`)**: Amber Gold
+>   - 🍃 **風神・翠緑 (`#10b981`)**: Emerald Green
+>   - 🌊 **碧羅・蒼波 (`#06b6d4`)**: Ocean Cyan
+>   - 🔮 **虚式・紫電 (`#c084fc`)**: Lavender Purple
+>   - 🩸 **真紅・終焉 (`#ff3366`)**: Crimson Red
+>   - 🌸 **幽玄・紅桜 (`#f43f5e`)**: Rose Pink
+>   - 🔥 **日輪・業火 (`#fb923c`)**: Sunset Orange
+>   - ❄️ **氷華・零度 (`#38bdf8`)**: Sky Blue
+>   - ☣️ **毒蝶・幻紫 (`#d946ef`)**: Magenta Purple
+>   - 🌌 **星骸・白金 (`#e2e8f0`)**: Platinum White
 > - **周波数調律 (Hue Resonator)**: Continuous `0° - 360°` full-spectrum mecha slider with live angle display and real-time color shifts across the dashboard and particle engine.
 > - **色彩座標入力 (Hex Coordinate Terminal)**: Direct terminal input box `[ #______ ]` with instant validation and sync, plus a native system palette eyedropper tool.
 

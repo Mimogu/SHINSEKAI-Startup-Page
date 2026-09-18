@@ -85,14 +85,12 @@
       const cfg = TIER_CONFIG[tier] || TIER_CONFIG.mid;
       document.body.style.setProperty('--blur-px', cfg.blurPx + 'px');
       document.body.style.setProperty('--grain-size', cfg.grainSize + 'px');
-      // Fix directive §4.1: the index.html boot script sets this once from
-      // the stored/URL tier at first paint, but nothing kept it in sync
-      // when the tier changed at runtime (tier chips, auto-downgrade on
-      // sustained bad frame times). Without this, [data-tier="eco"] CSS —
-      // including the backdrop-filter kill switch below — never actually
-      // applies after a runtime tier switch, only on a fresh page load.
-      document.body.setAttribute('data-tier', tier);
+      // `--blur-px: 0px` alone doesn't reliably zero out backdrop-filter's
+      // compositor cost in every engine. [data-tier="eco"] in style.css
+      // removes the `backdrop-filter` property outright on the handful of
+      // glass panels that use it, and needs this attribute to key off.
       document.documentElement.setAttribute('data-tier', tier);
+      document.body.setAttribute('data-tier', tier);
       if (!cfg.grain) setGrain(false);
       if (typeof respawnParticles === 'function') respawnParticles(); // Directly respawn particles matching count without re-running initCanvas() or adding resize listeners
       updateTierUI(tier);
@@ -103,13 +101,17 @@
       window.detectTier = detectTier;
     }
 
-    // Apply blur-px / grain-size CSS vars on boot from stored/detected tier
+    // Apply blur-px / grain-size CSS vars + data-tier attribute on boot from
+    // stored/detected tier. index.html's anti-FOUC script already sets
+    // data-tier before this (deferred) script runs, but this is set again
+    // here defensively in case script.js is ever loaded without that boot
+    // script (e.g. a future standalone/embedded use).
     (function() {
       const cfg = TIER_CONFIG[currentTier] || TIER_CONFIG.mid;
       document.body.style.setProperty('--blur-px', cfg.blurPx + 'px');
       document.body.style.setProperty('--grain-size', cfg.grainSize + 'px');
-      document.body.setAttribute('data-tier', currentTier);
       document.documentElement.setAttribute('data-tier', currentTier);
+      document.body.setAttribute('data-tier', currentTier);
     })();
 
     const urlParams = (typeof window !== 'undefined' && window.location) ? new URLSearchParams(window.location.search) : null;
@@ -161,10 +163,10 @@
     const spectrumSatPad = document.getElementById('spectrum-sat-pad');
     const spectrumSatCursor = document.getElementById('spectrum-sat-cursor');
     const spectrumSvBadge = document.getElementById('spectrum-sv-badge');
-    const spectrumEyedropperBtn = document.getElementById('spectrum-eyedropper-btn');
     const spectrumRgbR = document.getElementById('spectrum-rgb-r');
     const spectrumRgbG = document.getElementById('spectrum-rgb-g');
     const spectrumRgbB = document.getElementById('spectrum-rgb-b');
+    const spectrumEyedropperBtn = document.getElementById('spectrum-eyedropper-btn');
 
     const sceneBtn = document.getElementById('scene-btn');
     const sceneLabel = document.getElementById('scene-label');
@@ -407,30 +409,23 @@
       try { return localStorage.getItem('shinsekai-theme') || 'crimson'; } catch (e) { return 'crimson'; }
     })();
 
-    // Color math (hex/RGB/HSL/HSV conversion, the legibility-floor clamp,
-    // and the full custom-theme CSS-variable derivation) lives in
-    // theme-core.js — the same file the anti-FOUC boot script in
-    // index.html <head> calls before this script even loads. Aliasing the
-    // names here means every existing call site below (hexToRgb(...),
-    // hslToHex(...), etc.) keeps working unchanged, but there is now only
-    // ONE implementation of this math in the whole app (fix directive §3),
-    // so a future tweak — like the lightness floor in getLegibleAccent —
-    // can't silently drift out of sync between first paint and
-    // post-hydration ever again.
-    // Defensive fallback: theme-core.js is always loaded synchronously
-    // before this (deferred) script in index.html, so this should never
-    // actually be needed — but if it 404s or is ever missing, failing loud
-    // here would break every other feature on the page (search, links,
-    // boot sequence, etc.) that has nothing to do with theming. An empty
-    // stub keeps the rest of the app running; only custom-theme color math
-    // degrades.
-    if (!window.SHINSEKAI_THEME_CORE) {
-      console.error('[shinsekai] theme-core.js failed to load — custom theme colors will not work correctly.');
+    // Color math (hex/RGB/HSL/HSV conversions + the near-black legibility
+    // clamp) lives in theme-core.js, shared with the anti-FOUC boot script
+    // in index.html <head>. That file loads synchronously before this one
+    // (script.js is `defer`red), so window.SHINSEKAI_THEME is guaranteed to
+    // exist by the time this runs. Keeping one copy of this math means the
+    // first-paint boot colors and the post-hydration runtime colors can
+    // never drift apart the way two hand-maintained copies eventually would.
+    const SHINSEKAI_THEME_CORE = window.SHINSEKAI_THEME || null;
+    if (!SHINSEKAI_THEME_CORE) {
+      console.error('[SHINSEKAI] theme-core.js did not load — custom theme colors will be wrong. Check that <script src="theme-core.js"> is present before script.js in index.html.');
     }
-    const {
-      hexToRgb, rgbToHex, rgbToHsl, hslToHex, hexToHue,
-      hsvToHex, hexToHsv, getLegibleAccent, deriveThemeVars
-    } = window.SHINSEKAI_THEME_CORE || {};
+    const FALLBACK_RGB = { r: 166, g: 227, b: 161 };
+    const hexToRgb = SHINSEKAI_THEME_CORE ? SHINSEKAI_THEME_CORE.hexToRgb : () => ({ ...FALLBACK_RGB });
+    const hslToHex = SHINSEKAI_THEME_CORE ? SHINSEKAI_THEME_CORE.hslToHex : () => '#a6e3a1';
+    const hexToHue = SHINSEKAI_THEME_CORE ? SHINSEKAI_THEME_CORE.hexToHue : () => 0;
+    const getLegibleAccent = SHINSEKAI_THEME_CORE ? SHINSEKAI_THEME_CORE.getLegibleAccent : (hex) => ({ hex: hex || '#a6e3a1', ...FALLBACK_RGB });
+    const deriveThemeVars = SHINSEKAI_THEME_CORE ? SHINSEKAI_THEME_CORE.deriveThemeVars : null;
 
     const THEME_PARTICLE_ICONS = {
       crimson: '🔥',
@@ -2369,32 +2364,30 @@
     ];
 
     function applyCustomThemeColor(hex) {
-      // Single source of truth (fix directive §3): the exact same
-      // derivation the anti-FOUC boot script runs at first paint, via
-      // theme-core.js. Includes the legibility-floor clamp from §1, so a
-      // near-black or washed-out pick never turns into invisible text.
-      const {
-        themeBase, accent: accentHex, accentGlow, accentSoft, accentAlt,
-        accentCyan, glassBg, glassBorder, glassBorderHover, particleColor,
-        textMain, textBright, textMuted
-      } = deriveThemeVars(hex);
+      // deriveThemeVars() (theme-core.js) does the raw-vs-legibility-clamped
+      // split internally: themeBase/glassBg come from the raw picked color
+      // (fine at any darkness — they're background tints), everything else
+      // (accent/glow/border/particle/text) comes from a legibility-clamped
+      // version so a near-black or washed-out pick never renders invisible.
+      const v = deriveThemeVars ? deriveThemeVars(hex) : null;
+      if (!v) return; // theme-core.js missing — already logged above.
 
       const targets = [document.documentElement, document.body];
       targets.forEach(el => {
         if (!el) return;
-        el.style.setProperty('--theme-base', themeBase, 'important');
-        el.style.setProperty('--accent', accentHex, 'important');
-        el.style.setProperty('--accent-glow', accentGlow, 'important');
-        el.style.setProperty('--accent-soft', accentSoft, 'important');
-        el.style.setProperty('--accent-alt', accentAlt, 'important');
-        el.style.setProperty('--accent-cyan', accentCyan, 'important');
-        el.style.setProperty('--glass-bg', glassBg, 'important');
-        el.style.setProperty('--glass-border', glassBorder, 'important');
-        el.style.setProperty('--glass-border-hover', glassBorderHover, 'important');
-        el.style.setProperty('--particle-color', particleColor, 'important');
-        el.style.setProperty('--text-main', textMain, 'important');
-        el.style.setProperty('--text-bright', textBright, 'important');
-        el.style.setProperty('--text-muted', textMuted, 'important');
+        el.style.setProperty('--theme-base', v.themeBase, 'important');
+        el.style.setProperty('--accent', v.accent, 'important');
+        el.style.setProperty('--accent-glow', v.accentGlow, 'important');
+        el.style.setProperty('--accent-soft', v.accentSoft, 'important');
+        el.style.setProperty('--accent-alt', v.accentAlt, 'important');
+        el.style.setProperty('--accent-cyan', v.accentCyan, 'important');
+        el.style.setProperty('--glass-bg', v.glassBg, 'important');
+        el.style.setProperty('--glass-border', v.glassBorder, 'important');
+        el.style.setProperty('--glass-border-hover', v.glassBorderHover, 'important');
+        el.style.setProperty('--particle-color', v.particleColor, 'important');
+        el.style.setProperty('--text-main', v.textMain, 'important');
+        el.style.setProperty('--text-bright', v.textBright, 'important');
+        el.style.setProperty('--text-muted', v.textMuted, 'important');
       });
 
       let styleTag = document.getElementById('shinsekai-custom-theme-vars');
@@ -2408,21 +2401,50 @@
         html[data-theme="custom"],
         body[data-theme="custom"],
         [data-theme="custom"] {
-          --theme-base: ${themeBase} !important;
-          --accent: ${accentHex} !important;
-          --accent-glow: ${accentGlow} !important;
-          --accent-soft: ${accentSoft} !important;
-          --accent-alt: ${accentAlt} !important;
-          --accent-cyan: ${accentCyan} !important;
-          --glass-bg: ${glassBg} !important;
-          --glass-border: ${glassBorder} !important;
-          --glass-border-hover: ${glassBorderHover} !important;
-          --particle-color: ${particleColor} !important;
-          --text-main: ${textMain} !important;
-          --text-bright: ${textBright} !important;
-          --text-muted: ${textMuted} !important;
+          --theme-base: ${v.themeBase} !important;
+          --accent: ${v.accent} !important;
+          --accent-glow: ${v.accentGlow} !important;
+          --accent-soft: ${v.accentSoft} !important;
+          --accent-alt: ${v.accentAlt} !important;
+          --accent-cyan: ${v.accentCyan} !important;
+          --glass-bg: ${v.glassBg} !important;
+          --glass-border: ${v.glassBorder} !important;
+          --glass-border-hover: ${v.glassBorderHover} !important;
+          --particle-color: ${v.particleColor} !important;
+          --text-main: ${v.textMain} !important;
+          --text-bright: ${v.textBright} !important;
+          --text-muted: ${v.textMuted} !important;
         }
       `;
+    }
+
+    // ─── Saturation/Value pad + RGB fields sync (spectrum tuner) ───
+    // Kept as outer-scope state/functions (not nested in initSpectrumTuner)
+    // so applyCustomTheme() below can call this no matter which control
+    // (crystal click, hue slider, hex input, pad drag, RGB fields, imported
+    // profile) triggered the color change — one sync point, same pattern
+    // already used for the hex readout / hue slider / swatch dots.
+    let satPadDragging = false;
+    function updateSpectrumPadAndRgbUI(hex) {
+      const rgb = hexToRgb(hex);
+      if (spectrumRgbR && document.activeElement !== spectrumRgbR) spectrumRgbR.value = rgb.r;
+      if (spectrumRgbG && document.activeElement !== spectrumRgbG) spectrumRgbG.value = rgb.g;
+      if (spectrumRgbB && document.activeElement !== spectrumRgbB) spectrumRgbB.value = rgb.b;
+
+      if (spectrumSatPad && SHINSEKAI_THEME_CORE) {
+        const hsv = SHINSEKAI_THEME_CORE.rgbToHsv(rgb.r, rgb.g, rgb.b);
+        const hueRgb = SHINSEKAI_THEME_CORE.hsvToRgb(hsv.h, 1, 1);
+        const clamp255 = (n) => Math.max(0, Math.min(255, Math.round(n)));
+        const hueHex = '#' + [hueRgb.r, hueRgb.g, hueRgb.b].map(n => clamp255(n).toString(16).padStart(2, '0')).join('');
+        spectrumSatPad.style.backgroundColor = hueHex;
+        if (spectrumSatCursor && !satPadDragging) {
+          spectrumSatCursor.style.left = (hsv.s * 100).toFixed(1) + '%';
+          spectrumSatCursor.style.top = ((1 - hsv.v) * 100).toFixed(1) + '%';
+        }
+        if (spectrumSvBadge) {
+          spectrumSvBadge.textContent = `S:${Math.round(hsv.s * 100)}% V:${Math.round(hsv.v * 100)}%`;
+        }
+      }
     }
 
     function removeCustomThemeStyles() {
@@ -2460,23 +2482,6 @@
         } else {
           spectrumCoreLabel.textContent = 'カスタム周波数';
         }
-      }
-    }
-
-    // Keeps the in-DOM Saturation/Value pad (fix directive §2) in sync with
-    // whatever control last changed the color — crystal presets, the hue
-    // slider, the hex field, the RGB fields, or a drag on the pad itself.
-    // The pad's own background reflects the pure hue (S:100 V:100 in HSV,
-    // which is the same color as HSL(h, 100%, 50%)); the cursor position
-    // reflects this hex's actual saturation/value within that hue plane.
-    function syncSatPadUI(hex, hue) {
-      if (!spectrumSatPad || !spectrumSatCursor) return;
-      const { s, v } = hexToHsv(hex);
-      spectrumSatPad.style.backgroundColor = hslToHex(hue, 100, 50);
-      spectrumSatCursor.style.left = s + '%';
-      spectrumSatCursor.style.top = (100 - v) + '%';
-      if (spectrumSvBadge) {
-        spectrumSvBadge.textContent = `S:${Math.round(s)}% V:${Math.round(v)}%`;
       }
     }
 
@@ -2527,12 +2532,7 @@
       if (spectrumHueBadge) {
         spectrumHueBadge.textContent = `${hue}° FREQ`;
       }
-
-      const rgbNow = hexToRgb(hex);
-      if (spectrumRgbR && document.activeElement !== spectrumRgbR) spectrumRgbR.value = rgbNow.r;
-      if (spectrumRgbG && document.activeElement !== spectrumRgbG) spectrumRgbG.value = rgbNow.g;
-      if (spectrumRgbB && document.activeElement !== spectrumRgbB) spectrumRgbB.value = rgbNow.b;
-      syncSatPadUI(hex, hue);
+      updateSpectrumPadAndRgbUI(hex);
 
       if (themeHeaderBadge) themeHeaderBadge.textContent = 'CUSTOM';
       if (spectrumStatusTag) spectrumStatusTag.textContent = 'ACTIVE';
@@ -2682,46 +2682,6 @@
         });
       }
 
-      // 2b. In-DOM Saturation & Value Matrix Pad (drag/tap, mouse + touch)
-      if (spectrumSatPad && spectrumSatCursor) {
-        let satPadDragging = false;
-
-        const setFromPadPointer = (clientX, clientY) => {
-          const rect = spectrumSatPad.getBoundingClientRect();
-          const xPct = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
-          const yPct = Math.min(1, Math.max(0, (clientY - rect.top) / rect.height));
-          const satPct = xPct * 100;
-          const valPct = (1 - yPct) * 100;
-          const hue = spectrumHueSlider ? (parseInt(spectrumHueSlider.value, 10) || 0) : hexToHue(safeStorage.getItem('shinsekai-custom-theme-color') || '#a6e3a1');
-          const hex = hsvToHex(hue, satPct, valPct);
-          spectrumSatCursor.style.left = satPct + '%';
-          spectrumSatCursor.style.top = (100 - valPct) + '%';
-          if (spectrumSvBadge) spectrumSvBadge.textContent = `S:${Math.round(satPct)}% V:${Math.round(valPct)}%`;
-          applyCustomTheme(hex, false);
-        };
-
-        spectrumSatPad.addEventListener('pointerdown', (e) => {
-          e.stopPropagation();
-          satPadDragging = true;
-          try { spectrumSatPad.setPointerCapture(e.pointerId); } catch (err) {}
-          setFromPadPointer(e.clientX, e.clientY);
-        });
-        spectrumSatPad.addEventListener('pointermove', (e) => {
-          if (!satPadDragging) return;
-          e.stopPropagation();
-          setFromPadPointer(e.clientX, e.clientY);
-        });
-        spectrumSatPad.addEventListener('pointerup', (e) => {
-          if (!satPadDragging) return;
-          satPadDragging = false;
-          e.stopPropagation();
-          try { spectrumSatPad.releasePointerCapture(e.pointerId); } catch (err) {}
-        });
-        spectrumSatPad.addEventListener('pointercancel', () => {
-          satPadDragging = false;
-        });
-      }
-
       // 3. Hex Code Direct Terminal Input
       if (spectrumHexTextInput) {
         spectrumHexTextInput.addEventListener('input', (e) => {
@@ -2784,57 +2744,108 @@
         });
       }
 
-      // 5b. Eyedropper Trigger Button — the app's own styled control. The
-      // native <input type="color"> above stays completely hidden and is
-      // never the primary UI (fix directive §2); it's only used here as a
-      // way to reach the browser's screen-color-picking feature. Modern
-      // Chromium/Edge expose that directly via window.EyeDropper, which we
-      // prefer since it skips the full native color dialog entirely and
-      // just grants a crosshair for sampling the screen. Browsers without
-      // that API (Firefox, Safari) fall back to opening the hidden native
-      // input, whose own dialog still offers an OS-level eyedropper tool.
+      // 5b. Saturation/Value Matrix Pad (click + drag, in-DOM — no native dialog)
+      if (spectrumSatPad) {
+        const computeSatValFromEvent = (e) => {
+          const rect = spectrumSatPad.getBoundingClientRect();
+          const x = Math.min(Math.max(e.clientX - rect.left, 0), rect.width);
+          const y = Math.min(Math.max(e.clientY - rect.top, 0), rect.height);
+          return {
+            s: rect.width ? x / rect.width : 0,
+            v: rect.height ? 1 - (y / rect.height) : 1
+          };
+        };
+        const clamp255 = (n) => Math.max(0, Math.min(255, Math.round(n)));
+        const rgbToHexStr = (rgb) => '#' + [rgb.r, rgb.g, rgb.b].map(n => clamp255(n).toString(16).padStart(2, '0')).join('');
+        const applyFromSatVal = (s, v) => {
+          if (!SHINSEKAI_THEME_CORE) return;
+          const hue = spectrumHueSlider ? (parseInt(spectrumHueSlider.value, 10) || 0) : 0;
+          const rgb = SHINSEKAI_THEME_CORE.hsvToRgb(hue, s, v);
+          applyCustomTheme(rgbToHexStr(rgb), false);
+        };
+
+        spectrumSatPad.addEventListener('pointerdown', (e) => {
+          e.stopPropagation();
+          satPadDragging = true;
+          try { spectrumSatPad.setPointerCapture(e.pointerId); } catch (err) {}
+          const { s, v } = computeSatValFromEvent(e);
+          applyFromSatVal(s, v);
+        });
+        spectrumSatPad.addEventListener('pointermove', (e) => {
+          if (!satPadDragging) return;
+          e.stopPropagation();
+          const { s, v } = computeSatValFromEvent(e);
+          if (spectrumSatCursor) {
+            spectrumSatCursor.style.left = (s * 100).toFixed(1) + '%';
+            spectrumSatCursor.style.top = ((1 - v) * 100).toFixed(1) + '%';
+          }
+          applyFromSatVal(s, v);
+        });
+        const endSatPadDrag = (e) => {
+          if (!satPadDragging) return;
+          satPadDragging = false;
+          try { spectrumSatPad.releasePointerCapture(e.pointerId); } catch (err) {}
+        };
+        spectrumSatPad.addEventListener('pointerup', endSatPadDrag);
+        spectrumSatPad.addEventListener('pointercancel', endSatPadDrag);
+
+        // Keyboard: arrow keys nudge saturation/value by 2% steps
+        spectrumSatPad.addEventListener('keydown', (e) => {
+          if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) return;
+          e.preventDefault();
+          e.stopPropagation();
+          if (!SHINSEKAI_THEME_CORE) return;
+          const hue = spectrumHueSlider ? (parseInt(spectrumHueSlider.value, 10) || 0) : 0;
+          const rawHex = safeStorage.getItem('shinsekai-custom-theme-color') || '#a6e3a1';
+          const rgb = hexToRgb(rawHex);
+          const hsv = SHINSEKAI_THEME_CORE.rgbToHsv(rgb.r, rgb.g, rgb.b);
+          const step = 0.02;
+          let s = hsv.s, v = hsv.v;
+          if (e.key === 'ArrowRight') s = Math.min(1, s + step);
+          if (e.key === 'ArrowLeft') s = Math.max(0, s - step);
+          if (e.key === 'ArrowUp') v = Math.min(1, v + step);
+          if (e.key === 'ArrowDown') v = Math.max(0, v - step);
+          applyFromSatVal(s, v);
+        });
+      }
+
+      // 5c. RGB Numeric Channel Inputs
+      [spectrumRgbR, spectrumRgbG, spectrumRgbB].forEach(input => {
+        if (!input) return;
+        input.addEventListener('input', (e) => {
+          e.stopPropagation();
+          const clamp255 = (v) => Math.max(0, Math.min(255, Math.round(Number(v) || 0)));
+          const r = clamp255(spectrumRgbR ? spectrumRgbR.value : 0);
+          const g = clamp255(spectrumRgbG ? spectrumRgbG.value : 0);
+          const b = clamp255(spectrumRgbB ? spectrumRgbB.value : 0);
+          const hex = '#' + [r, g, b].map(n => n.toString(16).padStart(2, '0')).join('');
+          applyCustomTheme(hex, false);
+        });
+        input.addEventListener('keydown', (e) => e.stopPropagation());
+        input.addEventListener('click', (e) => e.stopPropagation());
+      });
+
+      // 5d. Screen Eyedropper — uses the native EyeDropper API (a lightweight
+      // crosshair, not a dialog) where supported (Chromium). Firefox/Safari
+      // don't implement it yet, so those fall back to the hidden
+      // <input type="color">, which still opens the OS dialog for them but
+      // only as a last resort, not as the primary UI.
       if (spectrumEyedropperBtn) {
         spectrumEyedropperBtn.addEventListener('click', async (e) => {
           e.stopPropagation();
           if (typeof window.EyeDropper === 'function') {
             try {
-              const picker = new window.EyeDropper();
-              const result = await picker.open();
+              const dropper = new window.EyeDropper();
+              const result = await dropper.open();
               if (result && result.sRGBHex) {
                 applyCustomTheme(result.sRGBHex, false);
               }
             } catch (err) {
-              // User cancelled the pick (Escape) or the API rejected —
-              // nothing to do, no fallback needed.
+              // User pressed Escape / cancelled — nothing to do.
             }
-            return;
-          }
-          if (customThemeColorInput) {
+          } else if (customThemeColorInput) {
             customThemeColorInput.click();
           }
-        });
-      }
-
-      // 6b. RGB Numeric Channel Inputs
-      if (spectrumRgbR && spectrumRgbG && spectrumRgbB) {
-        const applyFromRgbFields = () => {
-          const clamp255 = n => Math.min(255, Math.max(0, Math.round(n) || 0));
-          const r = clamp255(parseFloat(spectrumRgbR.value));
-          const g = clamp255(parseFloat(spectrumRgbG.value));
-          const b = clamp255(parseFloat(spectrumRgbB.value));
-          applyCustomTheme(rgbToHex(r, g, b), false);
-        };
-        [spectrumRgbR, spectrumRgbG, spectrumRgbB].forEach(input => {
-          input.addEventListener('input', (e) => {
-            e.stopPropagation();
-            applyFromRgbFields();
-          });
-          input.addEventListener('change', (e) => {
-            e.stopPropagation();
-            applyFromRgbFields();
-          });
-          input.addEventListener('click', (e) => e.stopPropagation());
-          input.addEventListener('keydown', (e) => e.stopPropagation());
         });
       }
 
@@ -2889,12 +2900,8 @@
       const hue = hexToHue(savedHex);
       if (spectrumHueSlider) spectrumHueSlider.value = hue;
       if (spectrumHueBadge) spectrumHueBadge.textContent = `${hue}° FREQ`;
-      const savedRgb = hexToRgb(savedHex);
-      if (spectrumRgbR) spectrumRgbR.value = savedRgb.r;
-      if (spectrumRgbG) spectrumRgbG.value = savedRgb.g;
-      if (spectrumRgbB) spectrumRgbB.value = savedRgb.b;
-      syncSatPadUI(savedHex, hue);
       updateActiveCrystalState(savedHex);
+      updateSpectrumPadAndRgbUI(savedHex);
     }
 
     initSpectrumTuner();
