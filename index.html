@@ -5,15 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>shinsekai</title>
   <meta name="description" content="新世界 · SHINSEKAI - Anime Cinematic OS Startup Page" />
+  <meta name="theme-color" content="#0d080e" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚔️</text></svg>" />
-  <link rel="stylesheet" href="style.min.css?v=2.3" />
+  <link rel="stylesheet" href="style.css?v=2.4" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://www.google.com">
   <link rel="preconnect" href="https://icon.horse">
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Plus+Jakarta+Sans:wght@600;800&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Plus+Jakarta+Sans:wght@600;800&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap"></noscript>
-  <script src="theme-core.min.js?v=2.3"></script>
+  <script src="theme-core.js?v=2.4"></script>
   <!-- Early Zero-Latency Theme & Profile Sync -->
   <script>
     (function() {
@@ -30,7 +31,6 @@
         document.documentElement.setAttribute('data-scene', s);
         document.documentElement.setAttribute('data-tier', tier);
 
-        // Sync mobile browser chrome (address bar / task switcher) color to the active theme
         var THEME_BASE_COLORS = {
           tokyonight: '#0b0f19',
           crimson: '#0d080e',
@@ -94,7 +94,6 @@
           }
         });
 
-        // Early Operator Name Sync
         var u = (params && (params.get('user') || params.get('operator'))) || localStorage.getItem('shinsekai-operator-name') || 'MIMOGU';
         var h = localStorage.getItem('shinsekai-operator-honorific');
         if (h === null) h = '-SAMA';
@@ -141,7 +140,7 @@
   <!-- MECHA FEMALE ANDROID VOICE WELCOME ASSET -->
   <audio id="welcome-voice" src="assets/audio/welcome.mp3" preload="none"></audio>
 
-  <!-- 1. CINEMATIC BACKGROUND LAYER (Live Video Loops & Static Artworks) -->
+  <!-- 1. CINEMATIC BACKGROUND LAYER -->
   <div class="video-stage">
     <video
       id="bg-video"
@@ -160,7 +159,6 @@
       decoding="async"
       loading="eager"
     />
-    <!-- Resolve the correct scene & wallpaper mode immediately on parse, before script.js runs -->
     <script>
     (function() {
       try {
@@ -175,7 +173,6 @@
         var scene = params.get('scene') || stored || 'crimson';
         var isUltra = (params && (params.get('ultra') === '1' || params.get('hd') === '1')) || (storedUltra === 'true');
         var mode = params.get('mode') || storedMode || 'live';
-        // Resolve aliases used by the main engine
         var aliases = { eyes: 'crimson', gojo: 'tokyonight', sasuke: 'catppuccin', rengoku: 'crimson', sukuna: 'crimson' };
         scene = aliases[scene] || scene;
         if (mode === 'static') {
@@ -207,17 +204,17 @@
     <div class="video-scrim"></div>
   </div>
 
-  <!-- 2. ATMOSPHERIC PARTICLE CANVAS (Sakura Petals / Flame Embers / Electric Sparks) -->
+  <!-- 2. ATMOSPHERIC PARTICLE CANVAS -->
   <canvas id="ambient-canvas" class="ambient-canvas"></canvas>
 
-  <!-- 3. RETRO ANIME CRT SCANLINES & FILM GRAIN (Toggleable) -->
+  <!-- 3. RETRO ANIME CRT SCANLINES & FILM GRAIN -->
   <div class="crt-overlay" aria-hidden="true"></div>
   <div class="grain-overlay" aria-hidden="true"></div>
 
   <!-- 4. ANIME CINEMATIC VIEWPORT -->
   <div class="cinema-viewport">
 
-    <!-- 4.1. TOP BAR: Anime Episode Card & Temporal Header -->
+    <!-- 4.1. TOP BAR -->
     <header class="anime-header">
       
       <!-- Left: Episode Title Card -->
@@ -232,7 +229,7 @@
         </div>
       </div>
 
-      <!-- Center: High-Contrast Skewed Anime Chronometer (Click or press 'c' to toggle 24h / 12h) -->
+      <!-- Center: Chronometer -->
       <div class="chronometer-box" id="chronometer-box" title="時間表示切替 (24h / 12h) / Click or press 'c' to toggle 24h / 12h">
         <div class="chrono-tag">
           <span class="pulse-core"></span>
@@ -251,8 +248,6 @@
 
       <!-- Right: Mission HUD & Cyber Controls -->
       <div class="hud-controls-deck">
-        
-        <!-- Live Sync / Combat Power Meter -->
         <div class="combat-gauge-card">
           <div class="gauge-meta">
             <span class="gauge-label">SYNC RATE // 特級 · GRADE 1</span>
@@ -263,13 +258,8 @@
           </div>
         </div>
 
-        <!-- System Quick Toolbar Deck -->
         <div class="quick-tools-deck">
-
-          <!-- Tier 1: Visual & Environment Controls -->
           <div class="quick-tools-row tools-tier-visual">
-
-            <!-- Theme Faction Dropdown -->
             <div class="dropdown-wrapper">
               <button class="tool-pill" id="theme-btn" title="テーマ・陣営切替 / Switch Theme (Hotkey: 't')">
                 <span class="tool-dot" id="theme-color-dot" style="background: #f7768e;"></span>
@@ -279,13 +269,11 @@
                 </div>
               </button>
               <div class="anime-popover" id="theme-popover" role="dialog" aria-label="テーマ色彩調律 / Theme Spectrum Matrix">
-                <!-- Theme Popover Header Bar -->
                 <div class="pop-header-title-bar">
                   <span class="pop-header-tag">陣営色彩 // THEME FACTION</span>
                   <span class="pop-header-mode-status" id="theme-header-badge">OPTIMAL</span>
                 </div>
 
-                <!-- 5 Core Anime Factions -->
                 <div class="pop-theme-list" role="group" aria-label="陣営プリセットテーマ / Preset Themes">
                   <button type="button" class="pop-item active" data-theme="crimson">
                     <span class="pop-dot" style="background: #f7768e;"></span>
@@ -314,10 +302,8 @@
                   </button>
                 </div>
 
-                <!-- Custom Spectrum / Resonance Matrix -->
                 <div class="theme-custom-divider" aria-hidden="true"></div>
                 <div class="spectrum-deck" id="spectrum-tuner">
-                  <!-- Spectrum Header Card / Switcher -->
                   <div class="spectrum-deck-header pop-item-custom" id="custom-theme-item" data-theme="custom" role="button" tabindex="0" title="カスタム調色を有効化 / Activate Custom Spectrum">
                     <span class="pop-dot spectrum-beacon" id="custom-theme-dot" style="background: #a6e3a1;"></span>
                     <div class="spectrum-header-text">
@@ -332,7 +318,6 @@
                     </div>
                   </div>
 
-                  <!-- Chakra Cores (10 Iconic Anime Resonance Swatches) -->
                   <div class="spectrum-block">
                     <div class="spectrum-sub-header">
                       <span class="spectrum-sub-title">霊力結晶 · CHAKRA CORES</span>
@@ -352,7 +337,6 @@
                     </div>
                   </div>
 
-                  <!-- In-DOM Saturation & Value Matrix Pad -->
                   <div class="spectrum-block spectrum-sat-block">
                     <div class="spectrum-sub-header">
                       <span class="spectrum-sub-title">彩度・明度 · SATURATION &amp; VALUE</span>
@@ -365,7 +349,6 @@
                     </div>
                   </div>
 
-                  <!-- Mecha Frequency Hue Resonator -->
                   <div class="spectrum-block">
                     <div class="spectrum-sub-header">
                       <span class="spectrum-sub-title">周波数調律 · HUE RESONATOR</span>
@@ -376,7 +359,6 @@
                     </div>
                   </div>
 
-                  <!-- Terminal Coordinate Input & Palette Eyedropper -->
                   <div class="spectrum-block spectrum-input-block">
                     <div class="spectrum-input-wrapper">
                       <span class="spectrum-input-prefix">#</span>
@@ -389,7 +371,6 @@
                     <input type="color" id="custom-theme-color-input" value="#a6e3a1" class="custom-color-input-hidden" tabindex="-1" aria-hidden="true" />
                   </div>
 
-                  <!-- RGB Numeric Channel Inputs -->
                   <div class="spectrum-block spectrum-rgb-block">
                     <div class="spectrum-rgb-wrapper">
                       <div class="spectrum-rgb-field">
@@ -410,141 +391,126 @@
               </div>
             </div>
 
-            <!-- Wallpaper Scene Dropdown (Live Video & Static Wallpapers) -->
-            <div class="dropdown-wrapper">
-              <button class="tool-pill" id="scene-btn" title="壁紙切替 / Switch Wallpaper (Hotkey: 's' / 'w')">
-                <span class="tool-icon" id="scene-tool-icon">▶</span>
-                <div class="tool-label-stack">
-                  <span class="tool-label-main" id="scene-label">映像: 紅蓮</span>
-                  <span class="tool-label-sub" id="scene-label-sub">Wallpaper</span>
-                </div>
-              </button>
-              <div class="anime-popover" id="scene-popover">
-                <!-- Popover Header Bar -->
-                <div class="pop-header-title-bar">
-                  <div class="pop-header-tag">SYS // WALLPAPER ARCHIVE</div>
-                  <button type="button" class="pop-ultra-toggle" id="ultra-toggle-btn" title="解像度切替: 720p (軽量標準) / 1080p (最高画質 Ultra HD)">
-                    <span class="ultra-dot"></span>
-                    <span class="ultra-label" id="ultra-btn-label">720p</span>
+            <button class="tool-pill" id="scene-btn" title="壁紙切替 / Switch Wallpaper (Hotkey: 's' / 'w')">
+              <span class="tool-icon" id="scene-tool-icon">▶</span>
+              <div class="tool-label-stack">
+                <span class="tool-label-main" id="scene-label">映像: 紅蓮</span>
+                <span class="tool-label-sub" id="scene-label-sub">Wallpaper</span>
+              </div>
+            </button>
+            <div class="anime-popover" id="scene-popover">
+              <div class="pop-header-title-bar">
+                <div class="pop-header-tag">SYS // WALLPAPER ARCHIVE</div>
+                <button type="button" class="pop-ultra-toggle" id="ultra-toggle-btn" title="解像度切替: 720p (軽量標準) / 1080p (最高画質 Ultra HD)">
+                  <span class="ultra-dot"></span>
+                  <span class="ultra-label" id="ultra-btn-label">720p</span>
+                </button>
+                <span class="pop-header-mode-status" id="pop-header-mode-status">LIVE VIDEO</span>
+              </div>
+
+              <div class="wallpaper-mode-switch" id="wallpaper-mode-switch" role="tablist" aria-label="Wallpaper categories">
+                <div class="mode-switch-group presets-group">
+                  <button type="button" class="mode-tab active" data-category="live" id="mode-tab-live" role="tab" aria-selected="true" title="動的映像プリセット (Live Loops)">
+                    <span class="mode-tab-icon">▶</span>
+                    <span class="mode-tab-label">動的</span>
+                    <span class="mode-tab-tag">LIVE</span>
                   </button>
-                  <span class="pop-header-mode-status" id="pop-header-mode-status">LIVE VIDEO</span>
+                  <div class="mode-tab-divider" aria-hidden="true"></div>
+                  <button type="button" class="mode-tab" data-category="static" id="mode-tab-static" role="tab" aria-selected="false" title="静止画アートプリセット (Static Artworks)">
+                    <span class="mode-tab-icon">🖼</span>
+                    <span class="mode-tab-label">静止画</span>
+                    <span class="mode-tab-tag">STATIC</span>
+                  </button>
+                </div>
+                <div class="mode-group-divider" aria-hidden="true"></div>
+                <div class="mode-switch-group custom-group">
+                  <button type="button" class="mode-tab mode-tab-custom" data-category="custom" id="mode-tab-custom" role="tab" aria-selected="false" title="ユーザーカスタムライブラリ (Custom Library)">
+                    <span class="mode-tab-icon">📁</span>
+                    <span class="mode-tab-label">カスタム</span>
+                    <span class="mode-tab-tag" id="custom-pill-count">0</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="wallpaper-category-panel" id="panel-live">
+                <div class="pop-section-hdr">
+                  <span class="pop-section-title">既定動的映像 · SYSTEM LIVE LOOPS</span>
+                  <span class="pop-section-count" id="live-count-badge">5</span>
+                </div>
+                <button type="button" class="pop-restore-banner" id="restore-live-btn" style="display: none;" title="削除された初期動画を復元 / Restore Deleted Default Videos">
+                  <span class="pop-restore-icon">↺</span>
+                  <span>削除された初期動画を復元 / Restore Defaults</span>
+                </button>
+                <div class="wallpaper-list" id="list-live"></div>
+              </div>
+
+              <div class="wallpaper-category-panel" id="panel-static" style="display: none;">
+                <div class="pop-section-hdr">
+                  <span class="pop-section-title">既定静止画 · SYSTEM STATIC ARTWORKS</span>
+                  <span class="pop-section-count" id="static-count-badge">5</span>
+                </div>
+                <button type="button" class="pop-restore-banner" id="restore-static-btn" style="display: none;" title="削除された初期静止画を復元 / Restore Deleted Default Wallpapers">
+                  <span class="pop-restore-icon">↺</span>
+                  <span>削除された初期静止画を復元 / Restore Defaults</span>
+                </button>
+                <div class="wallpaper-list" id="list-static"></div>
+              </div>
+
+              <div class="wallpaper-category-panel" id="panel-custom" style="display: none;">
+                <div class="wallpaper-action-row" id="wallpaper-action-row">
+                  <button type="button" class="pop-action-btn primary" id="upload-wallpaper-btn" title="動画・画像を追加 (Upload files)">
+                    <span class="pop-action-icon">＋</span>
+                    <span>ファイル追加</span>
+                    <span class="pop-action-hint">MP4 · PNG · JPG · GIF</span>
+                  </button>
+                  <button type="button" class="pop-action-btn" id="url-wallpaper-btn" title="オンラインURLを追加 (Add Web URL)">
+                    <span class="pop-action-icon">🔗</span>
+                    <span>Web URL</span>
+                  </button>
+                  <button type="button" class="pop-action-btn pop-restore-btn" id="restore-defaults-btn" title="初期壁紙を復元 (Restore Default Wallpapers)" style="display: none;">
+                    <span class="pop-action-icon">↺</span>
+                    <span>初期復元</span>
+                  </button>
+                  <input type="file" id="wallpaper-file-input" accept="image/*,video/mp4,video/webm" multiple style="display: none;" />
                 </div>
 
-                <!-- Segmented Control Bar: Presets (Live | Static) || Custom -->
-                <div class="wallpaper-mode-switch" id="wallpaper-mode-switch" role="tablist" aria-label="Wallpaper categories">
-                  <div class="mode-switch-group presets-group">
-                    <button type="button" class="mode-tab active" data-category="live" id="mode-tab-live" role="tab" aria-selected="true" title="動的映像プリセット (Live Loops)">
-                      <span class="mode-tab-icon">▶</span>
-                      <span class="mode-tab-label">動的</span>
-                      <span class="mode-tab-tag">LIVE</span>
-                    </button>
-                    <div class="mode-tab-divider" aria-hidden="true"></div>
-                    <button type="button" class="mode-tab" data-category="static" id="mode-tab-static" role="tab" aria-selected="false" title="静止画アートプリセット (Static Artworks)">
-                      <span class="mode-tab-icon">🖼</span>
-                      <span class="mode-tab-label">静止画</span>
-                      <span class="mode-tab-tag">STATIC</span>
-                    </button>
-                  </div>
-                  <div class="mode-group-divider" aria-hidden="true"></div>
-                  <div class="mode-switch-group custom-group">
-                    <button type="button" class="mode-tab mode-tab-custom" data-category="custom" id="mode-tab-custom" role="tab" aria-selected="false" title="ユーザーカスタムライブラリ (Custom Library)">
-                      <span class="mode-tab-icon">📁</span>
-                      <span class="mode-tab-label">カスタム</span>
-                      <span class="mode-tab-tag" id="custom-pill-count">0</span>
-                    </button>
-                  </div>
+                <div class="pop-upload-info-note">
+                  <span class="note-icon">ℹ</span>
+                  <span>最大35MB/ファイル · 動画 (MP4/WebM) · 静止画 (PNG/JPG/WebP/GIF) · IndexedDB保存</span>
                 </div>
 
-                <!-- Category 1: Live Video Scenes (Presets) -->
-                <div class="wallpaper-category-panel" id="panel-live">
+                <div class="pop-empty-msg" id="custom-empty-msg" style="display: none;">
+                  <div class="empty-icon" style="font-size: 1.4rem; margin-bottom: 4px;">📁</div>
+                  <div class="empty-title" style="font-weight: 700; color: #ffffff;">カスタム壁紙がありません</div>
+                  <div class="empty-desc" style="opacity: 0.6; font-size: 0.65rem; margin-top: 2px;">「＋ ファイル追加」から複数動画や画像を追加できます</div>
+                </div>
+
+                <div class="custom-subsection" id="custom-sub-live">
                   <div class="pop-section-hdr">
-                    <span class="pop-section-title">既定動的映像 · SYSTEM LIVE LOOPS</span>
-                    <span class="pop-section-count" id="live-count-badge">5</span>
+                    <span class="pop-section-title"><span class="hdr-icon">▶</span> カスタム動的映像 · CUSTOM VIDEOS</span>
+                    <span class="pop-section-count" id="custom-live-count">0</span>
                   </div>
-                  <button type="button" class="pop-restore-banner" id="restore-live-btn" style="display: none;" title="削除された初期動画を復元 / Restore Deleted Default Videos">
-                    <span class="pop-restore-icon">↺</span>
-                    <span>削除された初期動画を復元 / Restore Defaults</span>
-                  </button>
-                  <div class="wallpaper-list" id="list-live"></div>
+                  <div class="wallpaper-list" id="list-custom-live"></div>
                 </div>
 
-                <!-- Category 2: Static Artworks (Presets) -->
-                <div class="wallpaper-category-panel" id="panel-static" style="display: none;">
+                <div class="custom-subsection" id="custom-sub-static">
                   <div class="pop-section-hdr">
-                    <span class="pop-section-title">既定静止画 · SYSTEM STATIC ARTWORKS</span>
-                    <span class="pop-section-count" id="static-count-badge">5</span>
+                    <span class="pop-section-title"><span class="hdr-icon">🖼</span> カスタム静止画 · CUSTOM IMAGES</span>
+                    <span class="pop-section-count" id="custom-static-count">0</span>
                   </div>
-                  <button type="button" class="pop-restore-banner" id="restore-static-btn" style="display: none;" title="削除された初期静止画を復元 / Restore Deleted Default Wallpapers">
-                    <span class="pop-restore-icon">↺</span>
-                    <span>削除された初期静止画を復元 / Restore Defaults</span>
-                  </button>
-                  <div class="wallpaper-list" id="list-static"></div>
+                  <div class="wallpaper-list" id="list-custom-static"></div>
                 </div>
 
-                <!-- Category 3: Custom Wallpapers (Uploaded Files & Web URLs) -->
-                <div class="wallpaper-category-panel" id="panel-custom" style="display: none;">
-                  <!-- Custom Quick Actions Bar -->
-                  <div class="wallpaper-action-row" id="wallpaper-action-row">
-                    <button type="button" class="pop-action-btn primary" id="upload-wallpaper-btn" title="動画・画像を追加 (Upload files)">
-                      <span class="pop-action-icon">＋</span>
-                      <span>ファイル追加</span>
-                      <span class="pop-action-hint">MP4 · PNG · JPG · GIF</span>
-                    </button>
-                    <button type="button" class="pop-action-btn" id="url-wallpaper-btn" title="オンラインURLを追加 (Add Web URL)">
-                      <span class="pop-action-icon">🔗</span>
-                      <span>Web URL</span>
-                    </button>
-                    <button type="button" class="pop-action-btn pop-restore-btn" id="restore-defaults-btn" title="初期壁紙を復元 (Restore Default Wallpapers)" style="display: none;">
-                      <span class="pop-action-icon">↺</span>
-                      <span>初期復元</span>
-                    </button>
-                    <input type="file" id="wallpaper-file-input" accept="image/*,video/mp4,video/webm" multiple style="display: none;" />
+                <div class="custom-subsection" id="custom-sub-web">
+                  <div class="pop-section-hdr">
+                    <span class="pop-section-title"><span class="hdr-icon">🔗</span> オンラインリンク · WEB URLS</span>
+                    <span class="pop-section-count" id="custom-web-count">0</span>
                   </div>
-
-                  <!-- Upload Limits & Formats Info Note -->
-                  <div class="pop-upload-info-note">
-                    <span class="note-icon">ℹ</span>
-                    <span>最大35MB/ファイル · 動画 (MP4/WebM) · 静止画 (PNG/JPG/WebP/GIF) · IndexedDB保存</span>
-                  </div>
-
-                  <!-- Empty State Message -->
-                  <div class="pop-empty-msg" id="custom-empty-msg" style="display: none;">
-                    <div class="empty-icon" style="font-size: 1.4rem; margin-bottom: 4px;">📁</div>
-                    <div class="empty-title" style="font-weight: 700; color: #ffffff;">カスタム壁紙がありません</div>
-                    <div class="empty-desc" style="opacity: 0.6; font-size: 0.65rem; margin-top: 2px;">「＋ ファイル追加」から複数動画や画像を追加できます</div>
-                  </div>
-
-                  <!-- Subsection A: Custom Live Videos (Separated from Static!) -->
-                  <div class="custom-subsection" id="custom-sub-live">
-                    <div class="pop-section-hdr">
-                      <span class="pop-section-title"><span class="hdr-icon">▶</span> カスタム動的映像 · CUSTOM VIDEOS</span>
-                      <span class="pop-section-count" id="custom-live-count">0</span>
-                    </div>
-                    <div class="wallpaper-list" id="list-custom-live"></div>
-                  </div>
-
-                  <!-- Subsection B: Custom Static Images (Separated from Live!) -->
-                  <div class="custom-subsection" id="custom-sub-static">
-                    <div class="pop-section-hdr">
-                      <span class="pop-section-title"><span class="hdr-icon">🖼</span> カスタム静止画 · CUSTOM IMAGES</span>
-                      <span class="pop-section-count" id="custom-static-count">0</span>
-                    </div>
-                    <div class="wallpaper-list" id="list-custom-static"></div>
-                  </div>
-
-                  <!-- Subsection C: Custom Web URLs -->
-                  <div class="custom-subsection" id="custom-sub-web">
-                    <div class="pop-section-hdr">
-                      <span class="pop-section-title"><span class="hdr-icon">🔗</span> オンラインリンク · WEB URLS</span>
-                      <span class="pop-section-count" id="custom-web-count">0</span>
-                    </div>
-                    <div class="wallpaper-list" id="list-custom-web"></div>
-                  </div>
+                  <div class="wallpaper-list" id="list-custom-web"></div>
                 </div>
               </div>
             </div>
 
-            <!-- Atmospheric Particles Toggle (Sakura / Embers / Sparks / Rain) -->
             <button class="tool-pill active" id="particles-toggle-btn" title="浮遊粒子・桜吹雪切替 / Atmospheric Particles (Hotkey: 'b')">
               <span class="tool-icon" id="particles-status-icon">🌸</span>
               <div class="tool-label-stack">
@@ -553,7 +519,6 @@
               </div>
             </button>
 
-            <!-- Film Grain / CRT Effect Toggle -->
             <button class="tool-pill" id="grain-toggle-btn" title="CRT走査線・フィルム粒子切替 / CRT Filter (Hotkey: 'g')">
               <span class="tool-icon">⛶</span>
               <div class="tool-label-stack">
@@ -561,13 +526,9 @@
                 <span class="tool-label-sub">Filter</span>
               </div>
             </button>
-
           </div>
 
-          <!-- Tier 2: Operator & Station Hub -->
           <div class="quick-tools-row tools-tier-station">
-
-            <!-- Operator Profile Pill -->
             <button class="tool-pill" id="operator-btn" title="操縦士・ユーザー識別設定 / Operator Profile (Hotkey: 'u')">
               <span class="tool-icon">👤</span>
               <div class="tool-label-stack">
@@ -576,7 +537,6 @@
               </div>
             </button>
 
-            <!-- Pinned Links Editor Modal Trigger -->
             <button class="tool-pill" id="edit-links-btn" title="ピン留めリンク編集 / Edit Links (Hotkey: 'e')">
               <span class="tool-icon">⚙️</span>
               <div class="tool-label-stack">
@@ -585,7 +545,6 @@
               </div>
             </button>
 
-            <!-- Pin Dock Mode Toggle -->
             <button class="tool-pill" id="pin-dock-btn" title="リンク展開固定切替 / Pin Dock (Hotkey: 'p')">
               <span class="tool-icon">📌</span>
               <div class="tool-label-stack">
@@ -594,7 +553,6 @@
               </div>
             </button>
 
-            <!-- Android AI Voice Replay Button -->
             <button class="tool-pill" id="voice-btn" title="機体音声再生 / Replay Voice Greeting (Hotkey: 'v')">
               <span class="tool-icon">🎙️</span>
               <div class="tool-label-stack">
@@ -603,7 +561,6 @@
               </div>
             </button>
 
-            <!-- Keyboard Shortcuts Matrix Trigger -->
             <button class="tool-pill" id="shortcuts-btn" title="操作一覧・ショートカット / Keybindings Matrix (Hotkey: '?')">
               <span class="tool-icon">⌨</span>
               <div class="tool-label-stack">
@@ -611,15 +568,12 @@
                 <span class="tool-label-sub">Help '?'</span>
               </div>
             </button>
-
           </div>
-
         </div>
       </div>
-
     </header>
 
-    <!-- 4.2. CENTER SECTION: Anime Command Slash Search Bar -->
+    <!-- 4.2. SEARCH BAR -->
     <section class="search-stage command-console-box">
       <div class="search-capsule" id="search-capsule">
         <div class="capsule-prompt">
@@ -639,7 +593,6 @@
         </div>
       </div>
 
-      <!-- Quick Bang Tags -->
       <div class="bangs-container">
         <button class="bang-chip" data-bang="!g"><span class="b-key">!g</span> Google</button>
         <button class="bang-chip" data-bang="!y"><span class="b-key">!y</span> YouTube</button>
@@ -651,17 +604,13 @@
       </div>
     </section>
 
-    <!-- 4.3. DYNAMIC ANIME BLADE LAUNCHER (Drawer System) -->
+    <!-- 4.3. DYNAMIC BLADE LAUNCHER -->
     <nav class="blade-launcher-container" id="blade-launcher">
-
-      <!-- Category Tab Blades (Dynamically Managed from links.js & Local Config) -->
       <div class="launcher-tabs-bar" id="launcher-tabs-bar"></div>
-
-      <!-- Expandable Hologram Grid Drawer -->
       <div class="hologram-drawer" id="hologram-drawer"></div>
     </nav>
 
-    <!-- 4.4. CINEMATIC ANIME SUBTITLE & DIALOGUE SYSTEM (Bottom Bar) -->
+    <!-- 4.4. SUBTITLES BAR -->
     <footer class="anime-subtitles-bar" id="subtitles-bar" title="クリックでセリフ切替 / Click to cycle quote (Hotkey: 'q')">
       <div class="sub-speaker-box">
         <span class="sub-speaker-badge" id="sub-speaker">煉獄 杏寿郎</span>
@@ -678,10 +627,9 @@
     </footer>
   </div>
 
-  <!-- 5. ANIME LINK EDITOR MODAL -->
+  <!-- 5. LINK EDITOR MODAL -->
   <div class="link-editor-backdrop" id="link-editor-modal" aria-hidden="true">
     <div class="link-editor-dialog">
-      
       <div class="editor-header">
         <div class="editor-header-left">
           <span class="editor-pill">SHINSEKAI_HUD // CONFIG_HUB</span>
@@ -690,7 +638,6 @@
         <button class="editor-close-btn" id="editor-close-btn" title="閉じる (Esc)">✕</button>
       </div>
 
-      <!-- Unified Configuration Nav Bar -->
       <div class="modal-nav-bar">
         <button type="button" class="modal-nav-btn" id="link-modal-nav-to-operator">
           <span class="nav-btn-icon">👤</span>
@@ -702,16 +649,13 @@
         </button>
       </div>
 
-      <!-- Category Tabs inside Modal -->
       <div class="editor-tabs-bar" id="editor-tabs-bar"></div>
 
-      <!-- Current Links in Active Sector -->
       <div class="editor-links-container">
         <div class="editor-section-heading">登録済みリンク一覧 / CURRENT PINNED LINKS</div>
         <div class="editor-links-list" id="editor-links-list"></div>
       </div>
 
-      <!-- Add / Edit Link Form -->
       <div class="editor-add-section">
         <input type="hidden" id="edit-link-index" value="-1" />
         <div class="editor-section-heading" id="editor-form-heading">＋ 新規リンク追加 / ADD NEW LINK</div>
@@ -747,7 +691,6 @@
         </div>
       </div>
 
-      <!-- Editor Footer Actions -->
       <div class="editor-footer">
         <div class="editor-footer-left">
           <button class="editor-btn editor-btn-ghost" id="editor-export-btn" title="現在のリンク設定をJSONファイルで保存 / Save Current Links as JSON">⭳ 設定保存 / EXPORT</button>
@@ -759,14 +702,12 @@
           <button class="editor-btn editor-btn-accent" id="editor-done-btn">完了 / DONE</button>
         </div>
       </div>
-
     </div>
   </div>
 
-  <!-- 6. ANIME OPERATOR & IDENTITY SETTINGS MODAL -->
+  <!-- 6. OPERATOR SETTINGS MODAL -->
   <div class="link-editor-backdrop operator-modal-backdrop" id="operator-modal" aria-hidden="true">
     <div class="link-editor-dialog operator-dialog">
-      
       <div class="editor-header">
         <div class="editor-header-left">
           <span class="editor-pill">SHINSEKAI_HUD // OPERATOR_CONFIG</span>
@@ -775,7 +716,6 @@
         <button class="editor-close-btn" id="operator-close-btn" title="閉じる (Esc)">✕</button>
       </div>
 
-      <!-- Unified Configuration Nav Bar -->
       <div class="modal-nav-bar">
         <button type="button" class="modal-nav-btn active" id="nav-to-operator-btn">
           <span class="nav-btn-icon">👤</span>
@@ -787,10 +727,7 @@
         </button>
       </div>
 
-      <!-- Modal Body -->
       <div class="operator-modal-body">
-        
-        <!-- Left: Operator Credentials Form -->
         <div class="operator-form-card">
           <div class="editor-section-heading">操縦士プロファイル構成 / OPERATOR CREDENTIALS</div>
           
@@ -832,7 +769,6 @@
             </div>
           </div>
 
-          <!-- Performance Tier Selector & Re-detection -->
           <div class="operator-field-group" style="margin-top: 1.1rem;">
             <label class="operator-label">
               <span class="label-kanji">機体性能</span>
@@ -866,7 +802,6 @@
           </div>
         </div>
 
-        <!-- Right: Real-time Telemetry Preview Card -->
         <div class="operator-telemetry-card">
           <div class="editor-section-heading">起動テレメトリー・プレビュー / LIVE BOOT TELEMETRY</div>
           
@@ -899,10 +834,8 @@
           </div>
           <span class="form-hint" style="margin-top: 0.6rem; text-align: right;">※ 入力に応じてリアルタイムに更新されます (Live updating as you type)</span>
         </div>
-
       </div>
 
-      <!-- Editor Footer Actions -->
       <div class="editor-footer">
         <div class="editor-footer-left">
           <button type="button" class="editor-btn editor-btn-danger" id="operator-reset-btn" title="初期値（MIMOGU-SAMA）に戻す / Reset to Default (MIMOGU-SAMA)">
@@ -919,11 +852,10 @@
           </button>
         </div>
       </div>
-
     </div>
   </div>
 
-  <!-- 7. KEYBOARD SHORTCUTS CHEAT SHEET HUD MODAL -->
+  <!-- 7. SHORTCUTS MODAL -->
   <div class="link-editor-backdrop" id="shortcuts-modal" aria-hidden="true">
     <div class="link-editor-dialog shortcuts-dialog">
       <div class="editor-header">
@@ -1045,7 +977,7 @@
     </div>
   </div>
 
-  <script src="links.js?v=2.2" defer></script>
-  <script src="script.min.js?v=2.3" defer></script>
+  <script src="links.js?v=2.4" defer></script>
+  <script src="script.js?v=2.4" defer></script>
 </body>
 </html>

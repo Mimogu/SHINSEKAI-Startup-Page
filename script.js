@@ -2505,6 +2505,25 @@
 
       applyCustomThemeColor(hex);
 
+      const THEME_BASE_COLORS = {
+      tokyonight: '#0b0f19',
+      crimson: '#0d080e',
+      sakura: '#140d18',
+      catppuccin: '#11111b',
+      cyberpunk: '#040710',
+      custom: '#080c14'
+    };
+
+    function syncMetaThemeColor(colorHex) {
+      let meta = document.querySelector('meta[name="theme-color"]');
+      if (!meta) {
+        meta = document.createElement('meta');
+        meta.setAttribute('name', 'theme-color');
+        document.head.appendChild(meta);
+      }
+      meta.setAttribute('content', colorHex);
+    }
+
       if (themeLabel) themeLabel.textContent = 'カスタム';
       const themeLabelSub = document.getElementById('theme-label-sub');
       if (themeLabelSub) themeLabelSub.textContent = 'Custom';
