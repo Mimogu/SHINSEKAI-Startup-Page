@@ -31,7 +31,7 @@
 <br/>
 
 <p align="center">
-  <img src="assets/previews/crimson.png" alt="Shinsekai Crimson Flame Interface" width="100%" style="border-radius: 12px; box-shadow: 0 20px 50px rgba(0,0,0,0.85);" />
+  <img src="assets/previews/showcase/crimson.jpg" alt="Shinsekai Crimson Flame Interface" width="100%" style="border-radius: 12px; box-shadow: 0 20px 50px rgba(0,0,0,0.85);" />
 </p>
 
 </div>
@@ -91,38 +91,38 @@
 
 ## 🎨 Faction Themes & Screenshots
 
-Switch factions instantly via the header dropdown or by pressing <kbd>t</kbd>:
+Switch factions instantly via the header dropdown or by pressing <kbd>t</kbd>. Each capture below is the actual live cockpit — episode header, chronometer, sync gauge, tool dock, Katana search console, bookmark blades, and subtitle bar all rendered in real time over the theme's native stage art, not a bare wallpaper crop:
 
 <div align="center">
 
 <table>
   <tr>
     <td width="50%" align="center">
-      <img src="assets/previews/crimson.png" alt="紅蓮 · Crimson Flame" width="100%" style="border-radius: 8px;" /><br/>
+      <img src="assets/previews/showcase/crimson.jpg" alt="紅蓮 · Crimson Flame" width="100%" style="border-radius: 8px;" /><br/>
       <b>🔥 紅蓮 · Crimson Flame</b><br/>
       <sub>煉獄炎獄 · Kyojuro Rengoku Stage (Rising Embers)</sub>
     </td>
     <td width="50%" align="center">
-      <img src="assets/previews/tokyonight.png" alt="東京夜 · TokyoNight Void" width="100%" style="border-radius: 8px;" /><br/>
+      <img src="assets/previews/showcase/tokyonight.jpg" alt="東京夜 · TokyoNight Void" width="100%" style="border-radius: 8px;" /><br/>
       <b>🌌 東京夜 · TokyoNight Void</b><br/>
       <sub>無量空処 · Satoru Gojo Stage (Spatial Energy Orbs)</sub>
     </td>
   </tr>
   <tr>
     <td width="50%" align="center">
-      <img src="assets/previews/sakura.png" alt="桜吹雪 · Sakura Ronin" width="100%" style="border-radius: 8px;" /><br/>
+      <img src="assets/previews/showcase/sakura.jpg" alt="桜吹雪 · Sakura Ronin" width="100%" style="border-radius: 8px;" /><br/>
       <b>🌸 桜吹雪 · Sakura Ronin</b><br/>
       <sub>侍道 · Cherry Blossom Stage (Fluttering Sakura Petals)</sub>
     </td>
     <td width="50%" align="center">
-      <img src="assets/previews/catppuccin.png" alt="終末谷 · Catppuccin Spiral" width="100%" style="border-radius: 8px;" /><br/>
+      <img src="assets/previews/showcase/catppuccin.jpg" alt="終末谷 · Catppuccin Spiral" width="100%" style="border-radius: 8px;" /><br/>
       <b>🌀 終末谷 · Catppuccin Spiral</b><br/>
       <sub>螺旋輪廻 · Valley of the End Stage (Chakra Spheres)</sub>
     </td>
   </tr>
   <tr>
     <td colspan="2" align="center">
-      <img src="assets/previews/cyberpunk.png" alt="電脳都市 · Cyberpunk Neon" width="85%" style="border-radius: 8px;" /><br/>
+      <img src="assets/previews/showcase/cyberpunk.jpg" alt="電脳都市 · Cyberpunk Neon" width="85%" style="border-radius: 8px;" /><br/>
       <b>⚡ 電脳都市 · Cyberpunk Neon</b><br/>
       <sub>攻殻機動 · Night City Digital Rain Stage (Matrix Rain)</sub>
     </td>
@@ -384,18 +384,37 @@ SHINSEKAI-Startup-Page/
 │   │   └── tokyonight.mp4  # HD Ultra 1080p Infinite Void Cosmos
 │   ├── audio/              # Mecha female voice welcome asset
 │   │   └── welcome.mp3     # 「ようこそ、ミモグ様」
-│   └── previews/           # High-resolution theme screenshots
+│   └── previews/           # Clean wallpaper-only stills — used LIVE by the app itself as the
+│       │                   # <video poster> and as the actual background for 静止画/Static mode,
+│       │                   # so keep these free of any baked-in HUD/overlay.
 │       ├── catppuccin.png  # 終末谷 Interface
 │       ├── crimson.png     # 紅蓮 Interface
 │       ├── cyberpunk.png   # 電脳都市 Interface
 │       ├── sakura.png      # 桜吹雪 Interface
-│       └── tokyonight.png  # 東京夜 Interface
+│       ├── tokyonight.png  # 東京夜 Interface
+│       └── showcase/       # README-only marketing captures: the real cockpit UI (header, HUD,
+│           │                # search, bookmark blades, subtitle bar) rendered live over each
+│           │                # theme's stage art. Never referenced by index.html/script.js —
+│           │                # safe to regenerate or replace without touching app behavior.
+│           ├── catppuccin.jpg
+│           ├── crimson.jpg
+│           ├── cyberpunk.jpg
+│           ├── sakura.jpg
+│           └── tokyonight.jpg
 ├── index.html              # Clean semantic anime HUD viewport & zero-latency loader
 ├── links.js                # Default pinned links & kanji seals
 ├── manifest.json           # Native Chromium Web Extension manifest (V3)
 ├── README.md               # Mission dossier & documentation
 ├── script.js               # Reactive engine, tier manager, particle physics & watchdogs
-└── style.css               # Glassmorphism, CSS variable blur, GPU isolation & themes
+├── style.css               # Glassmorphism, CSS variable blur, GPU isolation & themes
+├── theme-core.js            # Synchronous anti-FOUC theme/profile bootstrap (loaded before <body>)
+└── *.min.js / *.min.css    # Optional pre-minified bundle (script.min.js, style.min.css,
+                             # theme-core.min.js) — NOT loaded by default. index.html always
+                             # loads the readable source directly, zero build step required, so
+                             # editing script.js / style.css / links.js just works. Regenerate the
+                             # minified set after an edit only if you want it for your own
+                             # deployment: `npx esbuild script.js --minify --outfile=script.min.js`
+                             # (swap the filename for style.css / theme-core.js as needed).
 ```
 
 ---

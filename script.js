@@ -23,7 +23,15 @@
           window.localStorage.setItem(key, val);
           return;
         }
-      } catch (e) {}
+      } catch (e) {
+        // Fix directive §6 (perf/bug audit): this used to fail silently, so a
+        // quota-exceeded write (large custom-link export, many cached icons)
+        // looked like it saved but quietly lived only in memory for the rest
+        // of the tab's life — gone on next reload with no sign anything was
+        // wrong. One console.warn costs nothing at runtime and turns a silent
+        // data-loss bug into something visible in devtools.
+        console.warn(`[shinsekai] localStorage.setItem('${key}') failed (quota exceeded or storage unavailable) — falling back to in-memory storage for this tab only. This value will NOT survive a reload.`, e);
+      }
       this._mem[key] = String(val);
     },
     removeItem(key) {
@@ -1568,7 +1576,11 @@
             bgVideo.style.opacity = '0.2';
             bgVideo.src = videoSrc;
             if (videoSource) videoSource.src = videoSrc;
-            bgVideo.load();
+            // Fix directive §5 (perf audit): setting .src above already triggers the
+            // element's resource-selection algorithm per the HTML spec. An explicit
+            // .load() call immediately after aborts that in-flight fetch and starts an
+            // identical second one — confirmed live via a duplicate net::ERR_ABORTED
+            // request on every single theme/scene switch. Do not re-add .load() here.
             bgVideo.playbackRate = 1.15;
 
             const onReady = () => {
@@ -1670,7 +1682,8 @@
           bgVideo.setAttribute('playsinline', '');
           bgVideo.src = currentCustomObjectUrl;
           bgVideo.playbackRate = 1.0;
-          bgVideo.load();
+          // See fix directive §5 above — .load() here duplicated the fetch this
+          // .src assignment already starts.
           bgVideo.play().catch(() => {});
           bgVideo.style.opacity = '1';
         }
@@ -1732,7 +1745,8 @@
           bgVideo.setAttribute('playsinline', '');
           bgVideo.src = record.url;
           bgVideo.playbackRate = 1.0;
-          bgVideo.load();
+          // See fix directive §5 above — .load() here duplicated the fetch this
+          // .src assignment already starts.
           bgVideo.play().catch(() => {});
           bgVideo.style.opacity = '1';
         }
