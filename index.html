@@ -7,14 +7,14 @@
   <meta name="description" content="新世界 · SHINSEKAI - Anime Cinematic OS Startup Page" />
   <meta name="theme-color" content="#0d080e" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚔️</text></svg>" />
-  <link rel="stylesheet" href="style.css?v=2.5" />
+  <link rel="stylesheet" href="style.css?v=2.6" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://www.google.com">
   <link rel="preconnect" href="https://icon.horse">
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Plus+Jakarta+Sans:wght@600;800&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Plus+Jakarta+Sans:wght@600;800&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap"></noscript>
-  <script src="theme-core.js?v=2.5"></script>
+  <script src="theme-core.js?v=2.6"></script>
   <!-- Early Zero-Latency Theme & Profile Sync -->
   <script>
     (function() {
@@ -30,6 +30,13 @@
         document.documentElement.setAttribute('data-theme', t);
         document.documentElement.setAttribute('data-scene', s);
         document.documentElement.setAttribute('data-tier', tier);
+
+        // Adaptive visual cost (see FX_LEVELS in script.js): Firefox defaults to 'lite'.
+        var fx = (params && params.get('fx')) || localStorage.getItem('shinsekai-fx');
+        if (fx !== 'full' && fx !== 'lite' && fx !== 'min') {
+          fx = (window.CSS && CSS.supports && CSS.supports('-moz-appearance', 'none')) ? 'lite' : 'full';
+        }
+        document.documentElement.setAttribute('data-fx', fx);
 
         var THEME_BASE_COLORS = {
           tokyonight: '#0b0f19',
@@ -91,6 +98,7 @@
             document.body.setAttribute('data-theme', t);
             document.body.setAttribute('data-scene', s);
             document.body.setAttribute('data-tier', tier);
+            document.body.setAttribute('data-fx', fx);
           }
         });
 
@@ -208,8 +216,8 @@
   <canvas id="ambient-canvas" class="ambient-canvas"></canvas>
 
   <!-- 3. RETRO ANIME CRT SCANLINES & FILM GRAIN -->
+  <!-- One combined layer (scanlines + grain) — two full-screen overlays cost double to composite over video -->
   <div class="crt-overlay" aria-hidden="true"></div>
-  <div class="grain-overlay" aria-hidden="true"></div>
 
   <!-- 4. ANIME CINEMATIC VIEWPORT -->
   <div class="cinema-viewport">
@@ -977,7 +985,7 @@
     </div>
   </div>
 
-  <script src="links.js?v=2.5" defer></script>
-  <script src="script.js?v=2.5" defer></script>
+  <script src="links.js?v=2.6" defer></script>
+  <script src="script.js?v=2.6" defer></script>
 </body>
 </html>

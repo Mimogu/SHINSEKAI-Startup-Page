@@ -46,7 +46,21 @@
 
   function initShinsekai() {
     document.title = 'shinsekai';
-    let isAppSuspended = false;
+
+    /* ─── ENGINE STATE IS *DERIVED*, NEVER TOGGLED ───
+       The old code flipped an `isAppSuspended` boolean from blur / focus /
+       visibilitychange / modal handlers. Whenever one of those events didn't
+       arrive in the expected order (or a code path forgot to flip it back),
+       the flag stayed stuck and the clock, particles, quotes and video froze
+       until something unrelated reset it. Now "should the heavy engines be
+       idle?" is recomputed from ground truth every time it is asked. */
+    function isModalOpen() {
+      return [linkEditorModal, operatorModal, shortcutsModal]
+        .some(m => m && m.classList.contains('open'));
+    }
+    function isSuspended() {
+      return document.hidden || isModalOpen();
+    }
 
     /* ─── TIER CONFIG (performance presets) ─── */
     const TIER_CONFIG = {
@@ -128,6 +142,48 @@
     const paramHonorific = urlParams ? (urlParams.get('honorific') || urlParams.get('title')) : null;
     const paramParticles = urlParams ? urlParams.get('particles') : null;
     const paramColor = urlParams ? (urlParams.get('color') || urlParams.get('hex')) : null;
+    const paramFx = urlParams ? urlParams.get('fx') : null;
+
+    /* Live custom-theme colour. Kept in memory so the colour picker can update
+       it every frame while storage writes are debounced (see scheduleCustomTheme). */
+    let currentCustomHex = paramColor || safeStorage.getItem('shinsekai-custom-theme-color') || '#a6e3a1';
+
+    /* ─── FX LEVEL: adaptive visual cost (independent from the quality tier) ───
+       full : everything (glass blur on every panel)
+       lite : no backdrop-filter on always-on panels/popovers, no blend modes.
+              Looks almost identical (those panels are already 82-96% opaque)
+              but avoids re-blurring ~10 regions every video frame.
+              Default on Firefox, and switched on automatically when the FPS
+              watchdog sees sustained low frame rates.
+       min  : lite + no CRT/grain overlay + fewer particles (session only). */
+    const FX_LEVELS = ['full', 'lite', 'min'];
+    function detectDefaultFx() {
+      try {
+        if (window.CSS && CSS.supports && CSS.supports('-moz-appearance', 'none')) return 'lite'; // Firefox
+      } catch (e) {}
+      return 'full';
+    }
+    let currentFx = (() => {
+      if (FX_LEVELS.includes(paramFx)) {
+        if (paramFx !== 'min') safeStorage.setItem('shinsekai-fx', paramFx);
+        return paramFx;
+      }
+      const stored = safeStorage.getItem('shinsekai-fx');
+      if (stored === 'full' || stored === 'lite') return stored;
+      return detectDefaultFx();
+    })();
+    function applyFxAttr(level) {
+      document.documentElement.setAttribute('data-fx', level);
+      if (document.body) document.body.setAttribute('data-fx', level);
+    }
+    applyFxAttr(currentFx);
+    function setFx(level, persist) {
+      if (!FX_LEVELS.includes(level) || level === currentFx) return;
+      currentFx = level;
+      applyFxAttr(level);
+      if (persist && level !== 'min') safeStorage.setItem('shinsekai-fx', level);
+      if (typeof respawnParticles === 'function') respawnParticles();
+    }
 
     /* ─── 0. DOM ELEMENTS ─── */
     const bgVideo = document.getElementById('bg-video');
@@ -354,7 +410,7 @@
     }
 
     function updateEpisodeClock() {
-      if (document.hidden || isAppSuspended) return;
+      if (document.hidden) return; // nothing to paint while hidden; tickClock() repaints the instant we return
 
       const now = new Date();
       const hours = now.getHours();
@@ -405,8 +461,18 @@
       }
     }
 
-    updateEpisodeClock();
-    setInterval(updateEpisodeClock, 1000);
+    /* Self-correcting clock: re-arms itself for the next wall-clock second
+       instead of a fixed setInterval (which browsers throttle in background
+       tabs and which drifted). tickClock() is also called on every
+       visibility/focus/pageshow so the time is correct the instant you come
+       back — no "frozen until the next tick" gap. */
+    let clockTimer = null;
+    function tickClock() {
+      clearTimeout(clockTimer);
+      updateEpisodeClock();
+      clockTimer = setTimeout(tickClock, 1000 - (Date.now() % 1000) + 8);
+    }
+    tickClock();
 
     /* ─── 2. ATMOSPHERIC PARTICLE CANVAS ENGINE (PEAK OPTIMIZATION) ─── */
     let particles = [];
@@ -490,7 +556,7 @@
 
     function initCanvas() {
       if (!canvas) return;
-      const ctx = canvas.getContext('2d', { alpha: true, desynchronized: true });
+      const ctx = canvas.getContext('2d', { alpha: true });
 
       function resize() {
         // High-DPI / 4K optimization: atmospheric dust/embers do not require 1:1 screen pixel density.
@@ -501,6 +567,7 @@
         canvas.height = Math.max(180, Math.floor(window.innerHeight * scale));
         if (particlesActive) {
           spawnParticles();
+          if (typeof startCanvasAnim === 'function') startCanvasAnim();
         } else {
           ctx.clearRect(0, 0, canvas.width, canvas.height);
         }
@@ -527,7 +594,7 @@
             p.coreColor = `rgba(122, 162, 247, ${p.opacity.toFixed(3)})`;
           }
         } else if (currentThemeKey === 'custom') {
-          const hex = safeStorage.getItem('shinsekai-custom-theme-color') || '#a6e3a1';
+          const hex = currentCustomHex;
           // Use the same legibility-clamped color as the UI chrome, so
           // particles stay visible even if the picked hex is near-black.
           const { r, g, b } = getLegibleAccent(hex);
@@ -546,7 +613,8 @@
         if (prefersReduced) return;
 
         // Tier-driven particle density (see TIER_CONFIG / detectTier)
-        const count = (TIER_CONFIG[currentTier] || TIER_CONFIG.mid).particleCount;
+        const baseCount = (TIER_CONFIG[currentTier] || TIER_CONFIG.mid).particleCount;
+        const count = currentFx === 'min' ? Math.round(baseCount * 0.4) : baseCount;
 
         for (let i = 0; i < count; i++) {
           particles.push({
@@ -668,11 +736,13 @@
       }
 
       function startAnimation() {
-        if (!particlesActive) return;
-        if (!animFrameId && particles.length > 0) {
-          lastFrameTime = performance.now();
-          animFrameId = requestAnimationFrame(render);
-        }
+        if (!particlesActive || isSuspended() || particles.length === 0) return;
+        // Always cancel-then-start: a frame id left over from before the tab
+        // was hidden (or from a bfcache restore) can be stale, and the old
+        // `if (!animFrameId)` guard then refused to restart the loop.
+        if (animFrameId) cancelAnimationFrame(animFrameId);
+        lastFrameTime = performance.now();
+        animFrameId = requestAnimationFrame(render);
       }
 
       function stopAnimation() {
@@ -1521,6 +1591,13 @@
     }
 
     /* ─── WALLPAPER ACTIVATION CONTROLLER ─── */
+    // 1.0 = native speed. The old 1.15 made 30 fps clips play at ~34.5 fps, which
+    // doesn't divide evenly into a 60 Hz refresh, so frames were shown for
+    // uneven durations (visible judder, worst in Firefox). Set to 1.15 to restore.
+    const VIDEO_PLAYBACK_RATE = 1.0;
+    let pendingCanPlay = null;
+    let fadeInFallbackTimer = null;
+
     function applyDefaultLiveScene(sceneKey, isUltra = null) {
       const resolvedKey = sceneAliasMap[sceneKey] || sceneKey;
       let s = DEFAULT_LIVE_SCENES.find(it => it.key === resolvedKey);
@@ -1571,33 +1648,44 @@
           bgVideo.setAttribute('muted', '');
           bgVideo.setAttribute('playsinline', '');
 
-          const activeSrc = String(bgVideo.currentSrc || (videoSource ? videoSource.src : '') || '');
-          if (!activeSrc || !activeSrc.includes(videoSrc)) {
+          // Decide "is this video already loaded?" from the src WE assigned (plus the
+          // element's real health) — never from bgVideo.currentSrc, which Chromium
+          // leaves stale after the source is removed (see getAssignedVideoSrc()).
+          const alreadyLoaded = getAssignedVideoSrc() === videoSrc &&
+            bgVideo.networkState !== 3 /* NETWORK_NO_SOURCE */ && !bgVideo.error;
+          if (!alreadyLoaded) {
             bgVideo.style.opacity = '0.2';
+            bgVideo.preload = 'auto'; // 'metadata' + a fresh src can leave canplay unfired
             bgVideo.src = videoSrc;
             if (videoSource) videoSource.src = videoSrc;
-            // Fix directive §5 (perf audit): setting .src above already triggers the
-            // element's resource-selection algorithm per the HTML spec. An explicit
-            // .load() call immediately after aborts that in-flight fetch and starts an
-            // identical second one — confirmed live via a duplicate net::ERR_ABORTED
-            // request on every single theme/scene switch. Do not re-add .load() here.
-            bgVideo.playbackRate = 1.15;
+            // Setting .src already triggers resource selection; an extra .load()
+            // here would abort and duplicate the fetch (see fix directive §5).
+            bgVideo.defaultPlaybackRate = VIDEO_PLAYBACK_RATE;
+            bgVideo.playbackRate = VIDEO_PLAYBACK_RATE;
 
+            if (pendingCanPlay) bgVideo.removeEventListener('canplay', pendingCanPlay);
+            clearTimeout(fadeInFallbackTimer);
             const onReady = () => {
               bgVideo.removeEventListener('canplay', onReady);
-              bgVideo.playbackRate = 1.15;
+              pendingCanPlay = null;
+              clearTimeout(fadeInFallbackTimer);
+              bgVideo.defaultPlaybackRate = VIDEO_PLAYBACK_RATE;
+              bgVideo.playbackRate = VIDEO_PLAYBACK_RATE;
               const p = bgVideo.play();
               if (p !== undefined) p.catch(() => {});
               setTimeout(() => { bgVideo.style.opacity = '1'; }, 80);
             };
-            if (bgVideo.readyState >= 3) {
-              onReady();
-            } else {
-              bgVideo.addEventListener('canplay', onReady, { once: true });
-            }
+            pendingCanPlay = onReady;
+            bgVideo.addEventListener('canplay', onReady, { once: true });
+            // If canplay never arrives (slow disk, odd decoder), don't leave the
+            // wallpaper stuck half-faded and paused.
+            fadeInFallbackTimer = setTimeout(() => {
+              bgVideo.style.opacity = '1';
+              ensureVideoPlayback();
+            }, 3000);
           } else {
             bgVideo.style.opacity = '1';
-            bgVideo.playbackRate = 1.15;
+            bgVideo.playbackRate = VIDEO_PLAYBACK_RATE;
             if (bgVideo.paused) {
               const p = bgVideo.play();
               if (p !== undefined) p.catch(() => {});
@@ -1681,7 +1769,8 @@
           bgVideo.setAttribute('muted', '');
           bgVideo.setAttribute('playsinline', '');
           bgVideo.src = currentCustomObjectUrl;
-          bgVideo.playbackRate = 1.0;
+          bgVideo.defaultPlaybackRate = VIDEO_PLAYBACK_RATE;
+          bgVideo.playbackRate = VIDEO_PLAYBACK_RATE;
           // See fix directive §5 above — .load() here duplicated the fetch this
           // .src assignment already starts.
           bgVideo.play().catch(() => {});
@@ -1744,7 +1833,8 @@
           bgVideo.setAttribute('muted', '');
           bgVideo.setAttribute('playsinline', '');
           bgVideo.src = record.url;
-          bgVideo.playbackRate = 1.0;
+          bgVideo.defaultPlaybackRate = VIDEO_PLAYBACK_RATE;
+          bgVideo.playbackRate = VIDEO_PLAYBACK_RATE;
           // See fix directive §5 above — .load() here duplicated the fetch this
           // .src assignment already starts.
           bgVideo.play().catch(() => {});
@@ -1813,9 +1903,37 @@
       );
     }
 
-    /* ─── 4.1. BULLETPROOF VIDEO AUTO-RESUME & FREEZE-RECOVERY ─── */
+    /* The src string we assigned ourselves. We compare against THIS, never
+       against bgVideo.currentSrc: Chromium keeps currentSrc pointing at the
+       old URL even after the src attribute is removed and load() is called,
+       which is what made the old "is the right video loaded?" check answer
+       "yes" for a video that was actually empty (the frozen-until-you-switch-
+       theme bug). */
+    function getAssignedVideoSrc() {
+      if (!bgVideo) return '';
+      return bgVideo.getAttribute('src') || (videoSource ? (videoSource.getAttribute('src') || '') : '');
+    }
+
+    // Re-apply whichever wallpaper is active from OUR state (not from the media element's).
+    function restoreWallpaperSource() {
+      if (!activeWallpaper) return;
+      if (activeWallpaper.source === 'custom-file') {
+        initActiveWallpaper();
+      } else if (activeWallpaper.source === 'custom-url') {
+        applyCustomWebWallpaper(activeWallpaper.id);
+      } else if (activeWallpaper.source === 'default-live') {
+        applyDefaultLiveScene(activeWallpaper.id);
+      }
+    }
+
+    /* ─── 4.1. VIDEO AUTO-RESUME & FREEZE-RECOVERY ─── */
     function ensureVideoPlayback() {
-      if (!isVideoActive()) return;
+      if (!isVideoActive() || isSuspended()) return;
+      if (!getAssignedVideoSrc()) {
+        // Nothing loaded at all (should not normally happen) — rebuild it.
+        restoreWallpaperSource();
+        return;
+      }
       bgVideo.muted = true;
       bgVideo.defaultMuted = true;
       bgVideo.playsInline = true;
@@ -1824,7 +1942,7 @@
 
       if (bgVideo.paused || bgVideo.ended) {
         if (bgVideo.ended || (bgVideo.duration && bgVideo.currentTime >= bgVideo.duration - 0.15)) {
-          bgVideo.currentTime = 0;
+          try { bgVideo.currentTime = 0; } catch (e) {}
         }
         const promise = bgVideo.play();
         if (promise !== undefined) {
@@ -1833,34 +1951,21 @@
       }
     }
 
-    // Fix directive §7 (bug audit): some GPU/video-decoder pipelines (observed on
-    // Linux/Chromium) silently lose their hardware decode context after a tab sits
-    // backgrounded for a while. bgVideo.play() then resolves successfully and
-    // .paused stays false, but the decoder never produces another frame — the
-    // wallpaper looks "stuck" on whatever frame it last painted. A cheap
-    // currentTime nudge (used below in the periodic watchdog) doesn't reliably
-    // wake a context that's actually gone; only re-selecting the resource from
-    // scratch does, which is exactly why switching themes "fixes" it (it forces a
-    // fresh .src assignment on a totally different element state). This helper
-    // reproduces that same fresh-load recovery on demand, without requiring the
-    // user to actually change themes.
+    // Some GPU/decoder stacks (seen on Linux/Chromium) silently lose the decode
+    // context while a tab is backgrounded: play() resolves, `paused` is false,
+    // but no new frame is ever produced. A fresh resource load is the only cure.
     function hardReloadVideo() {
       if (!bgVideo || !isVideoActive()) return;
-      const src = bgVideo.currentSrc || bgVideo.src;
-      if (!src) {
-        // Fully unloaded (e.g. a deep-suspend edge case) — rebuild via the normal
-        // scene-apply path instead, which knows how to pick the right tier/URL.
-        const sceneKey = (scenes && scenes[currentSceneIdx]) ? scenes[currentSceneIdx].key : (activeWallpaper.id || 'crimson');
-        applyScene(sceneKey);
-        return;
-      }
+      const src = getAssignedVideoSrc();
+      if (!src) { restoreWallpaperSource(); return; }
       const resumeAt = bgVideo.currentTime || 0;
-      bgVideo.pause();
+      try { bgVideo.pause(); } catch (e) {}
       bgVideo.src = src;
       if (videoSource) videoSource.src = src;
       bgVideo.load();
+      bgVideo.defaultPlaybackRate = VIDEO_PLAYBACK_RATE;
+      bgVideo.playbackRate = VIDEO_PLAYBACK_RATE;
       const seekOnReady = () => {
-        bgVideo.removeEventListener('loadedmetadata', seekOnReady);
         if (resumeAt > 0 && resumeAt < (bgVideo.duration || Infinity)) {
           try { bgVideo.currentTime = resumeAt; } catch (e) {}
         }
@@ -1870,96 +1975,65 @@
       ensureVideoPlayback();
     }
 
-    // One-shot check fired shortly after any resume event: if playback claims to
-    // be running but the frame clock hasn't actually moved, the decoder is dead —
-    // reload immediately rather than waiting out the slower periodic watchdog.
-    function scheduleResumeFreezeCheck() {
-      if (!isVideoActive() || !bgVideo) return;
+    // After any resume: prove the picture is really moving; if not, escalate
+    // (play() -> hard reload). Each step re-checks, so it converges instead of
+    // trusting a single event.
+    let verifyTimer = null;
+    function verifyVideoPlayback(attempt = 0) {
+      clearTimeout(verifyTimer);
+      if (!isVideoActive() || isSuspended() || !bgVideo) return;
       const t0 = bgVideo.currentTime;
-      setTimeout(() => {
-        if (document.hidden || isAppSuspended || !isVideoActive() || !bgVideo) return;
-        if (!bgVideo.paused && bgVideo.readyState >= 2 && Math.abs(bgVideo.currentTime - t0) < 0.03) {
+      verifyTimer = setTimeout(() => {
+        if (!isVideoActive() || isSuspended() || !bgVideo) return;
+        const moved = Math.abs(bgVideo.currentTime - t0) > 0.03;
+        if (!bgVideo.paused && moved) return; // healthy
+        if (attempt === 0) {
+          ensureVideoPlayback();
+          verifyVideoPlayback(1);
+        } else if (attempt === 1) {
           hardReloadVideo();
+          verifyVideoPlayback(2);
         }
+        // attempt 2 failing means the file itself is unplayable; the 'error'
+        // handler already falls back to Eco in that case.
       }, 900);
     }
 
-    /* ─── 4.2. UNIFIED POWER & MEMORY LIFECYCLE MANAGER ─── */
-    function pauseAllEngines() {
-      if (isAppSuspended) return;
-      isAppSuspended = true;
-      stopCanvasAnim();
-      if (bgVideo && !bgVideo.paused) {
-        bgVideo.pause();
-      }
-      clearInterval(quoteTimer);
-    }
-
-    function resumeAllEngines() {
-      // Never resume if document is hidden or any blocking modal is open
-      if (document.hidden) return;
-      const blockingModalOpen = [linkEditorModal, operatorModal, shortcutsModal]
-        .some(m => m && m.classList.contains('open'));
-      if (blockingModalOpen) return;
-
-      isAppSuspended = false;
-      lastClockMainStr = '';
-      lastDateDay = -1;
-      lastLoreHour = -1;
-      updateEpisodeClock();
-      startCanvasAnim();
-      ensureVideoPlayback();
-      scheduleResumeFreezeCheck();
-      startQuoteTimer();
-    }
-
-    // Deep-suspend: pause immediately on hide; after 20s hidden, unload src entirely to free GPU/RAM.
-    // On return, if deep-suspended, re-call applyScene to reload cleanly from the 720p default.
-    let deepSuspendTimer = null;
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden) {
-        pauseAllEngines();
-        deepSuspendTimer = setTimeout(() => {
-          if (document.hidden && isVideoActive()) {
-            bgVideo.pause();
-            bgVideo.removeAttribute('src');
-            if (videoSource) videoSource.removeAttribute('src');
-            bgVideo.load();
-            bgVideo.dataset.deepSuspended = 'true';
-          }
-        }, 20000);
-      } else {
-        clearTimeout(deepSuspendTimer);
-        if (bgVideo && bgVideo.dataset.deepSuspended === 'true') {
-          delete bgVideo.dataset.deepSuspended;
-          if (isVideoActive()) {
-            if (activeWallpaper && (activeWallpaper.source === 'custom-file' || activeWallpaper.source === 'custom-url')) {
-              initActiveWallpaper();
-            } else {
-              const sceneKey = (scenes && scenes[currentSceneIdx]) ? scenes[currentSceneIdx].key : (activeWallpaper.id || 'crimson');
-              applyScene(sceneKey);
-            }
-          } else {
-            resumeAllEngines();
-          }
-        } else {
-          resumeAllEngines();
+    /* ─── 4.2. UNIFIED POWER LIFECYCLE (idempotent) ───
+       One function reconciles reality with what *should* be running. It is
+       safe to call any number of times, from any event, in any order. */
+    let enginesRunning = true;
+    function syncEngines() {
+      if (isSuspended()) {
+        enginesRunning = false;
+        stopCanvasAnim();
+        if (bgVideo && !bgVideo.paused) {
+          try { bgVideo.pause(); } catch (e) {}
         }
+        clearInterval(quoteTimer);
+        quoteTimer = null;
+        return;
       }
-    });
+      const wasRunning = enginesRunning;
+      enginesRunning = true;
+      tickClock();          // correct time immediately, re-arms the timer
+      startCanvasAnim();    // cancel-then-start: exactly one loop
+      ensureVideoPlayback();
+      if (!wasRunning) verifyVideoPlayback();   // coming back from hidden / modal
+      if (!quoteTimer && subtitlesBar) startQuoteTimer();
+    }
+    // Kept as thin aliases so every existing call site (modals etc.) keeps working.
+    function pauseAllEngines() { syncEngines(); }
+    function resumeAllEngines() { syncEngines(); }
 
-    // Suspend non-critical rendering when user shifts focus to another window/application
-    window.addEventListener('blur', () => {
-      pauseAllEngines();
-    });
-
-    window.addEventListener('focus', () => {
-      resumeAllEngines();
-    });
-
-    window.addEventListener('pageshow', () => {
-      resumeAllEngines();
-    });
+    document.addEventListener('visibilitychange', syncEngines);
+    window.addEventListener('pageshow', syncEngines);   // bfcache restore
+    document.addEventListener('resume', syncEngines);   // Page Lifecycle API (Chromium): tab un-frozen
+    // 'focus' is only a cheap safety net. 'blur' is deliberately NOT handled:
+    // losing focus (address bar, another window beside the browser, a second
+    // monitor, focus-follows-mouse) does not hide the page, and pausing there
+    // made a fully visible wallpaper look frozen.
+    window.addEventListener('focus', syncEngines);
 
     if (bgVideo) {
       bgVideo.muted = true;
@@ -1967,9 +2041,9 @@
 
       // Auto-resume if paused unexpectedly while page is visible
       bgVideo.addEventListener('pause', () => {
-        if (!document.hidden && !isAppSuspended && isVideoActive()) {
+        if (!isSuspended() && isVideoActive()) {
           setTimeout(() => {
-            if (!document.hidden && !isAppSuspended && isVideoActive() && bgVideo.paused) {
+            if (!isSuspended() && isVideoActive() && bgVideo.paused) {
               ensureVideoPlayback();
             }
           }, 120);
@@ -1978,16 +2052,16 @@
 
       // Loop guarantee across all browser decoders
       bgVideo.addEventListener('ended', () => {
-        bgVideo.currentTime = 0;
+        try { bgVideo.currentTime = 0; } catch (e) {}
         ensureVideoPlayback();
       });
 
       // Recover from decoder stalls or waiting state
       bgVideo.addEventListener('stalled', () => {
-        if (!document.hidden && !isAppSuspended && isVideoActive()) ensureVideoPlayback();
+        if (!isSuspended() && isVideoActive()) ensureVideoPlayback();
       });
       bgVideo.addEventListener('waiting', () => {
-        if (!document.hidden && !isAppSuspended && isVideoActive()) ensureVideoPlayback();
+        if (!isSuspended() && isVideoActive()) ensureVideoPlayback();
       });
       let videoErrorCount = 0;
       bgVideo.addEventListener('playing', () => { videoErrorCount = 0; });
@@ -1997,12 +2071,16 @@
         try { bgVideo.load(); ensureVideoPlayback(); } catch (e) {}
       });
 
-      // Watchdog: checks every 4s to unfreeze video if frame gets stuck (dormant when paused/hidden/eco/static)
+      // Health watchdog (every 3s while visible): also self-heals a missed
+      // visibility/focus event — if the page is visible and nothing is
+      // suspending it but the engines were never restarted, restart them.
       let lastVideoTime = -1;
       let freezeCount = 0;
       let nudgeAttempts = 0;
       setInterval(() => {
-        if (document.hidden || isAppSuspended || !isVideoActive()) return;
+        if (isSuspended()) return;
+        if (!enginesRunning) { syncEngines(); return; }
+        if (!isVideoActive()) return;
         if (bgVideo.paused) {
           ensureVideoPlayback();
           return;
@@ -2013,10 +2091,6 @@
             freezeCount = 0;
             nudgeAttempts++;
             if (nudgeAttempts >= 2) {
-              // Fix directive §7: a cheap currentTime nudge hasn't unstuck this in
-              // two straight attempts (~16s) — the decode context is genuinely
-              // gone, not just a transient stall. Force a real reload instead of
-              // nudging forever.
               nudgeAttempts = 0;
               hardReloadVideo();
               return;
@@ -2031,7 +2105,7 @@
           nudgeAttempts = 0;
           lastVideoTime = bgVideo.currentTime;
         }
-      }, 4000);
+      }, 3000);
     }
 
     function cycleScene() {
@@ -2448,35 +2522,32 @@
       { key: 'starlight', kanji: '星骸・白金', rom: 'Platinum White',  color: '#e2e8f0' }
     ];
 
-    function applyCustomThemeColor(hex) {
-      // Single source of truth (fix directive §3): the exact same
-      // derivation the anti-FOUC boot script runs at first paint, via
-      // theme-core.js. Includes the legibility-floor clamp from §1, so a
-      // near-black or washed-out pick never turns into invisible text.
-      const {
-        themeBase, accent: accentHex, accentGlow, accentSoft, accentAlt,
-        accentCyan, glassBg, glassBorder, glassBorderHover, particleColor,
-        textMain, textBright, textMuted
-      } = deriveThemeVars(hex);
-
+    // Sets the derived CSS variables as inline !important values on <html> and
+    // <body>. This is the cheap part — safe to run once per frame while dragging.
+    // (The <style> tag copy is only rewritten when the colour is committed:
+    // rewriting a stylesheet 60x/s forced a full re-parse + restyle each time.)
+    function setCustomThemeInlineVars(v) {
       const targets = [document.documentElement, document.body];
       targets.forEach(el => {
         if (!el) return;
-        el.style.setProperty('--theme-base', themeBase, 'important');
-        el.style.setProperty('--accent', accentHex, 'important');
-        el.style.setProperty('--accent-glow', accentGlow, 'important');
-        el.style.setProperty('--accent-soft', accentSoft, 'important');
-        el.style.setProperty('--accent-alt', accentAlt, 'important');
-        el.style.setProperty('--accent-cyan', accentCyan, 'important');
-        el.style.setProperty('--glass-bg', glassBg, 'important');
-        el.style.setProperty('--glass-border', glassBorder, 'important');
-        el.style.setProperty('--glass-border-hover', glassBorderHover, 'important');
-        el.style.setProperty('--particle-color', particleColor, 'important');
-        el.style.setProperty('--text-main', textMain, 'important');
-        el.style.setProperty('--text-bright', textBright, 'important');
-        el.style.setProperty('--text-muted', textMuted, 'important');
+        const st = el.style;
+        st.setProperty('--theme-base', v.themeBase, 'important');
+        st.setProperty('--accent', v.accent, 'important');
+        st.setProperty('--accent-glow', v.accentGlow, 'important');
+        st.setProperty('--accent-soft', v.accentSoft, 'important');
+        st.setProperty('--accent-alt', v.accentAlt, 'important');
+        st.setProperty('--accent-cyan', v.accentCyan, 'important');
+        st.setProperty('--glass-bg', v.glassBg, 'important');
+        st.setProperty('--glass-border', v.glassBorder, 'important');
+        st.setProperty('--glass-border-hover', v.glassBorderHover, 'important');
+        st.setProperty('--particle-color', v.particleColor, 'important');
+        st.setProperty('--text-main', v.textMain, 'important');
+        st.setProperty('--text-bright', v.textBright, 'important');
+        st.setProperty('--text-muted', v.textMuted, 'important');
       });
+    }
 
+    function writeCustomThemeStyleTag(v) {
       let styleTag = document.getElementById('shinsekai-custom-theme-vars');
       if (!styleTag) {
         styleTag = document.createElement('style');
@@ -2488,21 +2559,31 @@
         html[data-theme="custom"],
         body[data-theme="custom"],
         [data-theme="custom"] {
-          --theme-base: ${themeBase} !important;
-          --accent: ${accentHex} !important;
-          --accent-glow: ${accentGlow} !important;
-          --accent-soft: ${accentSoft} !important;
-          --accent-alt: ${accentAlt} !important;
-          --accent-cyan: ${accentCyan} !important;
-          --glass-bg: ${glassBg} !important;
-          --glass-border: ${glassBorder} !important;
-          --glass-border-hover: ${glassBorderHover} !important;
-          --particle-color: ${particleColor} !important;
-          --text-main: ${textMain} !important;
-          --text-bright: ${textBright} !important;
-          --text-muted: ${textMuted} !important;
+          --theme-base: ${v.themeBase} !important;
+          --accent: ${v.accent} !important;
+          --accent-glow: ${v.accentGlow} !important;
+          --accent-soft: ${v.accentSoft} !important;
+          --accent-alt: ${v.accentAlt} !important;
+          --accent-cyan: ${v.accentCyan} !important;
+          --glass-bg: ${v.glassBg} !important;
+          --glass-border: ${v.glassBorder} !important;
+          --glass-border-hover: ${v.glassBorderHover} !important;
+          --particle-color: ${v.particleColor} !important;
+          --text-main: ${v.textMain} !important;
+          --text-bright: ${v.textBright} !important;
+          --text-muted: ${v.textMuted} !important;
         }
       `;
+    }
+
+    // Backwards-compatible: full (inline + stylesheet) application in one call.
+    function applyCustomThemeColor(hex) {
+      // Single source of truth (fix directive §3): the exact same derivation the
+      // anti-FOUC boot script runs at first paint, via theme-core.js, including
+      // the legibility-floor clamp so a near-black pick never becomes invisible.
+      const v = deriveThemeVars(hex);
+      setCustomThemeInlineVars(v);
+      writeCustomThemeStyleTag(v);
     }
 
     function removeCustomThemeStyles() {
@@ -2523,99 +2604,173 @@
       }
     }
 
-    function updateActiveCrystalState(currentHex = safeStorage.getItem('shinsekai-custom-theme-color') || '#a6e3a1') {
+    let crystalEls = null;
+    function updateActiveCrystalState(currentHex = currentCustomHex) {
       const normHex = (currentHex.startsWith('#') ? currentHex : '#' + currentHex).toLowerCase();
       let matched = null;
-      if (spectrumCrystalsGrid) {
-        const crystals = spectrumCrystalsGrid.querySelectorAll('.chakra-crystal');
-        crystals.forEach(cr => {
-          // Bugfix: only highlight a crystal as active when the "custom" theme is
-          // actually the one in effect. Previously this only compared the crystal's
-          // color to the last-saved custom hex, so switching to a default theme
-          // (e.g. crimson) after picking a color preset (e.g. gold) still showed
-          // that preset as "active" on hover, even though it wasn't applied anymore.
+      if (!crystalEls && spectrumCrystalsGrid) {
+        const found = spectrumCrystalsGrid.querySelectorAll('.chakra-crystal');
+        if (found.length) crystalEls = Array.from(found); // cache: no querySelectorAll per drag frame
+      }
+      if (crystalEls) {
+        crystalEls.forEach(cr => {
+          // Only highlight a crystal as active when the "custom" theme is the one
+          // actually in effect (otherwise a stale preset stays lit after switching
+          // back to a default theme).
           const isMatch = currentThemeKey === 'custom' && cr.dataset.color.toLowerCase() === normHex;
-          cr.classList.toggle('active', isMatch);
+          if (cr.classList.contains('active') !== isMatch) cr.classList.toggle('active', isMatch);
           if (isMatch) matched = cr;
         });
       }
       if (spectrumCoreLabel) {
-        if (matched) {
-          spectrumCoreLabel.textContent = `${matched.dataset.kanji} · ${matched.dataset.rom}`;
-        } else {
-          spectrumCoreLabel.textContent = 'カスタム周波数';
-        }
+        setTextIfChanged(spectrumCoreLabel, matched
+          ? `${matched.dataset.kanji} · ${matched.dataset.rom}`
+          : 'カスタム周波数');
       }
     }
 
-    // Keeps the in-DOM Saturation/Value pad (fix directive §2) in sync with
-    // whatever control last changed the color — crystal presets, the hue
-    // slider, the hex field, the RGB fields, or a drag on the pad itself.
-    // The pad's own background reflects the pure hue (S:100 V:100 in HSV,
-    // which is the same color as HSL(h, 100%, 50%)); the cursor position
-    // reflects this hex's actual saturation/value within that hue plane.
-    function syncSatPadUI(hex, hue) {
+    function setTextIfChanged(el, str) {
+      if (el && el.textContent !== str) el.textContent = str;
+    }
+
+    /* The picker's own HSV state. The pad and the hue slider work in HSV, and
+       hue is UNDEFINED for gray/white/black — the old code recomputed hue from
+       the resulting hex every frame, so dragging the pad into a gray edge
+       snapped the hue slider (and the whole pad) back to red. Now the hue only
+       changes when the user actually moves the hue slider (or picks a colour
+       that really has a hue). */
+    const _initHsv = hexToHsv(currentCustomHex);
+    let tunerHsv = { h: _initHsv.h, s: _initHsv.s, v: _initHsv.v };
+    let lastPadHue = -1;
+
+    // Keeps the Saturation/Value pad in sync with tunerHsv.
+    function syncSatPadUIFromState() {
       if (!spectrumSatPad || !spectrumSatCursor) return;
-      const { s, v } = hexToHsv(hex);
-      spectrumSatPad.style.backgroundColor = hslToHex(hue, 100, 50);
-      spectrumSatCursor.style.left = s + '%';
-      spectrumSatCursor.style.top = (100 - v) + '%';
+      const h = Math.round(tunerHsv.h) % 360;
+      if (h !== lastPadHue) {
+        lastPadHue = h;
+        spectrumSatPad.style.backgroundColor = hslToHex(h, 100, 50);
+      }
+      spectrumSatCursor.style.left = tunerHsv.s + '%';
+      spectrumSatCursor.style.top = (100 - tunerHsv.v) + '%';
       if (spectrumSvBadge) {
-        spectrumSvBadge.textContent = `S:${Math.round(s)}% V:${Math.round(v)}%`;
+        setTextIfChanged(spectrumSvBadge, `S:${Math.round(tunerHsv.s)}% V:${Math.round(tunerHsv.v)}%`);
       }
     }
 
-    function applyCustomTheme(hexColor, syncScene = false) {
-      let rawHex = String(hexColor || safeStorage.getItem('shinsekai-custom-theme-color') || '#a6e3a1').trim();
+    /* ─── COLOUR-PICKER PIPELINE ───
+       Live gestures (dragging the pad / hue slider / typing RGB) used to run the
+       whole theme application, including two synchronous localStorage writes and
+       a stylesheet rewrite, on EVERY input event. Now:
+         1. input events only record the latest colour (scheduleCustomTheme);
+         2. it is applied at most once per animation frame;
+         3. storage is written once, ~350 ms after the last change, on release,
+            and when the page is hidden;
+         4. while tuning, CSS transitions are switched off (html.is-tuning) so
+            ~40 "transition: all" elements don't restart a 0.2 s colour fade
+            on every frame. */
+    let persistTimer = null;
+    let tuneHold = 0, tuneIdleTimer = null, tuneRaf = 0, tunePending = null;
+
+    function persistCustomTheme(hex) {
+      clearTimeout(persistTimer);
+      persistTimer = null;
+      hex = hex || currentCustomHex;
+      safeStorage.setItem('shinsekai-theme', 'custom');
+      safeStorage.setItem('shinsekai-custom-theme-color', hex);
+      const v = deriveThemeVars(hex);
+      writeCustomThemeStyleTag(v);
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute('content', v.themeBase);
+    }
+
+    function cancelPendingCustomTheme() {
+      clearTimeout(persistTimer);
+      persistTimer = null;
+      if (tuneRaf) { cancelAnimationFrame(tuneRaf); tuneRaf = 0; }
+      tunePending = null;
+    }
+
+    function setTuningClass(on) {
+      const cl = document.documentElement.classList;
+      if (cl.contains('is-tuning') !== on) cl.toggle('is-tuning', on);
+    }
+    function endTuningSoon() {
+      clearTimeout(tuneIdleTimer);
+      tuneIdleTimer = setTimeout(() => { if (!tuneHold) setTuningClass(false); }, 260);
+    }
+    function flushTune() {
+      if (tuneRaf) { cancelAnimationFrame(tuneRaf); tuneRaf = 0; }
+      const p = tunePending;
+      tunePending = null;
+      if (p) applyCustomTheme(p.hex, false, Object.assign({}, p.opts, { persist: false }));
+    }
+    function scheduleCustomTheme(hex, opts) {
+      tunePending = { hex, opts: opts || {} };
+      setTuningClass(true);
+      endTuningSoon();
+      if (!tuneRaf) tuneRaf = requestAnimationFrame(() => { tuneRaf = 0; flushTune(); });
+    }
+    // End of a gesture: apply whatever is pending and save it now.
+    function commitCustomTheme() {
+      flushTune();
+      if (currentThemeKey === 'custom') persistCustomTheme(currentCustomHex);
+      endTuningSoon();
+    }
+    // Never lose a colour picked just before the tab is closed or hidden.
+    window.addEventListener('pagehide', () => { if (persistTimer) persistCustomTheme(currentCustomHex); });
+    document.addEventListener('visibilitychange', () => { if (document.hidden && persistTimer) persistCustomTheme(currentCustomHex); });
+
+    function applyCustomTheme(hexColor, syncScene = false, opts = {}) {
+      let rawHex = String(hexColor || currentCustomHex || '#a6e3a1').trim();
       if (!rawHex.startsWith('#')) rawHex = '#' + rawHex;
       if (rawHex.length === 4) rawHex = '#' + rawHex[1] + rawHex[1] + rawHex[2] + rawHex[2] + rawHex[3] + rawHex[3];
       const hex = /^#[0-9a-fA-F]{6}$/.test(rawHex) ? rawHex.toLowerCase() : '#a6e3a1';
+      const persist = opts.persist !== false;
+
+      // A committed apply supersedes anything still queued from a live drag.
+      if (persist) cancelPendingCustomTheme();
+
       currentThemeKey = 'custom';
       currentThemeIdx = themes.findIndex(t => t.key === 'custom');
       if (currentThemeIdx === -1) currentThemeIdx = themes.length - 1;
       themes[currentThemeIdx].color = hex;
+      currentCustomHex = hex;
 
-      safeStorage.setItem('shinsekai-theme', 'custom');
-      safeStorage.setItem('shinsekai-custom-theme-color', hex);
-
-      document.documentElement.setAttribute('data-theme', 'custom');
-      document.body.setAttribute('data-theme', 'custom');
-
-      applyCustomThemeColor(hex);
-
-      const THEME_BASE_COLORS = {
-      tokyonight: '#0b0f19',
-      crimson: '#0d080e',
-      sakura: '#140d18',
-      catppuccin: '#11111b',
-      cyberpunk: '#040710',
-      custom: '#080c14'
-    };
-
-    function syncMetaThemeColor(colorHex) {
-      let meta = document.querySelector('meta[name="theme-color"]');
-      if (!meta) {
-        meta = document.createElement('meta');
-        meta.setAttribute('name', 'theme-color');
-        document.head.appendChild(meta);
+      // HSV state (hue is kept when the colour has no hue of its own)
+      if (opts.hsv) {
+        tunerHsv = { h: opts.hsv.h, s: opts.hsv.s, v: opts.hsv.v };
+      } else {
+        const c = hexToHsv(hex);
+        tunerHsv = { h: (c.s < 1 || c.v < 1) ? tunerHsv.h : c.h, s: c.s, v: c.v };
       }
-      meta.setAttribute('content', colorHex);
-    }
+      const hue = Math.round(tunerHsv.h);
 
-      if (themeLabel) themeLabel.textContent = 'カスタム';
+      if (persist) {
+        persistCustomTheme(hex);
+      } else {
+        clearTimeout(persistTimer);
+        persistTimer = setTimeout(() => persistCustomTheme(currentCustomHex), 350);
+      }
+
+      if (document.documentElement.getAttribute('data-theme') !== 'custom') document.documentElement.setAttribute('data-theme', 'custom');
+      if (document.body.getAttribute('data-theme') !== 'custom') document.body.setAttribute('data-theme', 'custom');
+
+      setCustomThemeInlineVars(deriveThemeVars(hex));
+
+      setTextIfChanged(themeLabel, 'カスタム');
       const themeLabelSub = document.getElementById('theme-label-sub');
-      if (themeLabelSub) themeLabelSub.textContent = 'Custom';
+      setTextIfChanged(themeLabelSub, 'Custom');
       if (themeColorDot) {
         themeColorDot.style.background = hex;
         themeColorDot.style.boxShadow = '0 0 8px ' + hex;
       }
-
       if (customThemeDot) {
         customThemeDot.style.background = hex;
         customThemeDot.style.boxShadow = '0 0 8px ' + hex;
       }
       const upperHex = hex.replace('#', '').toUpperCase();
-      if (customThemeHex) customThemeHex.textContent = upperHex;
+      setTextIfChanged(customThemeHex, upperHex);
       if (spectrumHexChip) spectrumHexChip.style.borderColor = hex;
 
       if (customThemeColorInput && customThemeColorInput.value.toLowerCase() !== hex) {
@@ -2624,22 +2779,22 @@
       if (spectrumHexTextInput && document.activeElement !== spectrumHexTextInput) {
         spectrumHexTextInput.value = upperHex;
       }
-      const hue = hexToHue(hex);
       if (spectrumHueSlider && document.activeElement !== spectrumHueSlider) {
         spectrumHueSlider.value = hue;
       }
-      if (spectrumHueBadge) {
-        spectrumHueBadge.textContent = `${hue}° FREQ`;
-      }
+      setTextIfChanged(spectrumHueBadge, `${hue}° FREQ`);
 
       const rgbNow = hexToRgb(hex);
       if (spectrumRgbR && document.activeElement !== spectrumRgbR) spectrumRgbR.value = rgbNow.r;
       if (spectrumRgbG && document.activeElement !== spectrumRgbG) spectrumRgbG.value = rgbNow.g;
       if (spectrumRgbB && document.activeElement !== spectrumRgbB) spectrumRgbB.value = rgbNow.b;
-      syncSatPadUI(hex, hue);
 
-      if (themeHeaderBadge) themeHeaderBadge.textContent = 'CUSTOM';
-      if (spectrumStatusTag) spectrumStatusTag.textContent = 'ACTIVE';
+      // When the change came from the pad itself its cursor is already in place.
+      if (opts.source !== 'pad') syncSatPadUIFromState();
+      else if (spectrumSvBadge) setTextIfChanged(spectrumSvBadge, `S:${Math.round(tunerHsv.s)}% V:${Math.round(tunerHsv.v)}%`);
+
+      setTextIfChanged(themeHeaderBadge, 'CUSTOM');
+      setTextIfChanged(spectrumStatusTag, 'ACTIVE');
 
       const lore = themeBootLore.custom || themeBootLoreTemplates.custom;
       if (bootPill) bootPill.textContent = lore.tag;
@@ -2647,7 +2802,7 @@
       if (bootSub) bootSub.textContent = lore.sub || ('SYNCHRONIZING CUSTOM SPECTRUM // ' + getOperatorFormattedName());
 
       themeItems.forEach(item => {
-        item.classList.remove('active');
+        if (item.classList.contains('active')) item.classList.remove('active');
       });
       if (customThemeItem) customThemeItem.classList.add('active');
       if (spectrumTuner) spectrumTuner.classList.add('active');
@@ -2662,11 +2817,13 @@
 
     function applyTheme(themeKey, syncScene = false) {
       if (themeKey === 'custom') {
-        const savedHex = safeStorage.getItem('shinsekai-custom-theme-color') || '#a6e3a1';
+        const savedHex = currentCustomHex;
         applyCustomTheme(savedHex, syncScene);
         return;
       }
 
+      cancelPendingCustomTheme();
+      setTuningClass(false);
       removeCustomThemeStyles();
       const t = themes.find(item => item.key === themeKey) || themes[0];
       currentThemeIdx = themes.indexOf(t);
@@ -2724,7 +2881,7 @@
       currentThemeIdx = (currentThemeIdx + 1) % themes.length;
       const nextTheme = themes[currentThemeIdx];
       if (nextTheme.key === 'custom') {
-        applyCustomTheme(safeStorage.getItem('shinsekai-custom-theme-color') || '#a6e3a1', true);
+        applyCustomTheme(currentCustomHex, true);
       } else {
         applyTheme(nextTheme.key, true);
       }
@@ -2773,40 +2930,61 @@
           e.stopPropagation();
           const hue = parseInt(e.target.value, 10) || 0;
           const hex = hslToHex(hue, 88, 62);
-          if (spectrumHueBadge) spectrumHueBadge.textContent = `${hue}° FREQ`;
-          if (spectrumHexTextInput) spectrumHexTextInput.value = hex.replace('#', '').toUpperCase();
-          if (customThemeColorInput) customThemeColorInput.value = hex;
-          applyCustomTheme(hex, false);
+          const c = hexToHsv(hex);
+          // The slider is the authority on hue (hexToHsv may be off by a degree).
+          scheduleCustomTheme(hex, { hsv: { h: hue, s: c.s, v: c.v }, source: 'hue' });
         });
         spectrumHueSlider.addEventListener('change', (e) => {
           e.stopPropagation();
-          const hue = parseInt(e.target.value, 10) || 0;
-          const hex = hslToHex(hue, 88, 62);
-          applyCustomTheme(hex, false);
+          commitCustomTheme();
         });
+        spectrumHueSlider.addEventListener('pointerdown', () => { tuneHold++; setTuningClass(true); });
+        const releaseHueHold = () => { if (tuneHold > 0) tuneHold--; endTuningSoon(); };
+        spectrumHueSlider.addEventListener('pointerup', releaseHueHold);
+        spectrumHueSlider.addEventListener('pointercancel', releaseHueHold);
       }
 
       // 2b. In-DOM Saturation & Value Matrix Pad (drag/tap, mouse + touch)
       if (spectrumSatPad && spectrumSatCursor) {
         let satPadDragging = false;
 
+        let padRect = null; // measured once per drag — the popover doesn't move while you drag
+
         const setFromPadPointer = (clientX, clientY) => {
-          const rect = spectrumSatPad.getBoundingClientRect();
-          const xPct = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
-          const yPct = Math.min(1, Math.max(0, (clientY - rect.top) / rect.height));
+          if (!padRect) padRect = spectrumSatPad.getBoundingClientRect();
+          const xPct = Math.min(1, Math.max(0, (clientX - padRect.left) / padRect.width));
+          const yPct = Math.min(1, Math.max(0, (clientY - padRect.top) / padRect.height));
           const satPct = xPct * 100;
           const valPct = (1 - yPct) * 100;
-          const hue = spectrumHueSlider ? (parseInt(spectrumHueSlider.value, 10) || 0) : hexToHue(safeStorage.getItem('shinsekai-custom-theme-color') || '#a6e3a1');
-          const hex = hsvToHex(hue, satPct, valPct);
+          // Hue comes from the picker state, NOT from the hex we just produced:
+          // gray/white/black have no hue and used to reset it to red mid-drag.
+          const hsv = { h: tunerHsv.h, s: satPct, v: valPct };
+          const hex = hsvToHex(hsv.h, satPct, valPct);
+          // Cursor follows the pointer immediately (cheap); the theme itself
+          // is applied at most once per frame.
           spectrumSatCursor.style.left = satPct + '%';
           spectrumSatCursor.style.top = (100 - valPct) + '%';
-          if (spectrumSvBadge) spectrumSvBadge.textContent = `S:${Math.round(satPct)}% V:${Math.round(valPct)}%`;
-          applyCustomTheme(hex, false);
+          tunerHsv = hsv;
+          scheduleCustomTheme(hex, { hsv, source: 'pad' });
+        };
+
+        const endPadDrag = (e) => {
+          if (!satPadDragging) return;
+          satPadDragging = false;
+          padRect = null;
+          if (e && e.pointerId !== undefined) {
+            try { spectrumSatPad.releasePointerCapture(e.pointerId); } catch (err) {}
+          }
+          if (tuneHold > 0) tuneHold--;
+          commitCustomTheme();
         };
 
         spectrumSatPad.addEventListener('pointerdown', (e) => {
           e.stopPropagation();
           satPadDragging = true;
+          padRect = null;
+          tuneHold++;
+          setTuningClass(true);
           try { spectrumSatPad.setPointerCapture(e.pointerId); } catch (err) {}
           setFromPadPointer(e.clientX, e.clientY);
         });
@@ -2815,15 +2993,9 @@
           e.stopPropagation();
           setFromPadPointer(e.clientX, e.clientY);
         });
-        spectrumSatPad.addEventListener('pointerup', (e) => {
-          if (!satPadDragging) return;
-          satPadDragging = false;
-          e.stopPropagation();
-          try { spectrumSatPad.releasePointerCapture(e.pointerId); } catch (err) {}
-        });
-        spectrumSatPad.addEventListener('pointercancel', () => {
-          satPadDragging = false;
-        });
+        spectrumSatPad.addEventListener('pointerup', (e) => { e.stopPropagation(); endPadDrag(e); });
+        spectrumSatPad.addEventListener('pointercancel', endPadDrag);
+        spectrumSatPad.addEventListener('lostpointercapture', endPadDrag);
       }
 
       // 3. Hex Code Direct Terminal Input
@@ -2873,11 +3045,12 @@
         });
         customThemeColorInput.addEventListener('input', (e) => {
           e.stopPropagation();
-          applyCustomTheme(e.target.value, false);
+          scheduleCustomTheme(e.target.value, { source: 'native' });
         });
         customThemeColorInput.addEventListener('change', (e) => {
           e.stopPropagation();
-          applyCustomTheme(e.target.value, false);
+          scheduleCustomTheme(e.target.value, { source: 'native' });
+          commitCustomTheme();
         });
       }
 
@@ -2921,21 +3094,22 @@
 
       // 6b. RGB Numeric Channel Inputs
       if (spectrumRgbR && spectrumRgbG && spectrumRgbB) {
-        const applyFromRgbFields = () => {
+        const applyFromRgbFields = (commit) => {
           const clamp255 = n => Math.min(255, Math.max(0, Math.round(n) || 0));
           const r = clamp255(parseFloat(spectrumRgbR.value));
           const g = clamp255(parseFloat(spectrumRgbG.value));
           const b = clamp255(parseFloat(spectrumRgbB.value));
-          applyCustomTheme(rgbToHex(r, g, b), false);
+          scheduleCustomTheme(rgbToHex(r, g, b), { source: 'rgb' });
+          if (commit) commitCustomTheme();
         };
         [spectrumRgbR, spectrumRgbG, spectrumRgbB].forEach(input => {
           input.addEventListener('input', (e) => {
             e.stopPropagation();
-            applyFromRgbFields();
+            applyFromRgbFields(false);
           });
           input.addEventListener('change', (e) => {
             e.stopPropagation();
-            applyFromRgbFields();
+            applyFromRgbFields(true);
           });
           input.addEventListener('click', (e) => e.stopPropagation());
           input.addEventListener('keydown', (e) => e.stopPropagation());
@@ -2948,7 +3122,7 @@
           e.stopPropagation();
           const current = (spectrumHexTextInput && spectrumHexTextInput.value.length === 6 ? '#' + spectrumHexTextInput.value : null)
             || (customThemeColorInput && customThemeColorInput.value)
-            || safeStorage.getItem('shinsekai-custom-theme-color')
+            || currentCustomHex
             || '#a6e3a1';
           applyCustomTheme(current, false);
         });
@@ -2958,7 +3132,7 @@
             e.stopPropagation();
             const current = (spectrumHexTextInput && spectrumHexTextInput.value.length === 6 ? '#' + spectrumHexTextInput.value : null)
               || (customThemeColorInput && customThemeColorInput.value)
-              || safeStorage.getItem('shinsekai-custom-theme-color')
+              || currentCustomHex
               || '#a6e3a1';
             applyCustomTheme(current, false);
           }
@@ -2981,7 +3155,7 @@
       });
 
       // 9. Initial calibration of spectrum controls
-      const savedHex = safeStorage.getItem('shinsekai-custom-theme-color') || '#a6e3a1';
+      const savedHex = currentCustomHex;
       const upper = savedHex.replace('#', '').toUpperCase();
       if (spectrumHexTextInput) spectrumHexTextInput.value = upper;
       if (customThemeHex) customThemeHex.textContent = upper;
@@ -2990,14 +3164,14 @@
         customThemeDot.style.boxShadow = '0 0 8px ' + savedHex;
       }
       if (customThemeColorInput) customThemeColorInput.value = savedHex;
-      const hue = hexToHue(savedHex);
+      const hue = Math.round(tunerHsv.h);
       if (spectrumHueSlider) spectrumHueSlider.value = hue;
       if (spectrumHueBadge) spectrumHueBadge.textContent = `${hue}° FREQ`;
       const savedRgb = hexToRgb(savedHex);
       if (spectrumRgbR) spectrumRgbR.value = savedRgb.r;
       if (spectrumRgbG) spectrumRgbG.value = savedRgb.g;
       if (spectrumRgbB) spectrumRgbB.value = savedRgb.b;
-      syncSatPadUI(savedHex, hue);
+      syncSatPadUIFromState();
       updateActiveCrystalState(savedHex);
     }
 
@@ -3648,7 +3822,7 @@
           },
           settings: {
             theme: currentThemeKey,
-            customThemeColor: safeStorage.getItem('shinsekai-custom-theme-color') || '#a6e3a1',
+            customThemeColor: currentCustomHex,
             scene: (scenes && scenes[currentSceneIdx]) ? scenes[currentSceneIdx].key : 'crimson',
             wallpaperMode: currentWallpaperMode,
             activeWallpaper: activeWallpaper,
@@ -4431,21 +4605,38 @@
     window.addEventListener('online', syncAllIconsOffline);
     window.addEventListener('beforeunload', revokeCustomObjectUrl);
 
-    /* ─── RUNTIME FPS WATCHDOG (auto-downgrade tier on sustained low FPS) ─── */
+    /* ─── RUNTIME FPS WATCHDOG (adaptive visual cost) ───
+       Samples real frame rate over 2 s windows and, after 3 consecutive slow
+       windows, steps the FX level down: full -> lite -> min.
+       Rules that keep it honest:
+        - frames are only counted while the page is actually running: hidden
+          tabs, open modals, and the first seconds after load (boot animation,
+          video buffering) are ignored;
+        - a long gap between frames (hidden tab, sleep, modal) restarts the
+          window instead of being averaged in as "0 fps" — the old version did
+          exactly that on every return to the tab;
+        - it NEVER changes your wallpaper or your saved quality tier. The old
+          version jumped to static Eco mode and saved it permanently. */
     (function fpsWatchdog() {
-      let frames = 0, windowStart = performance.now(), badStreak = 0, downgraded = 0;
+      const GRACE_MS = 6000;
+      let frames = 0, windowStart = 0, lastNow = 0, badStreak = 0;
+      function reset() { frames = 0; windowStart = 0; lastNow = 0; badStreak = 0; }
       function step(now) {
+        requestAnimationFrame(step);
+        if (isSuspended() || now < GRACE_MS || !document.body.classList.contains('boot-ready')) { reset(); return; }
+        if (!windowStart || now - lastNow > 400) { frames = 0; windowStart = now; lastNow = now; return; }
+        lastNow = now;
         frames++;
         if (now - windowStart >= 2000) {
           const fps = (frames * 1000) / (now - windowStart);
           frames = 0; windowStart = now;
-          if (!document.hidden && !isAppSuspended && fps < 24) {
-            badStreak++;
-            if (badStreak >= 3 && downgraded === 0) { downgraded = 1; applyTierPreset('mid'); }
-            else if (badStreak >= 5 && downgraded === 1) { downgraded = 2; applyScene('eco'); }
-          } else { badStreak = 0; }
+          if (fps < 24) badStreak++; else badStreak = 0;
+          if (badStreak >= 3) {
+            badStreak = 0;
+            if (currentFx === 'full') setFx('lite', true);
+            else if (currentFx === 'lite') setFx('min', false);
+          }
         }
-        requestAnimationFrame(step);
       }
       requestAnimationFrame(step);
     })();

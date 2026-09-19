@@ -228,6 +228,7 @@ Configure or bookmark Shinsekai with pre-configured startup states directly thro
 | `?particles=` | `?particles=off` | Enable or disable atmospheric particle canvas (`on` or `off`) |
 | `?ultra=1` / `?hd=1` | `?ultra=1` | Force startup directly in HD Ultra (1080p) master mode |
 | `?pinned=1` | `?pinned=1` | Lock the holographic bookmark drawer open on boot |
+| `?fx=` | `?fx=lite` | Visual-cost level: `full` (glass blur on every panel), `lite` (no blur on always-on panels; the default on Firefox and picked automatically on slow machines) or `min` (lite + no CRT/grain, this session only). `full`/`lite` are remembered. |
 | `?noboot=1` | `?noboot=1` | Bypass the 1.5-second cinematic boot sequence for instant page display |
 | `?menu=` | `?menu=operator` | Auto-launch a modal on boot (`operator`, `links`, `shortcuts`, `theme`, `scene`) |
 
@@ -255,14 +256,18 @@ The engine autonomously detects your hardware environment (`deviceMemory`, `hard
 - **720p Default Transcodes**: All 5 anime scene loops are pre-encoded with high-efficiency `libx264`, `preset=slow`, `crf=20`, `scale=1280:720`, `lanczos` filtering, and `+faststart` web optimization, shrinking file sizes by 30–60% with zero perceived quality loss.
 - **HD Ultra (1080p) On-Demand**: Surfaced as explicit options in the scene selector (**紅蓮 HD**, **東京夜 HD**, etc.) for large high-DPI displays without imposing memory overhead on normal sessions. The selection automatically persists in `localStorage` across new tabs.
 
-### 💤 3. Deep-Suspend Tab Hibernation
-- When you switch away or minimize the tab, all animation loops, clocks, and quotes pause immediately.
-- After **20 seconds in the background**, the video stream is completely unloaded from the DOM (`removeAttribute('src')` and `bgVideo.load()`), releasing decoded frame buffers from GPU VRAM and system memory.
-- Upon returning to the tab, playback seamlessly resumes from the 720p default stream without delay.
+### 💤 3. Visibility-Driven Power Lifecycle
+- Whether the animation engines run is **derived from ground truth** (`document.hidden` and whether a modal is open) every time it is asked — never from a flag that events toggle. One idempotent `syncEngines()` reconciles reality and is safe to call from any event, in any order (`visibilitychange`, `pageshow`, Page Lifecycle `resume`, `focus`, modal open/close, and a 3-second health check that heals a missed event).
+- When the tab is hidden the video, particles and quote timer pause; when it is visible again the clock is corrected immediately and everything restarts.
+- Losing **window focus** (address bar, another window, another monitor, focus-follows-mouse) does *not* pause anything — the page is still visible.
+- The wallpaper stays loaded while hidden. (The old "unload the video after 20 s" hibernation was removed: it left the video empty in Chromium — `currentSrc` stays stale after `removeAttribute('src')` — which is why the wallpaper stayed frozen until you switched themes.)
 
-### 🛡️ 4. Dual Watchdogs & Error Recovery
-- **Runtime FPS Watchdog**: Continuously measures frame delivery over 2-second windows. If FPS drops below 24 sustained (3 consecutive bad streaks), the engine auto-downgrades the tier to `mid`. If degradation continues, it safely transitions to `eco`.
-- **Resume-Freeze Recovery**: Some GPU/decoder pipelines silently lose their hardware decode context after a tab sits backgrounded — playback reports as running but the frame never advances again. A one-shot check ~900ms after every resume (tab switch, app switch, window refocus) verifies the frame clock is actually moving; if it's stuck, the video source is transparently reloaded from where it left off.
+### 🪶 3b. Adaptive FX Level (`full` / `lite` / `min`)
+Independent of the hardware tier. `lite` removes `backdrop-filter` from the always-on panels and popovers (they are already 82–96 % opaque, so it is barely visible) and is the **default on Firefox**. The FPS watchdog steps `full → lite → min` automatically after sustained low frame rates, and never touches your wallpaper or saved tier. The CRT scanlines and film grain are a single merged layer, and the accent glow no longer uses a blend mode — both were measured as major per-frame costs when the browser composites without a GPU.
+
+### 🛡️ 4. Watchdogs & Error Recovery
+- **Runtime FPS Watchdog**: Measures frame delivery over 2-second windows, but only while the page is actually running (not hidden, no modal open, not in the first seconds after load) and it restarts its window after any long gap. After 3 consecutive slow windows it lowers the FX level (see 3b). It no longer changes your tier or switches to Eco.
+- **Resume-Freeze Recovery**: Some GPU/decoder pipelines silently lose their hardware decode context after a tab sits backgrounded — playback reports as running but the frame never advances. After every resume the engine verifies the frame clock is really moving, escalating `play()` → full reload from where it left off. "Which video is loaded" is decided from the `src` the app assigned, never from `currentSrc`.
 - **2-Strike Error & Freeze Recovery**: If video decoders stall or throw errors twice consecutively, Shinsekai cleanly falls back to `eco` static mode instead of entering an infinite retry loop. The periodic freeze watchdog follows the same escalation logic — a cheap timestamp nudge first, then a full reload if that doesn't resolve it within two attempts.
 - **Zero-Latency Boot Loader**: An early inline script parses the URL/stored scene prior to DOM rendering, loading the exact video immediately and eliminating wasteful initial double-decodes.
 

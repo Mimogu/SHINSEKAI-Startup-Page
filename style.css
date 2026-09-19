@@ -46,6 +46,41 @@
   -webkit-backdrop-filter: none !important;
 }
 
+/* ─── FX LEVELS (adaptive visual cost; see FX_LEVELS in script.js) ───
+   lite: default on Firefox, and switched on automatically when the FPS
+   watchdog sees sustained low frame rates. Removes backdrop-filter from the
+   always-visible panels and the popovers. Those surfaces are already 82-96%
+   opaque, so the blur was barely visible — but it forced ~10 regions to be
+   re-blurred on every video frame. (Modal dialogs keep their blur: the
+   wallpaper is paused while they're open.)
+   min: lite + no CRT/grain overlay. Session only. */
+[data-fx="lite"] .search-capsule,
+[data-fx="lite"] .tab-blade,
+[data-fx="lite"] .hologram-drawer,
+[data-fx="lite"] .anime-subtitles-bar,
+[data-fx="lite"] .anime-popover.open,
+[data-fx="min"] .search-capsule,
+[data-fx="min"] .tab-blade,
+[data-fx="min"] .hologram-drawer,
+[data-fx="min"] .anime-subtitles-bar,
+[data-fx="min"] .anime-popover.open {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+[data-fx="min"] .crt-overlay {
+  display: none !important;
+}
+
+/* While the colour picker is being dragged: no colour transitions. ~40
+   elements use `transition: all` and reference the accent variables, so every
+   frame of a drag used to restart a 0.2 s fade on all of them. */
+html.is-tuning *,
+html.is-tuning *::before,
+html.is-tuning *::after {
+  transition: none !important;
+}
+
 [data-theme="tokyonight"],
 :root {
   --theme-base: #0b0f19;
@@ -223,24 +258,25 @@ body[data-wallpaper-mode="static"] .bg-video {
   visibility: hidden !important;
 }
 
+/* PERF: this used to be two full-screen layers — the scrim plus an ::after
+   glow using `mix-blend-mode: screen`. A blend mode over a playing <video>
+   forces the compositor to re-blend the whole viewport on every video frame
+   (measured: ~8-10 fps in a software-composited browser, i.e. Firefox without
+   GPU compositing). The glow is now just one more background layer of the
+   same element, with plain alpha instead of a blend mode. */
 .video-scrim {
   position: absolute;
   inset: 0;
   background:
     radial-gradient(ellipse at center, rgba(4, 6, 12, 0.12) 0%, rgba(4, 6, 12, 0.68) 70%, rgba(4, 6, 12, 0.94) 100%),
     linear-gradient(to bottom, rgba(4, 6, 12, 0.88) 0%, transparent 24%, transparent 68%, rgba(4, 6, 12, 0.94) 100%);
+  /* Same look plus the accent glow, when the browser supports color-mix()
+     (all current Chrome/Edge/Firefox/Safari); otherwise the line above stays. */
+  background:
+    radial-gradient(circle at 50% 32%, color-mix(in srgb, var(--accent-glow) 55%, transparent) 0%, transparent 75%),
+    radial-gradient(ellipse at center, rgba(4, 6, 12, 0.12) 0%, rgba(4, 6, 12, 0.68) 70%, rgba(4, 6, 12, 0.94) 100%),
+    linear-gradient(to bottom, rgba(4, 6, 12, 0.88) 0%, transparent 24%, transparent 68%, rgba(4, 6, 12, 0.94) 100%);
   pointer-events: none;
-}
-
-.video-scrim::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at 50% 32%, var(--accent-glow) 0%, transparent 75%);
-  mix-blend-mode: screen;
-  opacity: 0.35;
-  pointer-events: none;
-  transition: opacity 0.4s ease;
 }
 
 /* Eco Mode (Zero-Video / Minimal RAM mode) */
@@ -277,37 +313,28 @@ body[data-scene="eco"] {
      underneath it animates (60fps). Cheap GPU memory cost, meaningful
      CPU/paint savings on lower-end machines. */
   transform: translateZ(0);
-  background: repeating-linear-gradient(
-    0deg,
-    rgba(0, 0, 0, 0.13) 0px,
-    rgba(0, 0, 0, 0.13) 1px,
-    transparent 2px,
-    transparent 4px
-  );
-  opacity: 0.8;
-  transition: opacity 0.3s ease;
+  /* PERF: scanlines and film grain used to be two separate full-screen
+     overlays, each at its own opacity. Every full-screen alpha layer above a
+     playing <video> has to be re-composited on every video frame, so two cost
+     twice as much as one (measured in a software-composited browser: ~28 ->
+     ~38 fps just from merging them). They are now ONE element with two
+     backgrounds; the old per-layer opacities (0.8 and 0.75) are baked into
+     the gradient alphas so the look is unchanged.
+     Grain tile size scales with the performance tier (see TIER_CONFIG in
+     script.js): bigger tiles = fewer tiles to rasterize. */
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.104) 0px,
+      rgba(0, 0, 0, 0.104) 1px,
+      transparent 2px,
+      transparent 4px
+    ),
+    radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: auto, var(--grain-size, 3px) var(--grain-size, 3px);
 }
 
-.grain-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 2;
-  pointer-events: none;
-  contain: strict;
-  transform: translateZ(0);
-  background-image: radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
-  /* Tile size now scales with the performance tier (see TIER_CONFIG /
-     applyTierPreset in script.js) — a full-viewport 3px-tile radial
-     gradient is a large number of tiles to rasterize; 'mid' tier uses a
-     coarser 5px tile to cut that cost, matching how the particle canvas
-     already scales its own resolution per tier. */
-  background-size: var(--grain-size, 3px) var(--grain-size, 3px);
-  opacity: 0.75;
-  transition: opacity 0.3s ease;
-}
-
-body[data-grain="off"] .crt-overlay,
-body[data-grain="off"] .grain-overlay {
+body[data-grain="off"] .crt-overlay {
   opacity: 0;
   visibility: hidden;
   display: none !important;
@@ -571,12 +598,15 @@ body[data-particles="off"] .ambient-canvas {
   height: 100%;
   background: var(--accent);
   box-shadow: 0 0 8px var(--accent);
+  transform-origin: left center;
   animation: gaugeFlicker 3s infinite alternate;
 }
 
+/* PERF: this used to animate `width`, which forces a layout pass on every
+   frame for as long as the page is open. scaleX/opacity avoid layout. */
 @keyframes gaugeFlicker {
-  0%   { opacity: 0.85; width: 98.5%; }
-  100% { opacity: 1;    width: 100%; }
+  0%   { opacity: 0.85; transform: scaleX(0.987); }
+  100% { opacity: 1;    transform: scaleX(1); }
 }
 
 /* Two-tier quick tools deck for visual clarity & zero overlap */
