@@ -1833,6 +1833,57 @@
       }
     }
 
+    // Fix directive §7 (bug audit): some GPU/video-decoder pipelines (observed on
+    // Linux/Chromium) silently lose their hardware decode context after a tab sits
+    // backgrounded for a while. bgVideo.play() then resolves successfully and
+    // .paused stays false, but the decoder never produces another frame — the
+    // wallpaper looks "stuck" on whatever frame it last painted. A cheap
+    // currentTime nudge (used below in the periodic watchdog) doesn't reliably
+    // wake a context that's actually gone; only re-selecting the resource from
+    // scratch does, which is exactly why switching themes "fixes" it (it forces a
+    // fresh .src assignment on a totally different element state). This helper
+    // reproduces that same fresh-load recovery on demand, without requiring the
+    // user to actually change themes.
+    function hardReloadVideo() {
+      if (!bgVideo || !isVideoActive()) return;
+      const src = bgVideo.currentSrc || bgVideo.src;
+      if (!src) {
+        // Fully unloaded (e.g. a deep-suspend edge case) — rebuild via the normal
+        // scene-apply path instead, which knows how to pick the right tier/URL.
+        const sceneKey = (scenes && scenes[currentSceneIdx]) ? scenes[currentSceneIdx].key : (activeWallpaper.id || 'crimson');
+        applyScene(sceneKey);
+        return;
+      }
+      const resumeAt = bgVideo.currentTime || 0;
+      bgVideo.pause();
+      bgVideo.src = src;
+      if (videoSource) videoSource.src = src;
+      bgVideo.load();
+      const seekOnReady = () => {
+        bgVideo.removeEventListener('loadedmetadata', seekOnReady);
+        if (resumeAt > 0 && resumeAt < (bgVideo.duration || Infinity)) {
+          try { bgVideo.currentTime = resumeAt; } catch (e) {}
+        }
+        ensureVideoPlayback();
+      };
+      bgVideo.addEventListener('loadedmetadata', seekOnReady, { once: true });
+      ensureVideoPlayback();
+    }
+
+    // One-shot check fired shortly after any resume event: if playback claims to
+    // be running but the frame clock hasn't actually moved, the decoder is dead —
+    // reload immediately rather than waiting out the slower periodic watchdog.
+    function scheduleResumeFreezeCheck() {
+      if (!isVideoActive() || !bgVideo) return;
+      const t0 = bgVideo.currentTime;
+      setTimeout(() => {
+        if (document.hidden || isAppSuspended || !isVideoActive() || !bgVideo) return;
+        if (!bgVideo.paused && bgVideo.readyState >= 2 && Math.abs(bgVideo.currentTime - t0) < 0.03) {
+          hardReloadVideo();
+        }
+      }, 900);
+    }
+
     /* ─── 4.2. UNIFIED POWER & MEMORY LIFECYCLE MANAGER ─── */
     function pauseAllEngines() {
       if (isAppSuspended) return;
@@ -1858,6 +1909,7 @@
       updateEpisodeClock();
       startCanvasAnim();
       ensureVideoPlayback();
+      scheduleResumeFreezeCheck();
       startQuoteTimer();
     }
 
@@ -1948,6 +2000,7 @@
       // Watchdog: checks every 4s to unfreeze video if frame gets stuck (dormant when paused/hidden/eco/static)
       let lastVideoTime = -1;
       let freezeCount = 0;
+      let nudgeAttempts = 0;
       setInterval(() => {
         if (document.hidden || isAppSuspended || !isVideoActive()) return;
         if (bgVideo.paused) {
@@ -1958,6 +2011,16 @@
           freezeCount++;
           if (freezeCount >= 2) {
             freezeCount = 0;
+            nudgeAttempts++;
+            if (nudgeAttempts >= 2) {
+              // Fix directive §7: a cheap currentTime nudge hasn't unstuck this in
+              // two straight attempts (~16s) — the decode context is genuinely
+              // gone, not just a transient stall. Force a real reload instead of
+              // nudging forever.
+              nudgeAttempts = 0;
+              hardReloadVideo();
+              return;
+            }
             try {
               bgVideo.currentTime = (bgVideo.currentTime + 0.1) % (bgVideo.duration || 10);
               ensureVideoPlayback();
@@ -1965,6 +2028,7 @@
           }
         } else {
           freezeCount = 0;
+          nudgeAttempts = 0;
           lastVideoTime = bgVideo.currentTime;
         }
       }, 4000);

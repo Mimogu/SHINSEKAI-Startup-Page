@@ -39,7 +39,7 @@
 ---
 
 > *「心を燃やせ、歯を食いしばって前を向け」*  
-> — **煉獄 杏寿郎 (Kyojuro Rengoku)** · *"Set your heart ablaze. Grit your teeth and move forward into the new world."*
+> — **煉獄 杏寿郎 (Kyojuro Rengoku)** · *"Set your heart ablaze. Grit your teeth and move forward."*
 
 ---
 
@@ -48,7 +48,7 @@
 ### 🎬 1. Tri-Category Wallpaper Engine: Live Video, Static Artworks & Custom Library
 - **3 Dedicated Modes & Categories**:
   - **動的 (Live)**: Hardware-accelerated looping video backdrops (`crimson.mp4`, `tokyonight.mp4`, `sakura.mp4`, `catppuccin.mp4`, `cyberpunk.mp4`, and Eco mode).
-  - **静止画 (Static)**: High-resolution static artworks (`crimson.png`, `tokyonight.png`, `sakura.png`, `catppuccin.png`, `cyberpunk.png`) with minimal RAM (~15MB).
+  - **静止画 (Static)**: High-resolution static artworks (`crimson.png`, `tokyonight.png`, `sakura.png`, `catppuccin.png`, `cyberpunk.png`) with minimal RAM (~20MB, zero video decoding).
   - **カスタム (Custom)**: User library featuring multi-file uploads and online web URLs with live format badges and individual delete controls.
 - **Dynamic File Reading & Multiple Uploads**: Select and upload multiple files at once (`.mp4`, `.webm`, `.png`, `.jpg`, `.webp`, `.gif`). All wallpapers are dynamically read and rendered by actual filename from IndexedDB.
 - **Default Deletion & Restoration by Filename**: Delete default live or static scenes from the UI at will. Re-adding/uploading a file with the original name (e.g. `crimson.mp4`, `crimson.png`) or clicking `↺ 初期復元` instantly restores them.
@@ -71,13 +71,13 @@
 - Easily replace with any custom anime voice line or sound effect.
 
 ### ⚔️ 4. Anime Episode Header & Chronometer HUD
-- **Dynamic Episode Title Card**: Displays episode title, arc tag, and act number that organically shifts based on the time of day (e.g. *第廿四話 · 黎明の咆哮*, *第十二話 · 宵闇の暗躍*).
+- **Dynamic Episode Title Card**: Displays episode title, arc tag, and act number that organically shifts across 4 time-of-day blocks (e.g. *第壱話 · 黎明の覚醒* in the morning, *第廿四話 · 黎明の咆哮* in the evening).
 - **Imperial Japanese Era Clock**: Synchronizes system time with true Japanese kanji era formatting (*令和八年 九月 火曜日*).
 - **Combat Power Sync Rate**: Live tactical combat gauge locked at *特級 · SPECIAL GRADE // 99.8%*.
 
 ### 💬 5. Subtitle Dialogue System
 - Real-time anime dialogue bar rendering legendary quotes in Japanese Kanji/Kana accompanied by English translations.
-- Featuring 20 iconic anime lines from **Kyojuro Rengoku**, **Satoru Gojo**, **Ryomen Sukuna**, **Naruto Uzumaki**, **Sasuke Uchiha**, **Mugen** (*Samurai Champloo*), **David Martinez** (*Cyberpunk: Edgerunners*), **Yuta Okkotsu** (*Jujutsu Kaisen*), **Saber** (*Fate/stay night*), **Archer (EMIYA)**, **Kamina** (*Gurren Lagann*), **Tanjiro Kamado**, **Kirei Kotomine**, **Kiritsugu Emiya**, **Lelouch Lamperouge**, **Levi Ackerman**, **Erwin Smith**, **Edward Elric**, **Roronoa Zoro**, and **Monkey D. Luffy**. Click or press <kbd>q</kbd> to cycle anytime.
+- Featuring 20 iconic anime lines from **Kyojuro Rengoku**, **Satoru Gojo**, **Ryomen Sukuna**, **Naruto Uzumaki**, **Sasuke Uchiha**, **Mugen** (*Samurai Champloo*), **David Martinez** (*Cyberpunk: Edgerunners*), **Yuta Okkotsu** (*Jujutsu Kaisen*), **Saber** (*Fate/stay night*), **Archer** (*Unlimited Blade Works*), **Kamina** (*Gurren Lagann*), **Tanjiro Kamado**, **Kirei Kotomine**, **Kiritsugu Emiya**, **Lelouch Lamperouge**, **Levi Ackerman**, **Erwin Smith**, **Edward Elric**, **Roronoa Zoro**, and **Monkey D. Luffy**. Click or press <kbd>q</kbd> to cycle anytime.
 
 ### 🗡️ 6. Katana Command Console & Hologram Drawer
 - Press <kbd>/</kbd> to activate the frosted **Katana Search Console** with direct URL navigation and quick bang queries (`!g`, `!y`, `!a`, `!gh`, `!r`, `!d`, `!w`).
@@ -100,31 +100,26 @@ Switch factions instantly via the header dropdown or by pressing <kbd>t</kbd>. E
     <td width="50%" align="center">
       <img src="assets/previews/showcase/crimson.jpg" alt="紅蓮 · Crimson Flame" width="100%" style="border-radius: 8px;" /><br/>
       <b>🔥 紅蓮 · Crimson Flame</b><br/>
-      <sub>煉獄炎獄 · Kyojuro Rengoku Stage (Rising Embers)</sub>
     </td>
     <td width="50%" align="center">
       <img src="assets/previews/showcase/tokyonight.jpg" alt="東京夜 · TokyoNight Void" width="100%" style="border-radius: 8px;" /><br/>
       <b>🌌 東京夜 · TokyoNight Void</b><br/>
-      <sub>無量空処 · Satoru Gojo Stage (Spatial Energy Orbs)</sub>
     </td>
   </tr>
   <tr>
     <td width="50%" align="center">
       <img src="assets/previews/showcase/sakura.jpg" alt="桜吹雪 · Sakura Ronin" width="100%" style="border-radius: 8px;" /><br/>
       <b>🌸 桜吹雪 · Sakura Ronin</b><br/>
-      <sub>侍道 · Cherry Blossom Stage (Fluttering Sakura Petals)</sub>
     </td>
     <td width="50%" align="center">
       <img src="assets/previews/showcase/catppuccin.jpg" alt="終末谷 · Catppuccin Spiral" width="100%" style="border-radius: 8px;" /><br/>
       <b>🌀 終末谷 · Catppuccin Spiral</b><br/>
-      <sub>螺旋輪廻 · Valley of the End Stage (Chakra Spheres)</sub>
     </td>
   </tr>
   <tr>
     <td colspan="2" align="center">
       <img src="assets/previews/showcase/cyberpunk.jpg" alt="電脳都市 · Cyberpunk Neon" width="85%" style="border-radius: 8px;" /><br/>
       <b>⚡ 電脳都市 · Cyberpunk Neon</b><br/>
-      <sub>攻殻機動 · Night City Digital Rain Stage (Matrix Rain)</sub>
     </td>
   </tr>
 </table>
@@ -133,14 +128,16 @@ Switch factions instantly via the header dropdown or by pressing <kbd>t</kbd>. E
 
 <br/>
 
-| Faction Theme | Japanese Lore | Aesthetic Colors | Particle Dynamics | Default Wallpaper |
+| Faction Theme | Japanese Lore | Aesthetic Colors | Particle Dynamics | Video Stage (720p default · 1080p Ultra) |
 |:---|:---|:---|:---|:---|
-| **紅蓮 · Crimson** | 煉獄炎獄 (Flame Breathing) | Crimson `#f7768e` / Blazing Ember | Rising Flame Embers | `assets/animated/crimson.mp4` |
-| **東京夜 · TokyoNight** | 無量空処 (Infinite Void) | Electric Blue `#7aa2f7` / Deep Void | Spatial Energy Orbs | `assets/animated/tokyonight.mp4` |
-| **桜吹雪 · Sakura** | 侍道 · 桜散る (Ronin Way) | Cherry Pink `#f4b8e4` / Pastel Mist | Fluttering Sakura Petals | `assets/animated/sakura.mp4` |
-| **終末谷 · Catppuccin** | 螺旋輪廻 (Valley of the End) | Lavender `#cba6f7` / Sage Teal | Mystic Chakra Spheres | `assets/animated/catppuccin.mp4` |
-| **電脳都市 · Cyberpunk** | 攻殻機動 (Night City Cyber) | Neon Cyan `#00f0ff` / Hot Pink | Vertical Digital Matrix | `assets/animated/cyberpunk.mp4` |
+| **紅蓮 · Crimson** | 煉獄炎獄 (Flame Breathing) | Crimson `#f7768e` / Blazing Ember | Rising Flame Embers | `assets/animated/720p/crimson.mp4` · `assets/animated/crimson.mp4` |
+| **東京夜 · TokyoNight** | 無量空処 (Infinite Void) | Electric Blue `#7aa2f7` / Deep Void | Spatial Energy Orbs | `assets/animated/720p/tokyonight.mp4` · `assets/animated/tokyonight.mp4` |
+| **桜吹雪 · Sakura** | 侍道 · 桜散る (Ronin Way) | Cherry Pink `#f4b8e4` / Pastel Mist | Fluttering Sakura Petals | `assets/animated/720p/sakura.mp4` · `assets/animated/sakura.mp4` |
+| **終末谷 · Catppuccin** | 螺旋輪廻 (Valley of the End) | Lavender `#cba6f7` / Sage Teal | Mystic Chakra Spheres | `assets/animated/720p/catppuccin.mp4` · `assets/animated/catppuccin.mp4` |
+| **電脳都市 · Cyberpunk** | 攻殻機動 (Night City Cyber) | Neon Cyan `#00f0ff` / Hot Pink | Vertical Digital Matrix | `assets/animated/720p/cyberpunk.mp4` · `assets/animated/cyberpunk.mp4` |
 | **カスタム · Custom** | 調色中枢 · 霊力波 (Spectrum Matrix) | 10 Anime Chakra Cores, 0–360° Hue Resonator, & Hex Terminal | Resonant Aura Prisms | User-defined or active wallpaper |
+
+*Every faction boots on the 720p stage by default (lower RAM/decode cost); the 1080p Ultra master is one click away in the scene selector or via `?ultra=1`.*
 
 > ### 🎛️ 調色中枢 · SPECTRUM TUNER & CHAKRA MATRIX
 > Beside the 5 classic faction presets, Shinsekai includes an in-cockpit **Anime Spectrum Tuner** with real-time UI harmonization:
@@ -223,6 +220,7 @@ Configure or bookmark Shinsekai with pre-configured startup states directly thro
 | Query Parameter | Example Value | Description |
 |:---|:---|:---|
 | `?scene=` | `?scene=tokyonight` | Select background scene (`crimson`, `tokyonight`, `sakura`, `catppuccin`, `cyberpunk`, `eco` or aliases `gojo`, `eyes`, `sasuke`) |
+| `?mode=` | `?mode=static` | Force the wallpaper category on boot (`live` or `static`) independent of the scene |
 | `?theme=` | `?theme=catppuccin` | Select color faction theme (`crimson`, `tokyonight`, `sakura`, `catppuccin`, `cyberpunk`, `custom`) |
 | `?color=` | `?color=%23a6e3a1` | Custom theme hex accent color (e.g. `%2300f0ff` or `ff007f`) |
 | `?user=` / `?operator=` | `?user=LEVI` | Override pilot callsign name |
@@ -264,7 +262,8 @@ The engine autonomously detects your hardware environment (`deviceMemory`, `hard
 
 ### 🛡️ 4. Dual Watchdogs & Error Recovery
 - **Runtime FPS Watchdog**: Continuously measures frame delivery over 2-second windows. If FPS drops below 24 sustained (3 consecutive bad streaks), the engine auto-downgrades the tier to `mid`. If degradation continues, it safely transitions to `eco`.
-- **2-Strike Error & Freeze Recovery**: If video decoders stall or throw errors twice consecutively, Shinsekai cleanly falls back to `eco` static mode instead of entering an infinite retry loop.
+- **Resume-Freeze Recovery**: Some GPU/decoder pipelines silently lose their hardware decode context after a tab sits backgrounded — playback reports as running but the frame never advances again. A one-shot check ~900ms after every resume (tab switch, app switch, window refocus) verifies the frame clock is actually moving; if it's stuck, the video source is transparently reloaded from where it left off.
+- **2-Strike Error & Freeze Recovery**: If video decoders stall or throw errors twice consecutively, Shinsekai cleanly falls back to `eco` static mode instead of entering an infinite retry loop. The periodic freeze watchdog follows the same escalation logic — a cheap timestamp nudge first, then a full reload if that doesn't resolve it within two attempts.
 - **Zero-Latency Boot Loader**: An early inline script parses the URL/stored scene prior to DOM rendering, loading the exact video immediately and eliminating wasteful initial double-decodes.
 
 ---
@@ -407,7 +406,7 @@ SHINSEKAI-Startup-Page/
 ├── README.md               # Mission dossier & documentation
 ├── script.js               # Reactive engine, tier manager, particle physics & watchdogs
 ├── style.css               # Glassmorphism, CSS variable blur, GPU isolation & themes
-├── theme-core.js            # Synchronous anti-FOUC theme/profile bootstrap (loaded before <body>)
+├── theme-core.js           # Synchronous anti-FOUC theme/profile bootstrap (loaded before <body>)
 └── *.min.js / *.min.css    # Optional pre-minified bundle (script.min.js, style.min.css,
                              # theme-core.min.js) — NOT loaded by default. index.html always
                              # loads the readable source directly, zero build step required, so
