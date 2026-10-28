@@ -576,6 +576,30 @@
                 <span class="tool-label-sub">Help '?'</span>
               </div>
             </button>
+
+            <button class="tool-pill" id="sfx-toggle-btn" title="機体音響合成・効果音切替 / Synthesized Cyber Audio SFX (Hotkey: 'm')">
+              <span class="tool-icon" id="sfx-status-icon">🔊</span>
+              <div class="tool-label-stack">
+                <span class="tool-label-main" id="sfx-status-text">音響: ON</span>
+                <span class="tool-label-sub">Synth SFX</span>
+              </div>
+            </button>
+
+            <button class="tool-pill" id="pomodoro-toggle-btn" title="修練・集中時間計測 / Shinobi Focus Pomodoro (Hotkey: 'x')">
+              <span class="tool-icon" id="pomodoro-status-icon">⏳</span>
+              <div class="tool-label-stack">
+                <span class="tool-label-main" id="pomodoro-status-text">修練: 25M</span>
+                <span class="tool-label-sub" id="pomodoro-status-sub">Focus</span>
+              </div>
+            </button>
+
+            <button class="tool-pill" id="radar-toggle-btn" title="最新アニメ放送レーダー / Seasonal Anime Radar">
+              <span class="tool-icon">📡</span>
+              <div class="tool-label-stack">
+                <span class="tool-label-main">アニメ探知</span>
+                <span class="tool-label-sub">Radar</span>
+              </div>
+            </button>
           </div>
         </div>
       </div>
@@ -954,6 +978,20 @@
               </td>
             </tr>
             <tr>
+              <td><span class="shortcut-kbd">m</span></td>
+              <td>
+                <div class="shortcut-action">Cyber SFX Haptics</div>
+                <div class="shortcut-desc">シンセサイザー操作音切替 / Synthesized Web Audio SFX toggle</div>
+              </td>
+            </tr>
+            <tr>
+              <td><span class="shortcut-kbd">x</span></td>
+              <td>
+                <div class="shortcut-action">Shinobi Pomodoro</div>
+                <div class="shortcut-desc">修練・瞑想タイマー開始・停止 / Focus session timer start/pause</div>
+              </td>
+            </tr>
+            <tr>
               <td><span class="shortcut-kbd">1</span> - <span class="shortcut-kbd">4</span></td>
               <td>
                 <div class="shortcut-action">Deploy Sector</div>
@@ -979,6 +1017,36 @@
       </div>
       <div class="editor-footer" style="padding: 0.8rem 1.4rem; justify-content: flex-end;">
         <button type="button" class="editor-btn editor-btn-primary" id="shortcuts-done-btn">
+          ✕ 閉じる / CLOSE
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8. SEASONAL ANIME RADAR MODAL -->
+  <div class="link-editor-backdrop" id="radar-modal" aria-hidden="true">
+    <div class="link-editor-dialog radar-dialog" style="max-width: 820px;">
+      <div class="editor-header">
+        <div class="editor-header-left">
+          <span class="editor-pill">ANILIST_API // TELEMETRY_RADAR</span>
+          <h2 class="editor-title">最新アニメ探知レーダー · Seasonal Anime Radar</h2>
+        </div>
+        <button class="editor-close-btn" id="radar-close-btn" title="閉じる (Esc)">✕</button>
+      </div>
+      <div class="radar-modal-body" style="padding: 1.2rem 1.5rem; max-height: 70vh; overflow-y: auto;">
+        <div class="radar-status-bar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.6rem; border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
+          <span class="radar-season-badge" id="radar-season-badge" style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--accent); font-weight: 700;">📡 SCANNING ANILIST SATELLITE...</span>
+          <button type="button" class="editor-btn editor-btn-secondary" id="radar-refresh-btn" style="padding: 0.3rem 0.8rem; font-size: 0.75rem;">
+            🔄 再探知 / REFRESH
+          </button>
+        </div>
+        <div class="radar-grid" id="radar-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem;">
+          <!-- Dynamically populated or offline fallback -->
+        </div>
+      </div>
+      <div class="editor-footer" style="padding: 0.8rem 1.4rem; justify-content: space-between; align-items: center;">
+        <span style="font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-muted);">SOURCE: ANILIST GRAPHQL / ZERO TRACKING</span>
+        <button type="button" class="editor-btn editor-btn-primary" id="radar-done-btn">
           ✕ 閉じる / CLOSE
         </button>
       </div>

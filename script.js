@@ -55,7 +55,7 @@
        until something unrelated reset it. Now "should the heavy engines be
        idle?" is recomputed from ground truth every time it is asked. */
     function isModalOpen() {
-      return [linkEditorModal, operatorModal, shortcutsModal]
+      return [linkEditorModal, operatorModal, shortcutsModal, radarModal]
         .some(m => m && m.classList.contains('open'));
     }
     function isSuspended() {
@@ -348,8 +348,30 @@
     const shortcutsCloseBtn = document.getElementById('shortcuts-close-btn');
     const shortcutsDoneBtn = document.getElementById('shortcuts-done-btn');
 
+    const sfxToggleBtn = document.getElementById('sfx-toggle-btn');
+    const sfxStatusIcon = document.getElementById('sfx-status-icon');
+    const sfxStatusText = document.getElementById('sfx-status-text');
+
+    const pomodoroToggleBtn = document.getElementById('pomodoro-toggle-btn');
+    const pomodoroStatusIcon = document.getElementById('pomodoro-status-icon');
+    const pomodoroStatusText = document.getElementById('pomodoro-status-text');
+    const pomodoroStatusSub = document.getElementById('pomodoro-status-sub');
+    const combatGaugeCard = document.querySelector('.combat-gauge-card');
+    const gaugeFill = document.getElementById('gauge-fill');
+    const syncVal = document.getElementById('sync-val');
+    const gaugeLabel = document.querySelector('.gauge-label');
+
+    const radarToggleBtn = document.getElementById('radar-toggle-btn');
+    const radarModal = document.getElementById('radar-modal');
+    const radarCloseBtn = document.getElementById('radar-close-btn');
+    const radarDoneBtn = document.getElementById('radar-done-btn');
+    const radarRefreshBtn = document.getElementById('radar-refresh-btn');
+    const radarGrid = document.getElementById('radar-grid');
+    const radarSeasonBadge = document.getElementById('radar-season-badge');
+
     const subtitlesBar = document.getElementById('subtitles-bar');
     const subSpeaker = document.getElementById('sub-speaker');
+    const subSpeakerEn = document.getElementById('sub-speaker-en');
     const subJp = document.getElementById('sub-jp');
     const subEn = document.getElementById('sub-en');
 
@@ -2889,6 +2911,9 @@
       } else {
         applyTheme(nextTheme.key, true);
       }
+      if (typeof CyberAudio !== 'undefined') {
+        CyberAudio.playThemeShimmer();
+      }
     }
 
     function initSpectrumTuner() {
@@ -3597,6 +3622,9 @@
 
     function openLinkEditor() {
       if (!linkEditorModal) return;
+      if (shortcutsModal && shortcutsModal.classList.contains('open')) closeShortcutsModal();
+      if (operatorModal && operatorModal.classList.contains('open')) closeOperatorModal();
+      if (radarModal && radarModal.classList.contains('open')) closeRadarModal();
       linkEditorModal.classList.add('open');
       linkEditorModal.setAttribute('aria-hidden', 'false');
       pauseAllEngines();
@@ -3994,9 +4022,9 @@
 
     function openOperatorModal() {
       if (!operatorModal) return;
-      if (linkEditorModal && linkEditorModal.classList.contains('open')) {
-        closeLinkEditor();
-      }
+      if (linkEditorModal && linkEditorModal.classList.contains('open')) closeLinkEditor();
+      if (shortcutsModal && shortcutsModal.classList.contains('open')) closeShortcutsModal();
+      if (radarModal && radarModal.classList.contains('open')) closeRadarModal();
       operatorModal.classList.add('open');
       operatorModal.setAttribute('aria-hidden', 'false');
       pauseAllEngines();
@@ -4202,9 +4230,11 @@
       if (!shortcutsModal) return;
       if (linkEditorModal && linkEditorModal.classList.contains('open')) closeLinkEditor();
       if (operatorModal && operatorModal.classList.contains('open')) closeOperatorModal();
+      if (radarModal && radarModal.classList.contains('open')) closeRadarModal();
       shortcutsModal.classList.add('open');
       shortcutsModal.setAttribute('aria-hidden', 'false');
       pauseAllEngines();
+      CyberAudio.playClick();
     }
 
     function closeShortcutsModal() {
@@ -4212,6 +4242,7 @@
       shortcutsModal.classList.remove('open');
       shortcutsModal.setAttribute('aria-hidden', 'true');
       resumeAllEngines();
+      CyberAudio.playClick();
     }
 
     if (shortcutsBtn) shortcutsBtn.addEventListener('click', openShortcutsModal);
@@ -4223,6 +4254,589 @@
         if (e.target === shortcutsModal) {
           closeShortcutsModal();
         }
+      });
+    }
+
+    /* ─── CYBERNETIC WEB AUDIO SYNTHESIZER (ZERO-ASSET PROCEDURAL SFX) ─── */
+    let sfxEnabled = safeStorage.getItem('shinsekai_sfx_enabled') !== '0';
+    let audioCtx = null;
+    let lastChirpTime = 0;
+
+    function getAudioContext() {
+      if (!sfxEnabled) return null;
+      if (!audioCtx) {
+        const AudioClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioClass) {
+          try { audioCtx = new AudioClass(); } catch (e) {}
+        }
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        try { audioCtx.resume().catch(() => {}); } catch (e) {}
+      }
+      return audioCtx;
+    }
+
+    const CyberAudio = {
+      isEnabled() { return sfxEnabled; },
+      playChirp() {
+        if (!sfxEnabled) return;
+        const now = performance.now();
+        if (now - lastChirpTime < 40) return;
+        lastChirpTime = now;
+        try {
+          const c = getAudioContext();
+          if (!c) return;
+          const osc = c.createOscillator();
+          const gain = c.createGain();
+          const t = c.currentTime;
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(850, t);
+          osc.frequency.exponentialRampToValueAtTime(1400, t + 0.02);
+          gain.gain.setValueAtTime(0.025, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.02);
+          osc.connect(gain);
+          gain.connect(c.destination);
+          osc.start(t);
+          osc.stop(t + 0.022);
+        } catch (e) {}
+      },
+      playClick() {
+        if (!sfxEnabled) return;
+        try {
+          const c = getAudioContext();
+          if (!c) return;
+          const osc = c.createOscillator();
+          const gain = c.createGain();
+          const t = c.currentTime;
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(620, t);
+          osc.frequency.exponentialRampToValueAtTime(240, t + 0.035);
+          gain.gain.setValueAtTime(0.045, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.035);
+          osc.connect(gain);
+          gain.connect(c.destination);
+          osc.start(t);
+          osc.stop(t + 0.038);
+        } catch (e) {}
+      },
+      playBlade() {
+        if (!sfxEnabled) return;
+        try {
+          const c = getAudioContext();
+          if (!c) return;
+          const osc = c.createOscillator();
+          const gain = c.createGain();
+          const t = c.currentTime;
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(340, t);
+          osc.frequency.exponentialRampToValueAtTime(780, t + 0.06);
+          gain.gain.setValueAtTime(0.04, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+          osc.connect(gain);
+          gain.connect(c.destination);
+          osc.start(t);
+          osc.stop(t + 0.065);
+        } catch (e) {}
+      },
+      playThemeShimmer() {
+        if (!sfxEnabled) return;
+        try {
+          const c = getAudioContext();
+          if (!c) return;
+          const chord = [523.25, 659.25, 783.99];
+          const t = c.currentTime;
+          chord.forEach((freq, idx) => {
+            const osc = c.createOscillator();
+            const gain = c.createGain();
+            const start = t + idx * 0.03;
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, start);
+            gain.gain.setValueAtTime(0.03, start);
+            gain.gain.exponentialRampToValueAtTime(0.001, start + 0.12);
+            osc.connect(gain);
+            gain.connect(c.destination);
+            osc.start(start);
+            osc.stop(start + 0.13);
+          });
+        } catch (e) {}
+      },
+      playPomodoroAlarm() {
+        if (!sfxEnabled) return;
+        try {
+          const c = getAudioContext();
+          if (!c) return;
+          const notes = [1046.50, 1318.51, 1567.98, 2093.00];
+          const t = c.currentTime;
+          notes.forEach((freq, idx) => {
+            const osc = c.createOscillator();
+            const gain = c.createGain();
+            const start = t + idx * 0.07;
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, start);
+            gain.gain.setValueAtTime(0.06, start);
+            gain.gain.exponentialRampToValueAtTime(0.001, start + 0.32);
+            osc.connect(gain);
+            gain.connect(c.destination);
+            osc.start(start);
+            osc.stop(start + 0.35);
+          });
+        } catch (e) {}
+      }
+    };
+
+    function updateSfxButtonUI() {
+      if (!sfxToggleBtn) return;
+      if (sfxEnabled) {
+        if (sfxStatusIcon) sfxStatusIcon.textContent = '🔊';
+        if (sfxStatusText) sfxStatusText.textContent = '音響: ON';
+        sfxToggleBtn.classList.add('active');
+        sfxToggleBtn.setAttribute('title', "機体音響合成・効果音切替 / Cyber Synth Audio: ON (Hotkey: 'm')");
+      } else {
+        if (sfxStatusIcon) sfxStatusIcon.textContent = '🔇';
+        if (sfxStatusText) sfxStatusText.textContent = '音響: OFF';
+        sfxToggleBtn.classList.remove('active');
+        sfxToggleBtn.setAttribute('title', "機体音響合成・効果音切替 / Cyber Synth Audio: OFF (Hotkey: 'm')");
+      }
+    }
+
+    function toggleCyberSfx() {
+      sfxEnabled = !sfxEnabled;
+      safeStorage.setItem('shinsekai_sfx_enabled', sfxEnabled ? '1' : '0');
+      updateSfxButtonUI();
+      if (sfxEnabled) {
+        getAudioContext();
+        CyberAudio.playClick();
+      }
+    }
+    if (sfxToggleBtn) sfxToggleBtn.addEventListener('click', toggleCyberSfx);
+    updateSfxButtonUI();
+
+    // Subtle audio haptics delegation across interactive HUD elements
+    document.addEventListener('mouseover', (e) => {
+      const target = e.target.closest('.holo-tile, .tab-blade, .tool-pill, .bang-chip, .editor-btn, .modal-nav-btn, .color-swatch-btn, .radar-card');
+      if (target) {
+        CyberAudio.playChirp();
+      }
+    }, { passive: true });
+
+    document.addEventListener('click', (e) => {
+      const blade = e.target.closest('.tab-blade');
+      if (blade) {
+        CyberAudio.playBlade();
+        return;
+      }
+      const clickable = e.target.closest('.tool-pill, .bang-chip, .editor-btn, .modal-nav-btn, .color-swatch-btn, .radar-card');
+      if (clickable) {
+        CyberAudio.playClick();
+      }
+    }, { passive: true });
+
+    /* ─── SHINOBI MECHA FOCUS POMODORO CONTROLLER ─── */
+    const FOCUS_MINUTES = 25;
+    const BREAK_MINUTES = 5;
+    const FOCUS_MS = FOCUS_MINUTES * 60 * 1000;
+    const BREAK_MS = BREAK_MINUTES * 60 * 1000;
+
+    let pomodoroState = 'idle'; // 'idle' | 'running' | 'paused' | 'break'
+    let pomodoroEndTime = 0;
+    let pomodoroRemainingMs = FOCUS_MS;
+    let pomodoroTimer = null;
+    const originalTitle = document.title || 'shinsekai';
+
+    function formatPomodoroTime(ms) {
+      const totalSec = Math.max(0, Math.ceil(ms / 1000));
+      const m = Math.floor(totalSec / 60);
+      const s = totalSec % 60;
+      return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    }
+
+    function updatePomodoroUI() {
+      if (!pomodoroStatusText) return;
+      if (pomodoroState === 'idle') {
+        pomodoroStatusText.textContent = `修練: ${FOCUS_MINUTES}M`;
+        if (pomodoroStatusSub) pomodoroStatusSub.textContent = 'Focus';
+        if (pomodoroStatusIcon) pomodoroStatusIcon.textContent = '⏳';
+        if (pomodoroToggleBtn) {
+          pomodoroToggleBtn.classList.remove('running', 'break-mode');
+        }
+        if (combatGaugeCard) {
+          combatGaugeCard.classList.remove('focus-active', 'focus-break');
+        }
+        if (syncVal) syncVal.textContent = '99.8%';
+        if (gaugeFill) gaugeFill.style.width = '99.8%';
+        if (gaugeLabel) gaugeLabel.textContent = 'SYNC RATE // 特級 · GRADE 1';
+        document.title = originalTitle;
+      } else if (pomodoroState === 'running' || pomodoroState === 'paused') {
+        const timeStr = formatPomodoroTime(pomodoroRemainingMs);
+        pomodoroStatusText.textContent = `${pomodoroState === 'paused' ? '一時停止' : '修練'}: ${timeStr}`;
+        if (pomodoroStatusSub) pomodoroStatusSub.textContent = pomodoroState === 'paused' ? 'PAUSED' : 'FOCUS';
+        if (pomodoroStatusIcon) pomodoroStatusIcon.textContent = '⚡';
+        if (pomodoroToggleBtn) {
+          pomodoroToggleBtn.classList.add('running');
+          pomodoroToggleBtn.classList.remove('break-mode');
+        }
+        if (combatGaugeCard) {
+          combatGaugeCard.classList.add('focus-active');
+          combatGaugeCard.classList.remove('focus-break');
+        }
+        const pct = Math.max(0, Math.min(100, (pomodoroRemainingMs / FOCUS_MS) * 100));
+        const pctStr = pct.toFixed(1) + '%';
+        if (syncVal) syncVal.textContent = pctStr;
+        if (gaugeFill) gaugeFill.style.width = pctStr;
+        if (gaugeLabel) gaugeLabel.textContent = `FOCUS SYNC // [${timeStr}]`;
+        document.title = `[${timeStr}] ${originalTitle}`;
+      } else if (pomodoroState === 'break') {
+        const timeStr = formatPomodoroTime(pomodoroRemainingMs);
+        pomodoroStatusText.textContent = `休憩: ${timeStr}`;
+        if (pomodoroStatusSub) pomodoroStatusSub.textContent = 'BREAK';
+        if (pomodoroStatusIcon) pomodoroStatusIcon.textContent = '🍵';
+        if (pomodoroToggleBtn) {
+          pomodoroToggleBtn.classList.remove('running');
+          pomodoroToggleBtn.classList.add('break-mode');
+        }
+        if (combatGaugeCard) {
+          combatGaugeCard.classList.remove('focus-active');
+          combatGaugeCard.classList.add('focus-break');
+        }
+        const pct = Math.max(0, Math.min(100, (pomodoroRemainingMs / BREAK_MS) * 100));
+        const pctStr = pct.toFixed(1) + '%';
+        if (syncVal) syncVal.textContent = pctStr;
+        if (gaugeFill) gaugeFill.style.width = pctStr;
+        if (gaugeLabel) gaugeLabel.textContent = `BREAK COOLDOWN // [${timeStr}]`;
+        document.title = `[☕ ${timeStr}] ${originalTitle}`;
+      }
+    }
+
+    function tickPomodoro() {
+      if (pomodoroState !== 'running' && pomodoroState !== 'break') return;
+      const now = Date.now();
+      pomodoroRemainingMs = Math.max(0, pomodoroEndTime - now);
+
+      if (pomodoroRemainingMs <= 0) {
+        clearInterval(pomodoroTimer);
+        pomodoroTimer = null;
+        if (pomodoroState === 'running') {
+          CyberAudio.playPomodoroAlarm();
+          if (subSpeaker && subJp && subEn) {
+            subSpeaker.textContent = 'SHINSEKAI // OS';
+            if (subSpeakerEn) subSpeakerEn.textContent = 'Focus Master';
+            subJp.textContent = '「修練完了！集中目標を達成しました。5分間の冷却休息を開始します」';
+            subEn.textContent = 'Focus session complete! Stand down for 5-minute tactical cooldown.';
+          }
+          pomodoroState = 'break';
+          pomodoroRemainingMs = BREAK_MS;
+          pomodoroEndTime = Date.now() + BREAK_MS;
+          pomodoroTimer = setInterval(tickPomodoro, 1000);
+          updatePomodoroUI();
+        } else {
+          CyberAudio.playPomodoroAlarm();
+          if (subSpeaker && subJp && subEn) {
+            subSpeaker.textContent = 'SHINSEKAI // OS';
+            if (subSpeakerEn) subSpeakerEn.textContent = 'Mission Ready';
+            subJp.textContent = '「休息終了。機体全系統正常。いつでも次の修練へ移行可能です」';
+            subEn.textContent = 'Tactical break finished. All systems nominal. Ready for next mission.';
+          }
+          resetPomodoro();
+        }
+        return;
+      }
+      updatePomodoroUI();
+    }
+
+    function startPomodoro() {
+      pomodoroState = 'running';
+      pomodoroEndTime = Date.now() + pomodoroRemainingMs;
+      clearInterval(pomodoroTimer);
+      pomodoroTimer = setInterval(tickPomodoro, 1000);
+      updatePomodoroUI();
+      CyberAudio.playClick();
+    }
+
+    function pausePomodoro() {
+      if (pomodoroTimer) {
+        clearInterval(pomodoroTimer);
+        pomodoroTimer = null;
+      }
+      pomodoroState = 'paused';
+      updatePomodoroUI();
+      CyberAudio.playClick();
+    }
+
+    function resetPomodoro() {
+      if (pomodoroTimer) {
+        clearInterval(pomodoroTimer);
+        pomodoroTimer = null;
+      }
+      pomodoroState = 'idle';
+      pomodoroRemainingMs = FOCUS_MS;
+      updatePomodoroUI();
+      CyberAudio.playClick();
+    }
+
+    function togglePomodoro() {
+      if (pomodoroState === 'idle') {
+        pomodoroRemainingMs = FOCUS_MS;
+        startPomodoro();
+      } else if (pomodoroState === 'running') {
+        pausePomodoro();
+      } else if (pomodoroState === 'paused') {
+        startPomodoro();
+      } else if (pomodoroState === 'break') {
+        resetPomodoro();
+      }
+    }
+
+    if (pomodoroToggleBtn) {
+      pomodoroToggleBtn.addEventListener('click', togglePomodoro);
+      pomodoroToggleBtn.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        resetPomodoro();
+      });
+    }
+
+    /* ─── SEASONAL ANIME RADAR (ANILIST TELEMETRY) ─── */
+    const RADAR_CACHE_KEY = 'shinsekai_radar_cache';
+    const RADAR_CACHE_TTL = 4 * 60 * 60 * 1000; // 4 hours
+
+    const OFFLINE_FALLBACK_ANIME = [
+      {
+        id: 171018,
+        title: { native: 'ダンダダン', romaji: 'Dandadan', english: 'DAN DA DAN' },
+        coverImage: { large: 'https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx171018-60q1B6GK2Ghb.jpg' },
+        averageScore: 83,
+        episodes: 12,
+        genres: ['Action', 'Comedy', 'Sci-Fi', 'Supernatural'],
+        siteUrl: 'https://anilist.co/anime/171018'
+      },
+      {
+        id: 101922,
+        title: { native: '鬼滅の刃', romaji: 'Kimetsu no Yaiba', english: 'Demon Slayer' },
+        coverImage: { large: 'https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx101922-PEn1CTDYxZao.png' },
+        averageScore: 84,
+        episodes: 26,
+        genres: ['Action', 'Fantasy', 'Supernatural'],
+        siteUrl: 'https://anilist.co/anime/101922'
+      },
+      {
+        id: 113415,
+        title: { native: '呪術廻戦', romaji: 'Jujutsu Kaisen', english: 'Jujutsu Kaisen' },
+        coverImage: { large: 'https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx113415-bbBWj4pEFseh.jpg' },
+        averageScore: 85,
+        episodes: 24,
+        genres: ['Action', 'Fantasy', 'Supernatural'],
+        siteUrl: 'https://anilist.co/anime/113415'
+      },
+      {
+        id: 154587,
+        title: { native: '葬送のフリーレン', romaji: 'Sousou no Frieren', english: "Frieren: Beyond Journey's End" },
+        coverImage: { large: 'https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx154587-nEpEbLugFQXCl.jpg' },
+        averageScore: 89,
+        episodes: 28,
+        genres: ['Adventure', 'Drama', 'Fantasy'],
+        siteUrl: 'https://anilist.co/anime/154587'
+      },
+      {
+        id: 151807,
+        title: { native: '俺だけレベルアップな件', romaji: 'Ore dake Level Up na Ken', english: 'Solo Leveling' },
+        coverImage: { large: 'https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx151807-m1gmV8C2aE9A.jpg' },
+        averageScore: 82,
+        episodes: 12,
+        genres: ['Action', 'Adventure', 'Fantasy'],
+        siteUrl: 'https://anilist.co/anime/151807'
+      },
+      {
+        id: 127230,
+        title: { native: 'チェンソーマン', romaji: 'Chainsaw Man', english: 'Chainsaw Man' },
+        coverImage: { large: 'https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx127230-FloXN56NOJlh.png' },
+        averageScore: 84,
+        episodes: 12,
+        genres: ['Action', 'Supernatural'],
+        siteUrl: 'https://anilist.co/anime/127230'
+      },
+      {
+        id: 140357,
+        title: { native: 'サイバーパンク エッジランナーズ', romaji: 'Cyberpunk: Edgerunners', english: 'Cyberpunk: Edgerunners' },
+        coverImage: { large: 'https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx140357-r4Z3JekS53iA.jpg' },
+        averageScore: 86,
+        episodes: 10,
+        genres: ['Action', 'Sci-Fi'],
+        siteUrl: 'https://anilist.co/anime/140357'
+      },
+      {
+        id: 145064,
+        title: { native: 'BLEACH 千年血戦篇', romaji: 'Bleach: Sennen Kessen-hen', english: 'Bleach: Thousand-Year Blood War' },
+        coverImage: { large: 'https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx145064-aL30l7hN5p6y.jpg' },
+        averageScore: 87,
+        episodes: 13,
+        genres: ['Action', 'Adventure', 'Supernatural'],
+        siteUrl: 'https://anilist.co/anime/145064'
+      }
+    ];
+
+    function getCurrentSeasonInfo() {
+      const now = new Date();
+      const month = now.getMonth();
+      const year = now.getFullYear();
+      let season = 'FALL';
+      if (month <= 2) season = 'WINTER';
+      else if (month <= 5) season = 'SPRING';
+      else if (month <= 8) season = 'SUMMER';
+      return { season, year };
+    }
+
+    function renderRadarGrid(animeList, seasonLabel) {
+      if (!radarGrid) return;
+      if (radarSeasonBadge) {
+        radarSeasonBadge.textContent = `📡 ANILIST RADAR // ${seasonLabel.toUpperCase()} · [${animeList.length} TITLES DETECTED]`;
+      }
+      radarGrid.innerHTML = animeList.map(anime => {
+        const titleNative = escapeHtml(anime.title?.native || anime.title?.romaji || 'Unknown Anime');
+        const titleSub = escapeHtml(anime.title?.english || anime.title?.romaji || '');
+        const score = anime.averageScore ? `★ ${anime.averageScore}%` : '★ NEW';
+        const epText = anime.episodes ? `EP.${anime.episodes}` : 'AIRING';
+        const cover = anime.coverImage?.large || '';
+        const link = escapeHtml(anime.siteUrl || `https://anilist.co/search/anime?search=${encodeURIComponent(titleNative)}`);
+        const genres = (anime.genres || []).slice(0, 3).map(g => `<span class="radar-genre-tag">${escapeHtml(g)}</span>`).join('');
+
+        return `
+          <a href="${link}" target="_blank" rel="noopener noreferrer" class="radar-card" title="${titleNative} - AniList">
+            <div class="radar-cover-wrap">
+              ${cover ? `<img src="${escapeHtml(cover)}" alt="${titleNative}" class="radar-cover-img" loading="lazy" onerror="this.style.display='none'">` : ''}
+              <div class="radar-cover-gradient"></div>
+              <span class="radar-score-badge">${score}</span>
+              <span class="radar-ep-badge">${epText}</span>
+            </div>
+            <div class="radar-info">
+              <span class="radar-title-jp">${titleNative}</span>
+              ${titleSub ? `<span class="radar-title-en">${titleSub}</span>` : ''}
+              <div class="radar-genres">${genres}</div>
+            </div>
+          </a>
+        `;
+      }).join('');
+    }
+
+    async function loadSeasonalRadar(forceRefresh = false) {
+      if (!radarGrid) return;
+
+      const { season, year } = getCurrentSeasonInfo();
+      const seasonLabel = `${season} ${year}`;
+
+      if (!forceRefresh) {
+        const cachedRaw = safeStorage.getItem(RADAR_CACHE_KEY);
+        if (cachedRaw) {
+          try {
+            const cached = JSON.parse(cachedRaw);
+            if (cached && cached.timestamp && (Date.now() - cached.timestamp < RADAR_CACHE_TTL) && cached.animeList && cached.animeList.length) {
+              renderRadarGrid(cached.animeList, cached.seasonLabel || seasonLabel);
+              return;
+            }
+          } catch (e) {}
+        }
+      }
+
+      radarGrid.innerHTML = `
+        <div class="radar-loading">
+          <div class="radar-spinner"></div>
+          <span>📡 衛星通信中 · TUNING ANILIST SATELLITE TELEMETRY...</span>
+        </div>
+      `;
+
+      const query = `
+        query ($season: MediaSeason, $seasonYear: Int) {
+          Page(page: 1, perPage: 16) {
+            media(season: $season, seasonYear: $seasonYear, type: ANIME, sort: [POPULARITY_DESC]) {
+              id
+              title { romaji english native }
+              coverImage { large }
+              episodes
+              status
+              averageScore
+              genres
+              siteUrl
+            }
+          }
+        }
+      `;
+
+      try {
+        const resp = await fetch('https://graphql.anilist.co', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({
+            query,
+            variables: { season, seasonYear: year }
+          })
+        });
+
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const result = await resp.json();
+        let list = result?.data?.Page?.media || [];
+
+        if (!list.length) {
+          const fallbackResp = await fetch('https://graphql.anilist.co', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify({
+              query: `query { Page(page: 1, perPage: 16) { media(type: ANIME, sort: [TRENDING_DESC, POPULARITY_DESC]) { id title { romaji english native } coverImage { large } episodes status averageScore genres siteUrl } } }`
+            })
+          });
+          const fallbackJson = await fallbackResp.json();
+          list = fallbackJson?.data?.Page?.media || [];
+        }
+
+        if (!list.length) throw new Error('No media returned');
+
+        safeStorage.setItem(RADAR_CACHE_KEY, JSON.stringify({
+          timestamp: Date.now(),
+          seasonLabel,
+          animeList: list
+        }));
+
+        renderRadarGrid(list, seasonLabel);
+      } catch (err) {
+        renderRadarGrid(OFFLINE_FALLBACK_ANIME, 'CURATED SATELLITE (OFFLINE CACHE)');
+        if (radarSeasonBadge) {
+          radarSeasonBadge.textContent = '📡 ANILIST RADAR // OFFLINE CACHE ENGAGED';
+        }
+      }
+    }
+
+    function openRadarModal() {
+      if (!radarModal) return;
+      if (shortcutsModal && shortcutsModal.classList.contains('open')) closeShortcutsModal();
+      if (linkEditorModal && linkEditorModal.classList.contains('open')) closeLinkEditor();
+      if (operatorModal && operatorModal.classList.contains('open')) closeOperatorModal();
+      radarModal.classList.add('open');
+      radarModal.setAttribute('aria-hidden', 'false');
+      pauseAllEngines();
+      CyberAudio.playBlade();
+      loadSeasonalRadar();
+    }
+
+    function closeRadarModal() {
+      if (!radarModal) return;
+      radarModal.classList.remove('open');
+      radarModal.setAttribute('aria-hidden', 'true');
+      resumeAllEngines();
+      CyberAudio.playClick();
+    }
+
+    if (radarToggleBtn) radarToggleBtn.addEventListener('click', openRadarModal);
+    if (radarCloseBtn) radarCloseBtn.addEventListener('click', closeRadarModal);
+    if (radarDoneBtn) radarDoneBtn.addEventListener('click', closeRadarModal);
+    if (radarRefreshBtn) {
+      radarRefreshBtn.addEventListener('click', () => {
+        CyberAudio.playClick();
+        loadSeasonalRadar(true);
+      });
+    }
+    if (radarModal) {
+      radarModal.addEventListener('click', (e) => {
+        if (e.target === radarModal) closeRadarModal();
       });
     }
 
@@ -4527,6 +5141,9 @@
           if (shortcutsModal && shortcutsModal.classList.contains('open')) {
             closeShortcutsModal();
           }
+          if (radarModal && radarModal.classList.contains('open')) {
+            closeRadarModal();
+          }
           if (operatorModal && operatorModal.classList.contains('open')) {
             closeOperatorModal();
           }
@@ -4570,6 +5187,10 @@
         openLinkEditor();
       } else if (key === 'c') {
         toggleClockFormat();
+      } else if (key === 'm') {
+        toggleCyberSfx();
+      } else if (key === 'x') {
+        togglePomodoro();
       } else if (e.key === '?' || (e.shiftKey && e.key === '/')) {
         e.preventDefault();
         if (shortcutsModal && shortcutsModal.classList.contains('open')) {
@@ -4580,6 +5201,10 @@
       } else if (e.key === 'Escape') {
         if (shortcutsModal && shortcutsModal.classList.contains('open')) {
           closeShortcutsModal();
+          return;
+        }
+        if (radarModal && radarModal.classList.contains('open')) {
+          closeRadarModal();
           return;
         }
         if (operatorModal && operatorModal.classList.contains('open')) {

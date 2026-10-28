@@ -121,6 +121,32 @@ Beside the 5 classic faction presets, Shinsekai includes an in-cockpit **Anime S
 
 ---
 
+### 🔊 9. Zero-Asset Cyber Audio Synthesizer (Procedural SFX Haptics)
+- **100% Pure Web Audio API**: Procedural sound generation without downloading heavy audio files or assets.
+- **Tactile Cockpit Haptics**: Micro-chirp on tile hover, hologram blade sweep on sector switch, crystalline theme triad shimmer on color adjustments, and mission completion chime.
+- Toggle anytime with the **`🔊 音響: ON/OFF`** tool pill or by pressing <kbd>m</kbd>.
+
+---
+
+### ⏳ 10. Shinobi Focus Pomodoro & Real-Time Telemetry Sync
+- **Interactive Focus Engine**: 25-minute tactical training cycles (<kbd>x</kbd>) with 5-minute cooldown break periods.
+- **Live Combat Sync Rate**: Cockpit header gauge dynamically links to your focus progression, tracking real-time completion percentage and tab title countdowns (`[24:59] shinsekai`).
+- **Ground-Truth Drift Protection**: Real-time timestamp delta math ensures zero timer drift even across background tabs or system sleep.
+
+---
+
+### 📡 11. Seasonal Anime Telemetry Radar (Live AniList GraphQL)
+- **Direct AniList Sat-Link**: Instant telemetry scan tracking top airing anime for the current season, complete with episode status, popularity ratings, and genre tags.
+- **Smart 4-Hour Cache & Offline Shield**: Intelligent local caching prevents unnecessary network requests and provides an automatic offline fallback catalogue if disconnected.
+
+---
+
+### 🎯 12. Kiroshi Optical Target Reticles & Mecha Chamfers
+- **Cyberpunk Cockpit Aesthetic**: Dynamic optical target brackets on bookmark tiles that illuminate on cursor lock-on.
+- **Chamfered Cockpit Telemetry**: Tactical notch bevels and luminous corner brackets framing the header combat gauge and search capsule.
+
+---
+
 ## 🎨 Faction Themes & Screenshots
 
 Switch factions instantly via the header dropdown or by pressing <kbd>t</kbd>. Each capture below is the actual live cockpit — episode header, chronometer, sync gauge, tool dock, Katana search console, bookmark blades, and subtitle bar all rendered in real time over the theme's native stage art:
@@ -220,6 +246,8 @@ Navigate your startpage like a mecha cockpit with full keyboard controls:
 | <kbd>g</kbd> | **CRT Scanlines** | Toggle vintage anime monitor scanlines and film grain |
 | <kbd>b</kbd> / <kbd>a</kbd> | **Particle FX** | Toggle floating particles, cherry blossom petals, or burning flame embers |
 | <kbd>c</kbd> | **Clock Format** | Toggle 12-hour (AM/PM) and military 24-hour chrono formats |
+| <kbd>m</kbd> | **Cyber SFX Haptics** | Toggle synthesized Web Audio sound effects and UI haptics |
+| <kbd>x</kbd> | **Shinobi Pomodoro** | Start / pause 25-minute focus training cycle or tactical break |
 | <kbd>p</kbd> | **Lock Drawer** | Pin the holographic bookmark drawer open |
 | <kbd>v</kbd> | **Voice Comms** | Re-trigger the mecha android audio greeting |
 | <kbd>q</kbd> | **Cycle Dialogue** | Advance to the next anime subtitle quote |
