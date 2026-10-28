@@ -1054,21 +1054,25 @@
 
     function addCustomWebWallpaper(url, name = null) {
       const list = getCustomWebWallpapers();
-      const isVideo = /\.(mp4|webm)($|\?)/i.test(url);
+      const sanitized = sanitizeUrl(url);
+      if (!sanitized || sanitized === '#') {
+        return null;
+      }
+      const isVideo = /\.(mp4|webm)($|\?)/i.test(sanitized);
       let displayName = name ? name.trim() : '';
       if (!displayName) {
         try {
-          const u = new URL(url);
+          const u = new URL(sanitized);
           const pathParts = u.pathname.split('/').filter(Boolean);
           displayName = pathParts.length ? pathParts[pathParts.length - 1] : u.hostname;
         } catch (e) {
-          displayName = url.slice(0, 24);
+          displayName = sanitized.slice(0, 24);
         }
       }
       const record = {
         id: 'web_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
         name: displayName,
-        url: url.trim(),
+        url: sanitized,
         type: isVideo ? 'live' : 'static',
         addedAt: Date.now()
       };
@@ -3492,9 +3496,9 @@
           <div class="sector-grid">
             ${sec.items.map(item => `
               <a href="${escapeHtml(sanitizeUrl(item.url))}" class="holo-tile" target="_blank" rel="noopener noreferrer">
-                <span class="tile-seal">${buildTileIconHtml(item.url, item.seal, item.title.slice(0, 1))}</span>
+                <span class="tile-seal">${buildTileIconHtml(item.url, item.seal, item.title ? item.title.slice(0, 1) : '★')}</span>
                 <div class="tile-info">
-                  <span class="tile-title">${escapeHtml(item.title)}</span>
+                  <span class="tile-title">${escapeHtml(item.title || 'Bookmark')}</span>
                   <span class="tile-sub">${escapeHtml(item.desc || '')}</span>
                 </div>
                 <span class="tile-arrow">↗</span>
@@ -4346,11 +4350,9 @@
           };
           window.addEventListener('pointerdown', resumeOnInteract, { once: true });
           window.addEventListener('keydown', resumeOnInteract, { once: true });
-          window.addEventListener('focus', resumeOnInteract, { once: true });
           cleanupVoiceListeners = () => {
             window.removeEventListener('pointerdown', resumeOnInteract);
             window.removeEventListener('keydown', resumeOnInteract);
-            window.removeEventListener('focus', resumeOnInteract);
           };
         });
       }

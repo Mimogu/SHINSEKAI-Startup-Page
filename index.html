@@ -95,10 +95,10 @@
 
         document.addEventListener('DOMContentLoaded', function() {
           if (document.body) {
-            document.body.setAttribute('data-theme', t);
-            document.body.setAttribute('data-scene', s);
-            document.body.setAttribute('data-tier', tier);
-            document.body.setAttribute('data-fx', fx);
+            if (!document.body.getAttribute('data-theme')) document.body.setAttribute('data-theme', t);
+            if (!document.body.getAttribute('data-scene')) document.body.setAttribute('data-scene', s);
+            if (!document.body.getAttribute('data-tier')) document.body.setAttribute('data-tier', tier);
+            if (!document.body.getAttribute('data-fx')) document.body.setAttribute('data-fx', fx);
           }
         });
 
