@@ -1,15 +1,15 @@
 <div align="center">
 
 # ⛩️ 新世界 · SHINSEKAI
-### // ANIME CINEMATIC OS · STARTUP PAGE //
+### // 次世代電脳機体 · ANIME COCKPIT STARTUP PAGE //
 **【 領域展開 · DOMAIN EXPANSION FOR YOUR BROWSER 】**
 
 <p align="center">
-  <i>Transform every blank new tab into a living anime battlestation.</i><br/>
-  <b>Hardware-Accelerated 4K Looping Wallpapers · 60 FPS Atmospheric Particles · Mecha Android Voice · Anime HUD Telemetry</b>
+  <i>Transform every blank new tab into a high-performance anime battlestation.</i><br/>
+  <b>Hardware-Accelerated Looping Video Stages · 60 FPS Atmospheric Particle Physics · Mecha Android Voice HUD · Tactical Anime Telemetry</b>
 </p>
 
-[![Status](https://img.shields.io/badge/SYS.AUTH-AUTHENTICATED-10b981?style=for-the-badge&logo=shield&logoColor=white)](https://github.com/Mimogu/SHINSEKAI-Startup-Page)
+[![System Status](https://img.shields.io/badge/SYS.AUTH-AUTHENTICATED-10b981?style=for-the-badge&logo=shield&logoColor=white)](https://github.com/Mimogu/SHINSEKAI-Startup-Page)
 [![Dependencies](https://img.shields.io/badge/DEP-ZERO_DEPENDENCIES-3b82f6?style=for-the-badge&logo=box&logoColor=white)](https://github.com/Mimogu/SHINSEKAI-Startup-Page)
 [![Performance](https://img.shields.io/badge/FPS-60_GPU_ACCELERATED-8b5cf6?style=for-the-badge&logo=speedtest&logoColor=white)](https://github.com/Mimogu/SHINSEKAI-Startup-Page)
 [![Privacy](https://img.shields.io/badge/TELEMETRY-100%25_OFFLINE_PRIVATE-ff0055?style=for-the-badge&logo=tor-browser&logoColor=white)](https://github.com/Mimogu/SHINSEKAI-Startup-Page)
@@ -25,7 +25,7 @@
 
 <p align="center">
   ⚔️ <b>Instant Web Deployment:</b> <a href="https://mimogu.github.io/SHINSEKAI-Startup-Page/"><b>https://mimogu.github.io/SHINSEKAI-Startup-Page/</b></a><br />
-  <sub><em>Experience the live boot sequence, mecha voice greeting, atmospheric particle canvas, and bookmark blades right in your browser!</em></sub>
+  <sub><em>Experience the live cinematic boot sequence, mecha voice greeting, atmospheric particle engine, and holographic bookmark blades right in your browser!</em></sub>
 </p>
 
 <br/>
@@ -43,55 +43,87 @@
 
 ---
 
-## ⚡ System Matrix & Features
+## ⚡ System Matrix & Tactical Modules
 
 ### 🎬 1. Tri-Category Wallpaper Engine: Live Video, Static Artworks & Custom Library
 - **3 Dedicated Modes & Categories**:
-  - **動的 (Live)**: Hardware-accelerated looping video backdrops (`crimson.mp4`, `tokyonight.mp4`, `sakura.mp4`, `catppuccin.mp4`, `cyberpunk.mp4`, and Eco mode).
-  - **静止画 (Static)**: High-resolution static artworks (`crimson.png`, `tokyonight.png`, `sakura.png`, `catppuccin.png`, `cyberpunk.png`) with minimal RAM (~20MB, zero video decoding).
-  - **カスタム (Custom)**: User library featuring multi-file uploads and online web URLs with live format badges and individual delete controls.
-- **Dynamic File Reading & Multiple Uploads**: Select and upload multiple files at once (`.mp4`, `.webm`, `.png`, `.jpg`, `.webp`, `.gif`). All wallpapers are dynamically read and rendered by actual filename from IndexedDB.
-- **Default Deletion & Restoration by Filename**: Delete default live or static scenes from the UI at will. Re-adding/uploading a file with the original name (e.g. `crimson.mp4`, `crimson.png`) or clicking `↺ 初期復元` instantly restores them.
-- **Enhanced Online Web URLs**: Add direct links to web images or videos with custom display names, saved directly into your Custom collection.
+  - **動的 (Live Video)**: Hardware-accelerated looping video backdrops (`crimson.mp4`, `tokyonight.mp4`, `sakura.mp4`, `catppuccin.mp4`, `cyberpunk.mp4`, plus low-power Eco mode).
+  - **静止画 (Static Artworks)**: High-resolution static artworks (`crimson.png`, `tokyonight.png`, `sakura.png`, `catppuccin.png`, `cyberpunk.png`) with minimal RAM (~20MB, zero video decoding).
+  - **カスタム (Custom Library)**: Personal user library featuring multi-file uploads and online web URLs with live format badges and individual delete controls.
+- **Dynamic File Reading & Multiple Uploads**: Select and upload multiple files at once (`.mp4`, `.webm`, `.png`, `.jpg`, `.webp`, `.gif`). All wallpapers are dynamically read and rendered by actual filename from **IndexedDB** (bypassing the strict 5MB `localStorage` limit).
+- **Default Deletion & Restoration by Filename**: Delete default live or static scenes from the UI at will. Contextual restore banners (`↺ 削除された初期動画を復元` / `↺ 削除された初期静止画を復元`) or uploading a file with the original filename instantly restores them.
+- **Enhanced Online Web URLs**: Add direct links to web images or videos with custom display names, saved directly into your Custom collection with URL protocol validation.
 - **Atmospheric Particle Fusion**: Sakura petals, rising embers, and retro CRT scanlines continue to render dynamically over all wallpapers.
 
-### 🌸 2. Atmospheric Particle Dynamics (60 FPS Canvas)
+---
+
+### 🎛️ 2. 調色中枢 · Anime Spectrum Matrix & Chakra Tuner
+Beside the 5 classic faction presets, Shinsekai includes an in-cockpit **Anime Spectrum Tuner** with real-time UI harmonization:
+- **10 霊力結晶 (Chakra Crystals)**: Instant 1-click resonant anime color frequencies with animated targeting rings:
+  - ⚡ **雷光・神速 (`#fbbf24`)**: Amber Gold (Zenitsu / Killua Godspeed)
+  - 🍃 **風神・翠緑 (`#10b981`)**: Emerald Green (Deku / Sanemi Wind Hashira)
+  - 🌊 **碧羅・蒼波 (`#06b6d4`)**: Ocean Cyan (Giyu Tomioka / Water Breathing)
+  - 🔮 **虚式・紫電 (`#c084fc`)**: Lavender Purple (Satoru Gojo Hollow Purple)
+  - 🩸 **真紅・終焉 (`#ff3366`)**: Crimson Red (EVA Unit-01 Berserk / Rengoku)
+  - 🌸 **幽玄・紅桜 (`#f43f5e`)**: Rose Pink (Sakura Ronin / Mitsuri Kanroji)
+  - 🔥 **日輪・業火 (`#fb923c`)**: Sunset Orange (Sun Breathing / Naruto Kurama)
+  - ❄️ **氷華・零度 (`#38bdf8`)**: Sky Blue (Hitsugaya Hyorinmaru / Rimuru Tempest)
+  - ☣️ **毒蝶・幻紫 (`#d946ef`)**: Magenta Purple (Shinobu Kocho Insect Dance)
+  - 🌌 **星骸・白金 (`#e2e8f0`)**: Platinum White (Gintoki Sakata / Satoru Gojo)
+- **周波数調律 · HUE RESONATOR (`0° - 360°`)**: Continuous full-spectrum mecha slider with live angle display and real-time color shifts across the dashboard, glass borders, and particle engine. Fully calibrated with exact 0°/360° pure red boundary synchronization.
+- **彩度・明度 · SATURATION & VALUE MATRIX**: 2D interactive HSV color matrix pad allowing precision coordinate selection across any saturation and brightness value.
+- **色彩座標入力 · HEX & RGB TERMINAL**: Direct terminal input box `[ #______ ]` with instant validation and sync, native eyedropper tool (`⌖`), and individual Red / Green / Blue channel numeric steppers.
+
+---
+
+### 🌸 3. Atmospheric Particle Dynamics (60 FPS Canvas)
 - Tailored dynamic particle canvas engine reacting to your selected anime faction:
   - **紅蓮 (Crimson)**: Rising flame embers with dual-layer temperature glow.
   - **桜吹雪 (Sakura)**: Fluttering, rotating cherry blossom petals drifting with the wind.
   - **電脳都市 (Cyberpunk)**: Dual-tint neon cyan and hot-pink digital rain streaks.
   - **東京夜 / 終末谷 (TokyoNight / Catppuccin)**: Glowing spiritual energy orbs with cosmic auras.
-- **On/Off Toggle Control**: Easily toggle particles on and off with the new **`🌸 粒子: ON/OFF`** button in the top HUD toolbar (Tier 1) or by pressing <kbd>b</kbd>.
+- **On/Off Toggle Control**: Easily toggle particles on and off with the **`🌸 粒子: ON/OFF`** button in the top HUD toolbar or by pressing <kbd>b</kbd>.
 - **True Zero CPU/GPU Cost When OFF**: Automatically terminates the `requestAnimationFrame` loop, unloads canvas VRAM, and hides the element.
 - **State Persistence & URL Override**: Choice is saved in `localStorage` (`shinsekai-particles`), supports `?particles=off` / `?particles=on` URL params, and is included in profile export/import backups.
 
-### 🎙️ 3. Mecha Android Voice Greeting
+---
+
+### 🎙️ 4. Mecha Android Voice Greeting
 - Upon boot sequence completion, an onboard anime android voice announces system readiness:  
   *「ようこそ、ミモグ様。新世界システム、起動完了しました」* (*"Welcome, Mimogu-sama. Shinsekai systems online."*)
-- Easily replace with any custom anime voice line or sound effect.
+- Robust audio unlock: clean user-gesture unlock listener ensuring seamless audio playback across modern strict browser autoplay policies.
+- Easily replace with any custom anime voice line or sound effect in `assets/audio/welcome.mp3`.
 
-### ⚔️ 4. Anime Episode Header & Chronometer HUD
+---
+
+### ⚔️ 5. Anime Episode Header & Chronometer HUD
 - **Dynamic Episode Title Card**: Displays episode title, arc tag, and act number that organically shifts across 4 time-of-day blocks (e.g. *第壱話 · 黎明の覚醒* in the morning, *第廿四話 · 黎明の咆哮* in the evening).
 - **Imperial Japanese Era Clock**: Synchronizes system time with true Japanese kanji era formatting (*令和八年 九月 火曜日*).
 - **Combat Power Sync Rate**: Live tactical combat gauge locked at *特級 · SPECIAL GRADE // 99.8%*.
 
-### 💬 5. Subtitle Dialogue System
+---
+
+### 💬 6. Subtitle Dialogue System
 - Real-time anime dialogue bar rendering legendary quotes in Japanese Kanji/Kana accompanied by English translations.
 - Featuring 20 iconic anime lines from **Kyojuro Rengoku**, **Satoru Gojo**, **Ryomen Sukuna**, **Naruto Uzumaki**, **Sasuke Uchiha**, **Mugen** (*Samurai Champloo*), **David Martinez** (*Cyberpunk: Edgerunners*), **Yuta Okkotsu** (*Jujutsu Kaisen*), **Saber** (*Fate/stay night*), **Archer** (*Unlimited Blade Works*), **Kamina** (*Gurren Lagann*), **Tanjiro Kamado**, **Kirei Kotomine**, **Kiritsugu Emiya**, **Lelouch Lamperouge**, **Levi Ackerman**, **Erwin Smith**, **Edward Elric**, **Roronoa Zoro**, and **Monkey D. Luffy**. Click or press <kbd>q</kbd> to cycle anytime.
 
-### 🗡️ 6. Katana Command Console & Hologram Drawer
+---
+
+### 🗡️ 7. Katana Command Console & Hologram Drawer
 - Press <kbd>/</kbd> to activate the frosted **Katana Search Console** with direct URL navigation and quick bang queries (`!g`, `!y`, `!a`, `!gh`, `!r`, `!d`, `!w`).
 - **Dynamic Holographic Blade Launcher**: Hover over categorized tab blades to deploy bookmarked sectors (*01 Anime*, *02 Gaming*, *03 Dev Core*, *04 Media*).
-- **In-Browser Bookmark Editor**: Press <kbd>e</kbd> to customize, add, remove, export, and import bookmarks visually.
+- **In-Browser Bookmark Editor**: Press <kbd>e</kbd> to customize, add, remove, export, and import bookmarks visually with custom Japanese kanji seals.
 
-### 📺 7. Retro CRT & Film Grain Overlay
+---
+
+### 📺 8. Retro CRT & Film Grain Overlay
 - Toggleable scanline filter and analog film grain (<kbd>g</kbd>) for an authentic 90s vintage anime aesthetic.
 
 ---
 
 ## 🎨 Faction Themes & Screenshots
 
-Switch factions instantly via the header dropdown or by pressing <kbd>t</kbd>. Each capture below is the actual live cockpit — episode header, chronometer, sync gauge, tool dock, Katana search console, bookmark blades, and subtitle bar all rendered in real time over the theme's native stage art, not a bare wallpaper crop:
+Switch factions instantly via the header dropdown or by pressing <kbd>t</kbd>. Each capture below is the actual live cockpit — episode header, chronometer, sync gauge, tool dock, Katana search console, bookmark blades, and subtitle bar all rendered in real time over the theme's native stage art:
 
 <div align="center">
 
@@ -139,22 +171,6 @@ Switch factions instantly via the header dropdown or by pressing <kbd>t</kbd>. E
 
 *Every faction boots on the 720p stage by default (lower RAM/decode cost); the 1080p Ultra master is one click away in the scene selector or via `?ultra=1`.*
 
-> ### 🎛️ 調色中枢 · SPECTRUM TUNER & CHAKRA MATRIX
-> Beside the 5 classic faction presets, Shinsekai includes an in-cockpit **Anime Spectrum Tuner** with real-time UI harmonization:
-> - **10 霊力結晶 (Chakra Crystals)**: Instant 1-click resonant anime color frequencies with animated targeting rings:
->   - ⚡ **雷光・神速 (`#fbbf24`)**: Amber Gold
->   - 🍃 **風神・翠緑 (`#10b981`)**: Emerald Green
->   - 🌊 **碧羅・蒼波 (`#06b6d4`)**: Ocean Cyan
->   - 🔮 **虚式・紫電 (`#c084fc`)**: Lavender Purple
->   - 🩸 **真紅・終焉 (`#ff3366`)**: Crimson Red
->   - 🌸 **幽玄・紅桜 (`#f43f5e`)**: Rose Pink
->   - 🔥 **日輪・業火 (`#fb923c`)**: Sunset Orange
->   - ❄️ **氷華・零度 (`#38bdf8`)**: Sky Blue
->   - ☣️ **毒蝶・幻紫 (`#d946ef`)**: Magenta Purple
->   - 🌌 **星骸・白金 (`#e2e8f0`)**: Platinum White
-> - **周波数調律 (Hue Resonator)**: Continuous `0° - 360°` full-spectrum mecha slider with live angle display and real-time color shifts across the dashboard and particle engine.
-> - **色彩座標入力 (Hex Coordinate Terminal)**: Direct terminal input box `[ #______ ]` with instant validation and sync, plus a native system palette eyedropper tool.
-
 ---
 
 ## 🚀 Deployment & Installation
@@ -190,7 +206,7 @@ git clone https://github.com/Mimogu/SHINSEKAI-Startup-Page.git
 
 ---
 
-## 🎮 Command Keybindings
+## 🎮 Command Keybindings HUD
 
 Navigate your startpage like a mecha cockpit with full keyboard controls:
 
@@ -233,7 +249,7 @@ Configure or bookmark Shinsekai with pre-configured startup states directly thro
 | `?menu=` | `?menu=operator` | Auto-launch a modal on boot (`operator`, `links`, `shortcuts`, `theme`, `scene`) |
 
 *Example Command Link:*  
-`index.html?theme=custom&color=%2300f0ff&scene=cyberpunk&ultra=1&user=RENGOKU&honorific=-SAMA&noboot=1`
+`index.html?theme=custom&color=%23ff3366&scene=crimson&ultra=1&user=RENGOKU&honorific=-SAMA&noboot=1`
 
 ---
 
@@ -260,15 +276,15 @@ The engine autonomously detects your hardware environment (`deviceMemory`, `hard
 - Whether the animation engines run is **derived from ground truth** (`document.hidden` and whether a modal is open) every time it is asked — never from a flag that events toggle. One idempotent `syncEngines()` reconciles reality and is safe to call from any event, in any order (`visibilitychange`, `pageshow`, Page Lifecycle `resume`, `focus`, modal open/close, and a 3-second health check that heals a missed event).
 - When the tab is hidden the video, particles and quote timer pause; when it is visible again the clock is corrected immediately and everything restarts.
 - Losing **window focus** (address bar, another window, another monitor, focus-follows-mouse) does *not* pause anything — the page is still visible.
-- The wallpaper stays loaded while hidden. (The old "unload the video after 20 s" hibernation was removed: it left the video empty in Chromium — `currentSrc` stays stale after `removeAttribute('src')` — which is why the wallpaper stayed frozen until you switched themes.)
+- The wallpaper stays loaded while hidden to prevent Chromium video element decimation.
 
 ### 🪶 3b. Adaptive FX Level (`full` / `lite` / `min`)
-Independent of the hardware tier. `lite` removes `backdrop-filter` from the always-on panels and popovers (they are already 82–96 % opaque, so it is barely visible) and is the **default on Firefox**. The FPS watchdog steps `full → lite → min` automatically after sustained low frame rates, and never touches your wallpaper or saved tier. The CRT scanlines and film grain are a single merged layer, and the accent glow no longer uses a blend mode — both were measured as major per-frame costs when the browser composites without a GPU.
+Independent of the hardware tier. `lite` removes `backdrop-filter` from the always-on panels and popovers (they are already 82–96% opaque, so it is barely visible) and is the **default on Firefox**. The FPS watchdog steps `full → lite → min` automatically after sustained low frame rates, and never touches your wallpaper or saved tier.
 
 ### 🛡️ 4. Watchdogs & Error Recovery
-- **Runtime FPS Watchdog**: Measures frame delivery over 2-second windows, but only while the page is actually running (not hidden, no modal open, not in the first seconds after load) and it restarts its window after any long gap. After 3 consecutive slow windows it lowers the FX level (see 3b). It no longer changes your tier or switches to Eco.
-- **Resume-Freeze Recovery**: Some GPU/decoder pipelines silently lose their hardware decode context after a tab sits backgrounded — playback reports as running but the frame never advances. After every resume the engine verifies the frame clock is really moving, escalating `play()` → full reload from where it left off. "Which video is loaded" is decided from the `src` the app assigned, never from `currentSrc`.
-- **2-Strike Error & Freeze Recovery**: If video decoders stall or throw errors twice consecutively, Shinsekai cleanly falls back to `eco` static mode instead of entering an infinite retry loop. The periodic freeze watchdog follows the same escalation logic — a cheap timestamp nudge first, then a full reload if that doesn't resolve it within two attempts.
+- **Runtime FPS Watchdog**: Measures frame delivery over 2-second windows, but only while the page is actually running (not hidden, no modal open, not in the first seconds after load) and it restarts its window after any long gap. After 3 consecutive slow windows it lowers the FX level (see 3b).
+- **Resume-Freeze Recovery**: Some GPU/decoder pipelines silently lose their hardware decode context after a tab sits backgrounded. After every resume the engine verifies the frame clock is really moving, escalating `play()` → full reload from where it left off.
+- **2-Strike Error & Freeze Recovery**: If video decoders stall or throw errors twice consecutively, Shinsekai cleanly falls back to `eco` static mode instead of entering an infinite retry loop.
 - **Zero-Latency Boot Loader**: An early inline script parses the URL/stored scene prior to DOM rendering, loading the exact video immediately and eliminating wasteful initial double-decodes.
 
 ---
@@ -289,12 +305,12 @@ Type any shortcut into the Katana search capsule followed by your query:
 | Bang | Target Terminal | Example Command |
 |:---:|:---|:---|
 | `!g` | Google Search | `!g mechanical keyboard reviews` |
-| `!y` | YouTube Video | `!y linux customization guide` |
-| `!a` | AniList Database | `!a database search` |
+| `!y` | YouTube Video | `!y anime lofi hip hop mix` |
+| `!a` | AniList Database | `!a jujutsu kaisen season 3` |
 | `!gh` | GitHub Code | `!gh cachyos linux` |
 | `!r` | Reddit Community | `!r unixporn` |
 | `!d` | DuckDuckGo Privacy | `!d neovim lua setup` |
-| `!w` | Wikipedia Archive | `!w artificial intelligence` |
+| `!w` | Wikipedia Archive | `!w mecha anime history` |
 
 *Tip: Pasting or typing direct URLs (e.g., `github.com`, `mailto:pilot@shinsekai.org`, or `https://archlinux.org`) will jump straight to the destination.*  
 *Operator Command Tip: Type `:user <name>` or `:settings` in the search bar to immediately configure your pilot identity.*
@@ -310,7 +326,6 @@ Type any shortcut into the Katana search capsule followed by your query:
 4. Select your **機体性能 (Hardware Performance Tier)** (`HIGH`, `MID`, `ECO`) or click **`🔄 自動判定 (Auto-Detect)`** to benchmark your device based on CPU cores, RAM, and motion preferences.
 5. Watch the real-time mecha boot telemetry preview update live as you type.
 6. Click **`▶ 起動シミュレーション (Test Boot)`** to immediately experience the cinematic mecha boot sequence and audio greeting with your custom name!
-7. *Optional URL Override:* You can also pass `?user=YourName` or `?operator=YourName` directly in the browser address bar.
 
 ### 2. Unified Profile & Link Matrix Editor (No Coding Required)
 1. Press <kbd>e</kbd> or click the **`⚙️ リンク編集`** button in the header.
@@ -355,8 +370,7 @@ assets/animated/
 5. **Multi-File Upload & Storage Limits**: Click **`＋ ファイル追加`** to select and upload multiple files at once (up to 35MB per file). Files are stored safely in **IndexedDB** without 5MB `localStorage` limits.
 6. **Contextual Restores & Deletions**:
    - Delete any preset or custom wallpaper at any time via the **`✕`** delete button on each item.
-   - Contextual restore banners (**`↺ 削除された初期動画を復元`** and **`↺ 削除された初期静止画を復元`**) appear directly within their respective panels whenever default items are deleted.
-   - Uploading a file with the original filename (e.g., `crimson.mp4` or `tokyonight.png`) also automatically restores that preset.
+   - Contextual restore banners appear directly within their respective panels whenever default items are deleted.
 
 > **Tip for Wayland / Hyprland users:** Shinsekai's companion desktop script also accepts arbitrary static wallpapers:
 > ```bash
@@ -388,18 +402,13 @@ SHINSEKAI-Startup-Page/
 │   │   └── tokyonight.mp4  # HD Ultra 1080p Infinite Void Cosmos
 │   ├── audio/              # Mecha female voice welcome asset
 │   │   └── welcome.mp3     # 「ようこそ、ミモグ様」
-│   └── previews/           # Clean wallpaper-only stills — used LIVE by the app itself as the
-│       │                   # <video poster> and as the actual background for 静止画/Static mode,
-│       │                   # so keep these free of any baked-in HUD/overlay.
+│   └── previews/           # Clean wallpaper-only stills (used live as <video poster> & static stage)
 │       ├── catppuccin.png  # 終末谷 Interface
 │       ├── crimson.png     # 紅蓮 Interface
 │       ├── cyberpunk.png   # 電脳都市 Interface
 │       ├── sakura.png      # 桜吹雪 Interface
 │       ├── tokyonight.png  # 東京夜 Interface
-│       └── showcase/       # README-only marketing captures: the real cockpit UI (header, HUD,
-│           │                # search, bookmark blades, subtitle bar) rendered live over each
-│           │                # theme's stage art. Never referenced by index.html/script.js —
-│           │                # safe to regenerate or replace without touching app behavior.
+│       └── showcase/       # Cockpit UI marketing captures rendered over stage art
 │           ├── catppuccin.jpg
 │           ├── crimson.jpg
 │           ├── cyberpunk.jpg
@@ -412,13 +421,7 @@ SHINSEKAI-Startup-Page/
 ├── script.js               # Reactive engine, tier manager, particle physics & watchdogs
 ├── style.css               # Glassmorphism, CSS variable blur, GPU isolation & themes
 ├── theme-core.js           # Synchronous anti-FOUC theme/profile bootstrap (loaded before <body>)
-└── *.min.js / *.min.css    # Optional pre-minified bundle (script.min.js, style.min.css,
-                             # theme-core.min.js) — NOT loaded by default. index.html always
-                             # loads the readable source directly, zero build step required, so
-                             # editing script.js / style.css / links.js just works. Regenerate the
-                             # minified set after an edit only if you want it for your own
-                             # deployment: `npx esbuild script.js --minify --outfile=script.min.js`
-                             # (swap the filename for style.css / theme-core.js as needed).
+└── *.min.js / *.min.css    # Pre-compiled production bundles (script.min.js, style.min.css, theme-core.min.js)
 ```
 
 ---
@@ -428,11 +431,11 @@ SHINSEKAI-Startup-Page/
 ### // MISSION COMPLETE //
 
 Crafted with passion for anime culture and clean aesthetics by **[Mimogu](https://github.com/Mimogu)**.  
-*Free and open-source for personal startpage customization.*
+*Contributions, anime quote suggestions, and pull requests are always welcome.*
 
-<br/>
-
-[![GitHub Stars](https://img.shields.io/github/stars/Mimogu/SHINSEKAI-Startup-Page?style=social)](https://github.com/Mimogu/SHINSEKAI-Startup-Page)
-[![GitHub Forks](https://img.shields.io/github/forks/Mimogu/SHINSEKAI-Startup-Page?style=social)](https://github.com/Mimogu/SHINSEKAI-Startup-Page)
+<p align="center">
+  <b>新世界システム · オールグリーン · 全システム正常始動</b><br/>
+  <sub>SHINSEKAI OS // ALL SYSTEMS NOMINAL // ZERO TELEMETRY</sub>
+</p>
 
 </div>

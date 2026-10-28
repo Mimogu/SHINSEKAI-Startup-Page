@@ -73,30 +73,34 @@
     let hue;
     if (max === rNorm) {
       hue = ((gNorm - bNorm) / delta) % 6;
+      if (hue < 0) hue += 6;
     } else if (max === gNorm) {
       hue = (bNorm - rNorm) / delta + 2;
     } else {
       hue = (rNorm - gNorm) / delta + 4;
     }
     hue = Math.round(hue * 60);
-    if (hue < 0) hue += 360;
+    if (hue >= 360) hue = 0;
     return hue;
   }
 
   // HSV helpers for the in-DOM Saturation/Value pad (fix directive §2) —
   // a separate plane from the HSL math above, but sharing the same hue axis.
   function hsvToHex(h, s, v) {
-    s /= 100; v /= 100;
+    h = ((h % 360) + 360) % 360;
+    s = Math.max(0, Math.min(100, s)) / 100;
+    v = Math.max(0, Math.min(100, v)) / 100;
     const c = v * s;
-    const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+    const hp = h / 60;
+    const x = c * (1 - Math.abs((hp % 2) - 1));
     const m = v - c;
     let r = 0, g = 0, b = 0;
-    if (h < 60) { r = c; g = x; b = 0; }
-    else if (h < 120) { r = x; g = c; b = 0; }
-    else if (h < 180) { r = 0; g = c; b = x; }
-    else if (h < 240) { r = 0; g = x; b = c; }
-    else if (h < 300) { r = c; g = 0; b = x; }
-    else { r = x; g = 0; b = c; }
+    if (hp < 1)      { r = c; g = x; b = 0; }
+    else if (hp < 2) { r = x; g = c; b = 0; }
+    else if (hp < 3) { r = 0; g = c; b = x; }
+    else if (hp < 4) { r = 0; g = x; b = c; }
+    else if (hp < 5) { r = x; g = 0; b = c; }
+    else             { r = c; g = 0; b = x; }
     return rgbToHex((r + m) * 255, (g + m) * 255, (b + m) * 255);
   }
 
@@ -107,11 +111,16 @@
     const d = max - min;
     let h = 0;
     if (d !== 0) {
-      if (max === rn) h = ((gn - bn) / d) % 6;
-      else if (max === gn) h = (bn - rn) / d + 2;
-      else h = (rn - gn) / d + 4;
+      if (max === rn) {
+        h = ((gn - bn) / d) % 6;
+        if (h < 0) h += 6;
+      } else if (max === gn) {
+        h = (bn - rn) / d + 2;
+      } else {
+        h = (rn - gn) / d + 4;
+      }
       h = Math.round(h * 60);
-      if (h < 0) h += 360;
+      if (h >= 360) h = 0;
     }
     const s = max === 0 ? 0 : (d / max) * 100;
     const v = max * 100;

@@ -2650,7 +2650,7 @@
     // Keeps the Saturation/Value pad in sync with tunerHsv.
     function syncSatPadUIFromState() {
       if (!spectrumSatPad || !spectrumSatCursor) return;
-      const h = Math.round(tunerHsv.h) % 360;
+      const h = ((Math.round(tunerHsv.h) % 360) + 360) % 360;
       if (h !== lastPadHue) {
         lastPadHue = h;
         spectrumSatPad.style.backgroundColor = hslToHex(h, 100, 50);
@@ -2933,10 +2933,10 @@
         spectrumHueSlider.addEventListener('input', (e) => {
           e.stopPropagation();
           const hue = parseInt(e.target.value, 10) || 0;
-          const hex = hslToHex(hue, 88, 62);
-          const c = hexToHsv(hex);
-          // The slider is the authority on hue (hexToHsv may be off by a degree).
-          scheduleCustomTheme(hex, { hsv: { h: hue, s: c.s, v: c.v }, source: 'hue' });
+          const s = (tunerHsv && typeof tunerHsv.s === 'number') ? tunerHsv.s : 88;
+          const v = (tunerHsv && typeof tunerHsv.v === 'number') ? tunerHsv.v : 62;
+          const hex = hsvToHex(hue, s, v);
+          scheduleCustomTheme(hex, { hsv: { h: hue, s, v }, source: 'hue' });
         });
         spectrumHueSlider.addEventListener('change', (e) => {
           e.stopPropagation();
