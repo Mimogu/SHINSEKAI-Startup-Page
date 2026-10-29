@@ -55,7 +55,7 @@
        until something unrelated reset it. Now "should the heavy engines be
        idle?" is recomputed from ground truth every time it is asked. */
     function isModalOpen() {
-      return [linkEditorModal, operatorModal, shortcutsModal, radarModal]
+      return [linkEditorModal, operatorModal, shortcutsModal]
         .some(m => m && m.classList.contains('open'));
     }
     function isSuspended() {
@@ -352,22 +352,16 @@
     const sfxStatusIcon = document.getElementById('sfx-status-icon');
     const sfxStatusText = document.getElementById('sfx-status-text');
 
-    const pomodoroToggleBtn = document.getElementById('pomodoro-toggle-btn');
-    const pomodoroStatusIcon = document.getElementById('pomodoro-status-icon');
-    const pomodoroStatusText = document.getElementById('pomodoro-status-text');
-    const pomodoroStatusSub = document.getElementById('pomodoro-status-sub');
-    const combatGaugeCard = document.querySelector('.combat-gauge-card');
+    const shinobiFocusDeck = document.getElementById('shinobi-focus-deck');
+    const focusTimeDisplay = document.getElementById('focus-time-display');
+    const focusTargetSub = document.getElementById('focus-target-sub');
+    const focusModeBadge = document.getElementById('focus-mode-badge');
+    const focusToggleBtn = document.getElementById('focus-toggle-btn');
+    const focusResetBtn = document.getElementById('focus-reset-btn');
+    const focusCmdIcon = document.getElementById('focus-cmd-icon');
+    const focusCmdText = document.getElementById('focus-cmd-text');
     const gaugeFill = document.getElementById('gauge-fill');
     const syncVal = document.getElementById('sync-val');
-    const gaugeLabel = document.querySelector('.gauge-label');
-
-    const radarToggleBtn = document.getElementById('radar-toggle-btn');
-    const radarModal = document.getElementById('radar-modal');
-    const radarCloseBtn = document.getElementById('radar-close-btn');
-    const radarDoneBtn = document.getElementById('radar-done-btn');
-    const radarRefreshBtn = document.getElementById('radar-refresh-btn');
-    const radarGrid = document.getElementById('radar-grid');
-    const radarSeasonBadge = document.getElementById('radar-season-badge');
 
     const subtitlesBar = document.getElementById('subtitles-bar');
     const subSpeaker = document.getElementById('sub-speaker');
@@ -3624,7 +3618,6 @@
       if (!linkEditorModal) return;
       if (shortcutsModal && shortcutsModal.classList.contains('open')) closeShortcutsModal();
       if (operatorModal && operatorModal.classList.contains('open')) closeOperatorModal();
-      if (radarModal && radarModal.classList.contains('open')) closeRadarModal();
       linkEditorModal.classList.add('open');
       linkEditorModal.setAttribute('aria-hidden', 'false');
       pauseAllEngines();
@@ -4024,7 +4017,6 @@
       if (!operatorModal) return;
       if (linkEditorModal && linkEditorModal.classList.contains('open')) closeLinkEditor();
       if (shortcutsModal && shortcutsModal.classList.contains('open')) closeShortcutsModal();
-      if (radarModal && radarModal.classList.contains('open')) closeRadarModal();
       operatorModal.classList.add('open');
       operatorModal.setAttribute('aria-hidden', 'false');
       pauseAllEngines();
@@ -4230,7 +4222,6 @@
       if (!shortcutsModal) return;
       if (linkEditorModal && linkEditorModal.classList.contains('open')) closeLinkEditor();
       if (operatorModal && operatorModal.classList.contains('open')) closeOperatorModal();
-      if (radarModal && radarModal.classList.contains('open')) closeRadarModal();
       shortcutsModal.classList.add('open');
       shortcutsModal.setAttribute('aria-hidden', 'false');
       pauseAllEngines();
@@ -4413,7 +4404,7 @@
 
     // Subtle audio haptics delegation across interactive HUD elements
     document.addEventListener('mouseover', (e) => {
-      const target = e.target.closest('.holo-tile, .tab-blade, .tool-pill, .bang-chip, .editor-btn, .modal-nav-btn, .color-swatch-btn, .radar-card');
+      const target = e.target.closest('.holo-tile, .tab-blade, .tool-pill, .bang-chip, .editor-btn, .modal-nav-btn, .color-swatch-btn');
       if (target) {
         CyberAudio.playChirp();
       }
@@ -4425,419 +4416,137 @@
         CyberAudio.playBlade();
         return;
       }
-      const clickable = e.target.closest('.tool-pill, .bang-chip, .editor-btn, .modal-nav-btn, .color-swatch-btn, .radar-card');
+      const clickable = e.target.closest('.tool-pill, .bang-chip, .editor-btn, .modal-nav-btn, .color-swatch-btn');
       if (clickable) {
         CyberAudio.playClick();
       }
     }, { passive: true });
 
-    /* ─── SHINOBI MECHA FOCUS POMODORO CONTROLLER ─── */
+    /* ─── SHINOBI FOCUS & EVA TELEMETRY CORE CONTROLLER ─── */
     const FOCUS_MINUTES = 25;
     const BREAK_MINUTES = 5;
     const FOCUS_MS = FOCUS_MINUTES * 60 * 1000;
     const BREAK_MS = BREAK_MINUTES * 60 * 1000;
-
-    let pomodoroState = 'idle'; // 'idle' | 'running' | 'paused' | 'break'
-    let pomodoroEndTime = 0;
-    let pomodoroRemainingMs = FOCUS_MS;
-    let pomodoroTimer = null;
     const originalTitle = document.title || 'shinsekai';
+    let focusState = 'idle'; // 'idle' | 'running' | 'paused' | 'break'
+    let focusEndTime = 0;
+    let focusRemainingMs = FOCUS_MS;
+    let focusTimer = null;
 
-    function formatPomodoroTime(ms) {
+    function formatFocusTime(ms) {
       const totalSec = Math.max(0, Math.ceil(ms / 1000));
       const m = Math.floor(totalSec / 60);
       const s = totalSec % 60;
       return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
     }
 
-    function updatePomodoroUI() {
-      if (!pomodoroStatusText) return;
-      if (pomodoroState === 'idle') {
-        pomodoroStatusText.textContent = `修練: ${FOCUS_MINUTES}M`;
-        if (pomodoroStatusSub) pomodoroStatusSub.textContent = 'Focus';
-        if (pomodoroStatusIcon) pomodoroStatusIcon.textContent = '⏳';
-        if (pomodoroToggleBtn) {
-          pomodoroToggleBtn.classList.remove('running', 'break-mode');
-        }
-        if (combatGaugeCard) {
-          combatGaugeCard.classList.remove('focus-active', 'focus-break');
-        }
-        if (syncVal) syncVal.textContent = '99.8%';
-        if (gaugeFill) gaugeFill.style.width = '99.8%';
-        if (gaugeLabel) gaugeLabel.textContent = 'SYNC RATE // 特級 · GRADE 1';
+    function updateFocusUI() {
+      if (focusTimeDisplay) focusTimeDisplay.textContent = formatFocusTime(focusRemainingMs);
+      if (focusTargetSub) focusTargetSub.textContent = `TRAINING // ${FOCUS_MINUTES}M`;
+      if (focusModeBadge) {
+        focusModeBadge.textContent = focusState === 'break' ? 'BREAK' : (focusState === 'idle' ? 'STANDBY' : focusState.toUpperCase());
+      }
+      if (shinobiFocusDeck) {
+        shinobiFocusDeck.classList.toggle('focus-running', focusState === 'running');
+        shinobiFocusDeck.classList.toggle('focus-break', focusState === 'break');
+      }
+      const pct = Math.max(0, Math.min(100, (focusRemainingMs / FOCUS_MS) * 100));
+      const pctStr = pct.toFixed(1) + '%';
+      if (syncVal) syncVal.textContent = pctStr;
+      if (gaugeFill) gaugeFill.style.width = pctStr;
+      if (focusState === 'idle') {
         document.title = originalTitle;
-      } else if (pomodoroState === 'running' || pomodoroState === 'paused') {
-        const timeStr = formatPomodoroTime(pomodoroRemainingMs);
-        pomodoroStatusText.textContent = `${pomodoroState === 'paused' ? '一時停止' : '修練'}: ${timeStr}`;
-        if (pomodoroStatusSub) pomodoroStatusSub.textContent = pomodoroState === 'paused' ? 'PAUSED' : 'FOCUS';
-        if (pomodoroStatusIcon) pomodoroStatusIcon.textContent = '⚡';
-        if (pomodoroToggleBtn) {
-          pomodoroToggleBtn.classList.add('running');
-          pomodoroToggleBtn.classList.remove('break-mode');
-        }
-        if (combatGaugeCard) {
-          combatGaugeCard.classList.add('focus-active');
-          combatGaugeCard.classList.remove('focus-break');
-        }
-        const pct = Math.max(0, Math.min(100, (pomodoroRemainingMs / FOCUS_MS) * 100));
-        const pctStr = pct.toFixed(1) + '%';
-        if (syncVal) syncVal.textContent = pctStr;
-        if (gaugeFill) gaugeFill.style.width = pctStr;
-        if (gaugeLabel) gaugeLabel.textContent = `FOCUS SYNC // [${timeStr}]`;
-        document.title = `[${timeStr}] ${originalTitle}`;
-      } else if (pomodoroState === 'break') {
-        const timeStr = formatPomodoroTime(pomodoroRemainingMs);
-        pomodoroStatusText.textContent = `休憩: ${timeStr}`;
-        if (pomodoroStatusSub) pomodoroStatusSub.textContent = 'BREAK';
-        if (pomodoroStatusIcon) pomodoroStatusIcon.textContent = '🍵';
-        if (pomodoroToggleBtn) {
-          pomodoroToggleBtn.classList.remove('running');
-          pomodoroToggleBtn.classList.add('break-mode');
-        }
-        if (combatGaugeCard) {
-          combatGaugeCard.classList.remove('focus-active');
-          combatGaugeCard.classList.add('focus-break');
-        }
-        const pct = Math.max(0, Math.min(100, (pomodoroRemainingMs / BREAK_MS) * 100));
-        const pctStr = pct.toFixed(1) + '%';
-        if (syncVal) syncVal.textContent = pctStr;
-        if (gaugeFill) gaugeFill.style.width = pctStr;
-        if (gaugeLabel) gaugeLabel.textContent = `BREAK COOLDOWN // [${timeStr}]`;
-        document.title = `[☕ ${timeStr}] ${originalTitle}`;
+      } else if (focusState === 'break') {
+        document.title = `[☕ ${formatFocusTime(focusRemainingMs)}] ${originalTitle}`;
+      } else {
+        document.title = `[${formatFocusTime(focusRemainingMs)}] ${originalTitle}`;
       }
     }
 
-    function tickPomodoro() {
-      if (pomodoroState !== 'running' && pomodoroState !== 'break') return;
+    function tickFocus() {
+      if (focusState !== 'running' && focusState !== 'break') return;
       const now = Date.now();
-      pomodoroRemainingMs = Math.max(0, pomodoroEndTime - now);
+      focusRemainingMs = Math.max(0, focusEndTime - now);
 
-      if (pomodoroRemainingMs <= 0) {
-        clearInterval(pomodoroTimer);
-        pomodoroTimer = null;
-        if (pomodoroState === 'running') {
-          CyberAudio.playPomodoroAlarm();
+      if (focusRemainingMs <= 0) {
+        clearInterval(focusTimer);
+        focusTimer = null;
+        CyberAudio.playPomodoroAlarm();
+        if (focusState === 'running') {
           if (subSpeaker && subJp && subEn) {
             subSpeaker.textContent = 'SHINSEKAI // OS';
             if (subSpeakerEn) subSpeakerEn.textContent = 'Focus Master';
-            subJp.textContent = '「修練完了！集中目標を達成しました。5分間の冷却休息を開始します」';
-            subEn.textContent = 'Focus session complete! Stand down for 5-minute tactical cooldown.';
+            if (subJp) subJp.textContent = '「修練完了！集中目標を達成しました。5分間の冷却休息を開始します」';
+            if (subEn) subEn.textContent = 'Focus session complete! Stand down for 5-minute tactical cooldown.';
           }
-          pomodoroState = 'break';
-          pomodoroRemainingMs = BREAK_MS;
-          pomodoroEndTime = Date.now() + BREAK_MS;
-          pomodoroTimer = setInterval(tickPomodoro, 1000);
-          updatePomodoroUI();
+          focusState = 'break';
+          focusRemainingMs = BREAK_MS;
+          focusEndTime = Date.now() + BREAK_MS;
+          focusTimer = setInterval(tickFocus, 1000);
+          updateFocusUI();
         } else {
           CyberAudio.playPomodoroAlarm();
           if (subSpeaker && subJp && subEn) {
             subSpeaker.textContent = 'SHINSEKAI // OS';
             if (subSpeakerEn) subSpeakerEn.textContent = 'Mission Ready';
-            subJp.textContent = '「休息終了。機体全系統正常。いつでも次の修練へ移行可能です」';
-            subEn.textContent = 'Tactical break finished. All systems nominal. Ready for next mission.';
+            if (subJp) subJp.textContent = '「休息終了。機体全系統正常。いつでも次の修練へ移行可能です」';
+            if (subEn) subEn.textContent = 'Tactical break finished. All systems nominal. Ready for next mission.';
           }
-          resetPomodoro();
+          resetFocus();
         }
         return;
       }
-      updatePomodoroUI();
+      updateFocusUI();
     }
 
-    function startPomodoro() {
-      pomodoroState = 'running';
-      pomodoroEndTime = Date.now() + pomodoroRemainingMs;
-      clearInterval(pomodoroTimer);
-      pomodoroTimer = setInterval(tickPomodoro, 1000);
-      updatePomodoroUI();
+    function startFocus() {
+      focusState = 'running';
+      focusEndTime = Date.now() + focusRemainingMs;
+      clearInterval(focusTimer);
+      focusTimer = setInterval(tickFocus, 1000);
+      updateFocusUI();
       CyberAudio.playClick();
     }
 
-    function pausePomodoro() {
-      if (pomodoroTimer) {
-        clearInterval(pomodoroTimer);
-        pomodoroTimer = null;
+    function pauseFocus() {
+      if (focusTimer) {
+        clearInterval(focusTimer);
+        focusTimer = null;
       }
-      pomodoroState = 'paused';
-      updatePomodoroUI();
+      focusState = 'paused';
+      updateFocusUI();
       CyberAudio.playClick();
     }
 
-    function resetPomodoro() {
-      if (pomodoroTimer) {
-        clearInterval(pomodoroTimer);
-        pomodoroTimer = null;
+    function resetFocus() {
+      if (focusTimer) {
+        clearInterval(focusTimer);
+        focusTimer = null;
       }
-      pomodoroState = 'idle';
-      pomodoroRemainingMs = FOCUS_MS;
-      updatePomodoroUI();
+      focusState = 'idle';
+      focusRemainingMs = FOCUS_MS;
+      updateFocusUI();
       CyberAudio.playClick();
     }
 
-    function togglePomodoro() {
-      if (pomodoroState === 'idle') {
-        pomodoroRemainingMs = FOCUS_MS;
-        startPomodoro();
-      } else if (pomodoroState === 'running') {
-        pausePomodoro();
-      } else if (pomodoroState === 'paused') {
-        startPomodoro();
-      } else if (pomodoroState === 'break') {
-        resetPomodoro();
+    function toggleFocus() {
+      if (focusState === 'idle') {
+        focusRemainingMs = FOCUS_MS;
+        startFocus();
+      } else if (focusState === 'running') {
+        pauseFocus();
+      } else if (focusState === 'paused') {
+        startFocus();
+      } else if (focusState === 'break') {
+        resetFocus();
       }
     }
 
-    if (pomodoroToggleBtn) {
-      pomodoroToggleBtn.addEventListener('click', togglePomodoro);
-      pomodoroToggleBtn.addEventListener('contextmenu', (e) => {
-        e.preventDefault();
-        resetPomodoro();
-      });
+    if (focusToggleBtn) {
+      focusToggleBtn.addEventListener('click', toggleFocus);
     }
-
-    /* ─── SEASONAL ANIME RADAR (ANILIST TELEMETRY) ─── */
-    const RADAR_CACHE_KEY = 'shinsekai_radar_cache';
-    const RADAR_CACHE_TTL = 4 * 60 * 60 * 1000; // 4 hours
-
-    const OFFLINE_FALLBACK_ANIME = [
-      {
-        id: 171018,
-        title: { native: 'ダンダダン', romaji: 'Dandadan', english: 'DAN DA DAN' },
-        coverImage: { large: 'https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx171018-60q1B6GK2Ghb.jpg' },
-        averageScore: 83,
-        episodes: 12,
-        genres: ['Action', 'Comedy', 'Sci-Fi', 'Supernatural'],
-        siteUrl: 'https://anilist.co/anime/171018'
-      },
-      {
-        id: 101922,
-        title: { native: '鬼滅の刃', romaji: 'Kimetsu no Yaiba', english: 'Demon Slayer' },
-        coverImage: { large: 'https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx101922-PEn1CTDYxZao.png' },
-        averageScore: 84,
-        episodes: 26,
-        genres: ['Action', 'Fantasy', 'Supernatural'],
-        siteUrl: 'https://anilist.co/anime/101922'
-      },
-      {
-        id: 113415,
-        title: { native: '呪術廻戦', romaji: 'Jujutsu Kaisen', english: 'Jujutsu Kaisen' },
-        coverImage: { large: 'https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx113415-bbBWj4pEFseh.jpg' },
-        averageScore: 85,
-        episodes: 24,
-        genres: ['Action', 'Fantasy', 'Supernatural'],
-        siteUrl: 'https://anilist.co/anime/113415'
-      },
-      {
-        id: 154587,
-        title: { native: '葬送のフリーレン', romaji: 'Sousou no Frieren', english: "Frieren: Beyond Journey's End" },
-        coverImage: { large: 'https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx154587-nEpEbLugFQXCl.jpg' },
-        averageScore: 89,
-        episodes: 28,
-        genres: ['Adventure', 'Drama', 'Fantasy'],
-        siteUrl: 'https://anilist.co/anime/154587'
-      },
-      {
-        id: 151807,
-        title: { native: '俺だけレベルアップな件', romaji: 'Ore dake Level Up na Ken', english: 'Solo Leveling' },
-        coverImage: { large: 'https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx151807-m1gmV8C2aE9A.jpg' },
-        averageScore: 82,
-        episodes: 12,
-        genres: ['Action', 'Adventure', 'Fantasy'],
-        siteUrl: 'https://anilist.co/anime/151807'
-      },
-      {
-        id: 127230,
-        title: { native: 'チェンソーマン', romaji: 'Chainsaw Man', english: 'Chainsaw Man' },
-        coverImage: { large: 'https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx127230-FloXN56NOJlh.png' },
-        averageScore: 84,
-        episodes: 12,
-        genres: ['Action', 'Supernatural'],
-        siteUrl: 'https://anilist.co/anime/127230'
-      },
-      {
-        id: 140357,
-        title: { native: 'サイバーパンク エッジランナーズ', romaji: 'Cyberpunk: Edgerunners', english: 'Cyberpunk: Edgerunners' },
-        coverImage: { large: 'https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx140357-r4Z3JekS53iA.jpg' },
-        averageScore: 86,
-        episodes: 10,
-        genres: ['Action', 'Sci-Fi'],
-        siteUrl: 'https://anilist.co/anime/140357'
-      },
-      {
-        id: 145064,
-        title: { native: 'BLEACH 千年血戦篇', romaji: 'Bleach: Sennen Kessen-hen', english: 'Bleach: Thousand-Year Blood War' },
-        coverImage: { large: 'https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx145064-aL30l7hN5p6y.jpg' },
-        averageScore: 87,
-        episodes: 13,
-        genres: ['Action', 'Adventure', 'Supernatural'],
-        siteUrl: 'https://anilist.co/anime/145064'
-      }
-    ];
-
-    function getCurrentSeasonInfo() {
-      const now = new Date();
-      const month = now.getMonth();
-      const year = now.getFullYear();
-      let season = 'FALL';
-      if (month <= 2) season = 'WINTER';
-      else if (month <= 5) season = 'SPRING';
-      else if (month <= 8) season = 'SUMMER';
-      return { season, year };
-    }
-
-    function renderRadarGrid(animeList, seasonLabel) {
-      if (!radarGrid) return;
-      if (radarSeasonBadge) {
-        radarSeasonBadge.textContent = `📡 ANILIST RADAR // ${seasonLabel.toUpperCase()} · [${animeList.length} TITLES DETECTED]`;
-      }
-      radarGrid.innerHTML = animeList.map(anime => {
-        const titleNative = escapeHtml(anime.title?.native || anime.title?.romaji || 'Unknown Anime');
-        const titleSub = escapeHtml(anime.title?.english || anime.title?.romaji || '');
-        const score = anime.averageScore ? `★ ${anime.averageScore}%` : '★ NEW';
-        const epText = anime.episodes ? `EP.${anime.episodes}` : 'AIRING';
-        const cover = anime.coverImage?.large || '';
-        const link = escapeHtml(anime.siteUrl || `https://anilist.co/search/anime?search=${encodeURIComponent(titleNative)}`);
-        const genres = (anime.genres || []).slice(0, 3).map(g => `<span class="radar-genre-tag">${escapeHtml(g)}</span>`).join('');
-
-        return `
-          <a href="${link}" target="_blank" rel="noopener noreferrer" class="radar-card" title="${titleNative} - AniList">
-            <div class="radar-cover-wrap">
-              ${cover ? `<img src="${escapeHtml(cover)}" alt="${titleNative}" class="radar-cover-img" loading="lazy" onerror="this.style.display='none'">` : ''}
-              <div class="radar-cover-gradient"></div>
-              <span class="radar-score-badge">${score}</span>
-              <span class="radar-ep-badge">${epText}</span>
-            </div>
-            <div class="radar-info">
-              <span class="radar-title-jp">${titleNative}</span>
-              ${titleSub ? `<span class="radar-title-en">${titleSub}</span>` : ''}
-              <div class="radar-genres">${genres}</div>
-            </div>
-          </a>
-        `;
-      }).join('');
-    }
-
-    async function loadSeasonalRadar(forceRefresh = false) {
-      if (!radarGrid) return;
-
-      const { season, year } = getCurrentSeasonInfo();
-      const seasonLabel = `${season} ${year}`;
-
-      if (!forceRefresh) {
-        const cachedRaw = safeStorage.getItem(RADAR_CACHE_KEY);
-        if (cachedRaw) {
-          try {
-            const cached = JSON.parse(cachedRaw);
-            if (cached && cached.timestamp && (Date.now() - cached.timestamp < RADAR_CACHE_TTL) && cached.animeList && cached.animeList.length) {
-              renderRadarGrid(cached.animeList, cached.seasonLabel || seasonLabel);
-              return;
-            }
-          } catch (e) {}
-        }
-      }
-
-      radarGrid.innerHTML = `
-        <div class="radar-loading">
-          <div class="radar-spinner"></div>
-          <span>📡 衛星通信中 · TUNING ANILIST SATELLITE TELEMETRY...</span>
-        </div>
-      `;
-
-      const query = `
-        query ($season: MediaSeason, $seasonYear: Int) {
-          Page(page: 1, perPage: 16) {
-            media(season: $season, seasonYear: $seasonYear, type: ANIME, sort: [POPULARITY_DESC]) {
-              id
-              title { romaji english native }
-              coverImage { large }
-              episodes
-              status
-              averageScore
-              genres
-              siteUrl
-            }
-          }
-        }
-      `;
-
-      try {
-        const resp = await fetch('https://graphql.anilist.co', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          body: JSON.stringify({
-            query,
-            variables: { season, seasonYear: year }
-          })
-        });
-
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-        const result = await resp.json();
-        let list = result?.data?.Page?.media || [];
-
-        if (!list.length) {
-          const fallbackResp = await fetch('https://graphql.anilist.co', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-            body: JSON.stringify({
-              query: `query { Page(page: 1, perPage: 16) { media(type: ANIME, sort: [TRENDING_DESC, POPULARITY_DESC]) { id title { romaji english native } coverImage { large } episodes status averageScore genres siteUrl } } }`
-            })
-          });
-          const fallbackJson = await fallbackResp.json();
-          list = fallbackJson?.data?.Page?.media || [];
-        }
-
-        if (!list.length) throw new Error('No media returned');
-
-        safeStorage.setItem(RADAR_CACHE_KEY, JSON.stringify({
-          timestamp: Date.now(),
-          seasonLabel,
-          animeList: list
-        }));
-
-        renderRadarGrid(list, seasonLabel);
-      } catch (err) {
-        renderRadarGrid(OFFLINE_FALLBACK_ANIME, 'CURATED SATELLITE (OFFLINE CACHE)');
-        if (radarSeasonBadge) {
-          radarSeasonBadge.textContent = '📡 ANILIST RADAR // OFFLINE CACHE ENGAGED';
-        }
-      }
-    }
-
-    function openRadarModal() {
-      if (!radarModal) return;
-      if (shortcutsModal && shortcutsModal.classList.contains('open')) closeShortcutsModal();
-      if (linkEditorModal && linkEditorModal.classList.contains('open')) closeLinkEditor();
-      if (operatorModal && operatorModal.classList.contains('open')) closeOperatorModal();
-      radarModal.classList.add('open');
-      radarModal.setAttribute('aria-hidden', 'false');
-      pauseAllEngines();
-      CyberAudio.playBlade();
-      loadSeasonalRadar();
-    }
-
-    function closeRadarModal() {
-      if (!radarModal) return;
-      radarModal.classList.remove('open');
-      radarModal.setAttribute('aria-hidden', 'true');
-      resumeAllEngines();
-      CyberAudio.playClick();
-    }
-
-    if (radarToggleBtn) radarToggleBtn.addEventListener('click', openRadarModal);
-    if (radarCloseBtn) radarCloseBtn.addEventListener('click', closeRadarModal);
-    if (radarDoneBtn) radarDoneBtn.addEventListener('click', closeRadarModal);
-    if (radarRefreshBtn) {
-      radarRefreshBtn.addEventListener('click', () => {
-        CyberAudio.playClick();
-        loadSeasonalRadar(true);
-      });
-    }
-    if (radarModal) {
-      radarModal.addEventListener('click', (e) => {
-        if (e.target === radarModal) closeRadarModal();
-      });
+    if (focusResetBtn) {
+      focusResetBtn.addEventListener('click', resetFocus);
     }
 
     /* ─── 9. COMMAND SEARCH BAR & BANG LOGIC ─── */
@@ -4845,7 +4554,6 @@
       google: 'https://www.google.com/search?q=',
       duckduckgo: 'https://duckduckgo.com/?q=',
       youtube: 'https://www.youtube.com/results?search_query=',
-      anilist: 'https://anilist.co/search/anime?search=',
       github: 'https://github.com/search?q=',
       reddit: 'https://www.reddit.com/search/?q=',
       wikipedia: 'https://en.wikipedia.org/wiki/Special:Search?search='
@@ -4911,9 +4619,6 @@
           } else if (lowerQuery === '!y' || lowerQuery.startsWith('!y ')) {
             const term = query.slice(2).trim();
             window.location.href = term ? searchEngines.youtube + encodeURIComponent(term) : 'https://www.youtube.com';
-          } else if (lowerQuery === '!a' || lowerQuery.startsWith('!a ')) {
-            const term = query.slice(2).trim();
-            window.location.href = term ? searchEngines.anilist + encodeURIComponent(term) : 'https://anilist.co';
           } else if (lowerQuery === '!r' || lowerQuery.startsWith('!r ')) {
             const term = query.slice(2).trim();
             window.location.href = term ? searchEngines.reddit + encodeURIComponent(term) : 'https://www.reddit.com';
@@ -5141,9 +4846,6 @@
           if (shortcutsModal && shortcutsModal.classList.contains('open')) {
             closeShortcutsModal();
           }
-          if (radarModal && radarModal.classList.contains('open')) {
-            closeRadarModal();
-          }
           if (operatorModal && operatorModal.classList.contains('open')) {
             closeOperatorModal();
           }
@@ -5175,7 +4877,7 @@
         cycleQuote();
       } else if (key === 'g') {
         setGrain(!grainActive);
-      } else if (key === 'b' || key === 'a') {
+      } else if (key === 'b') {
         setParticles(!particlesActive);
       } else if (key === 'p') {
         setDockPinned(!dockPinned);
@@ -5190,7 +4892,7 @@
       } else if (key === 'm') {
         toggleCyberSfx();
       } else if (key === 'x') {
-        togglePomodoro();
+        toggleFocus();
       } else if (e.key === '?' || (e.shiftKey && e.key === '/')) {
         e.preventDefault();
         if (shortcutsModal && shortcutsModal.classList.contains('open')) {
@@ -5201,10 +4903,6 @@
       } else if (e.key === 'Escape') {
         if (shortcutsModal && shortcutsModal.classList.contains('open')) {
           closeShortcutsModal();
-          return;
-        }
-        if (radarModal && radarModal.classList.contains('open')) {
-          closeRadarModal();
           return;
         }
         if (operatorModal && operatorModal.classList.contains('open')) {

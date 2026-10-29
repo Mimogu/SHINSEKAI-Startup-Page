@@ -99,7 +99,7 @@ Beside the 5 classic faction presets, Shinsekai includes an in-cockpit **Anime S
 ### ⚔️ 5. Anime Episode Header & Chronometer HUD
 - **Dynamic Episode Title Card**: Displays episode title, arc tag, and act number that organically shifts across 4 time-of-day blocks (e.g. *第壱話 · 黎明の覚醒* in the morning, *第廿四話 · 黎明の咆哮* in the evening).
 - **Imperial Japanese Era Clock**: Synchronizes system time with true Japanese kanji era formatting (*令和八年 九月 火曜日*).
-- **Combat Power Sync Rate**: Live tactical combat gauge locked at *特級 · SPECIAL GRADE // 99.8%*.
+- **Shinobi Focus & EVA Telemetry Core**: Prominent cockpit focus deck with large digital countdown digits, live EVA sync rate (*特級 · GRADE 1 // 99.8%* tracking focus completion), segmented progress track, and direct <kbd>ENGAGE</kbd> / <kbd>R</kbd> action buttons.
 
 ---
 
@@ -110,7 +110,7 @@ Beside the 5 classic faction presets, Shinsekai includes an in-cockpit **Anime S
 ---
 
 ### 🗡️ 7. Katana Command Console & Hologram Drawer
-- Press <kbd>/</kbd> to activate the frosted **Katana Search Console** with direct URL navigation and quick bang queries (`!g`, `!y`, `!a`, `!gh`, `!r`, `!d`, `!w`).
+- Press <kbd>/</kbd> to activate the frosted **Katana Search Console** with direct URL navigation and quick bang queries (`!g`, `!y`, `!gh`, `!r`, `!d`, `!w`).
 - **Dynamic Holographic Blade Launcher**: Hover over categorized tab blades to deploy bookmarked sectors (*01 Anime*, *02 Gaming*, *03 Dev Core*, *04 Media*).
 - **In-Browser Bookmark Editor**: Press <kbd>e</kbd> to customize, add, remove, export, and import bookmarks visually with custom Japanese kanji seals.
 
@@ -128,20 +128,14 @@ Beside the 5 classic faction presets, Shinsekai includes an in-cockpit **Anime S
 
 ---
 
-### ⏳ 10. Shinobi Focus Pomodoro & Real-Time Telemetry Sync
-- **Interactive Focus Engine**: 25-minute tactical training cycles (<kbd>x</kbd>) with 5-minute cooldown break periods.
-- **Live Combat Sync Rate**: Cockpit header gauge dynamically links to your focus progression, tracking real-time completion percentage and tab title countdowns (`[24:59] shinsekai`).
+### ⏳ 10. Shinobi Focus & EVA Telemetry Core (25-Min Training Cycle)
+- **Interactive Focus Engine**: 25-minute tactical training cycles (<kbd>x</kbd> or <kbd>ENGAGE</kbd>) with 5-minute cooldown break periods.
+- **Prominent EVA Telemetry Display**: Large mono-digit countdown (`25:00`), live sync rate percentage tracking focus completion, segmented progress track, and direct <kbd>ENGAGE</kbd> / <kbd>R</kbd> action buttons in the top-right cockpit deck.
 - **Ground-Truth Drift Protection**: Real-time timestamp delta math ensures zero timer drift even across background tabs or system sleep.
 
 ---
 
-### 📡 11. Seasonal Anime Telemetry Radar (Live AniList GraphQL)
-- **Direct AniList Sat-Link**: Instant telemetry scan tracking top airing anime for the current season, complete with episode status, popularity ratings, and genre tags.
-- **Smart 4-Hour Cache & Offline Shield**: Intelligent local caching prevents unnecessary network requests and provides an automatic offline fallback catalogue if disconnected.
-
----
-
-### 🎯 12. Kiroshi Optical Target Reticles & Mecha Chamfers
+### 🎯 11. Kiroshi Optical Target Reticles & Mecha Chamfers
 - **Cyberpunk Cockpit Aesthetic**: Dynamic optical target brackets on bookmark tiles that illuminate on cursor lock-on.
 - **Chamfered Cockpit Telemetry**: Tactical notch bevels and luminous corner brackets framing the header combat gauge and search capsule.
 
@@ -334,7 +328,6 @@ Type any shortcut into the Katana search capsule followed by your query:
 |:---:|:---|:---|
 | `!g` | Google Search | `!g mechanical keyboard reviews` |
 | `!y` | YouTube Video | `!y anime lofi hip hop mix` |
-| `!a` | AniList Database | `!a jujutsu kaisen season 3` |
 | `!gh` | GitHub Code | `!gh cachyos linux` |
 | `!r` | Reddit Community | `!r unixporn` |
 | `!d` | DuckDuckGo Privacy | `!d neovim lua setup` |

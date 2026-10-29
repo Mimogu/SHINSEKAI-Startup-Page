@@ -256,13 +256,43 @@
 
       <!-- Right: Mission HUD & Cyber Controls -->
       <div class="hud-controls-deck">
-        <div class="combat-gauge-card">
-          <div class="gauge-meta">
-            <span class="gauge-label">SYNC RATE // 特級 · GRADE 1</span>
-            <span class="gauge-val" id="sync-val">99.8%</span>
+        <div class="shinobi-focus-deck" id="shinobi-focus-deck">
+          <div class="focus-telemetry-header">
+            <div class="focus-title-wrap">
+              <span class="focus-status-dot" id="focus-status-dot"></span>
+              <span class="focus-hud-tag">SHINOBI // EVA_SYNC</span>
+            </div>
+            <span class="focus-mode-badge" id="focus-mode-badge">STANDBY</span>
           </div>
-          <div class="gauge-track">
+
+          <div class="focus-digital-row">
+            <div class="focus-digits-box">
+              <span class="focus-digits" id="focus-time-display">25:00</span>
+              <span class="focus-target-sub" id="focus-target-sub">25M TRAINING</span>
+            </div>
+            <div class="focus-sync-box">
+              <div class="focus-sync-line">
+                <span class="focus-sync-label">SYNC RATE</span>
+                <span class="focus-sync-val" id="sync-val">99.8%</span>
+              </div>
+              <span class="focus-grade-tag">特級 · GRADE 1</span>
+            </div>
+          </div>
+
+          <div class="gauge-track focus-gauge-track">
             <div class="gauge-fill" id="gauge-fill"></div>
+          </div>
+
+          <div class="focus-actions-row">
+            <button type="button" class="focus-cmd-btn focus-cmd-primary" id="focus-toggle-btn" title="修練開始・一時停止 (Hotkey: 'x')">
+              <span class="focus-cmd-icon" id="focus-cmd-icon">▶</span>
+              <span class="focus-cmd-text" id="focus-cmd-text">ENGAGE</span>
+              <kbd class="focus-kbd">x</kbd>
+            </button>
+            <button type="button" class="focus-cmd-btn focus-cmd-secondary" id="focus-reset-btn" title="リセット / Reset">
+              <span class="focus-cmd-icon">↺</span>
+              <span class="focus-cmd-text">RESET</span>
+            </button>
           </div>
         </div>
 
@@ -581,23 +611,7 @@
               <span class="tool-icon" id="sfx-status-icon">🔊</span>
               <div class="tool-label-stack">
                 <span class="tool-label-main" id="sfx-status-text">音響: ON</span>
-                <span class="tool-label-sub">Synth SFX</span>
-              </div>
-            </button>
-
-            <button class="tool-pill" id="pomodoro-toggle-btn" title="修練・集中時間計測 / Shinobi Focus Pomodoro (Hotkey: 'x')">
-              <span class="tool-icon" id="pomodoro-status-icon">⏳</span>
-              <div class="tool-label-stack">
-                <span class="tool-label-main" id="pomodoro-status-text">修練: 25M</span>
-                <span class="tool-label-sub" id="pomodoro-status-sub">Focus</span>
-              </div>
-            </button>
-
-            <button class="tool-pill" id="radar-toggle-btn" title="最新アニメ放送レーダー / Seasonal Anime Radar">
-              <span class="tool-icon">📡</span>
-              <div class="tool-label-stack">
-                <span class="tool-label-main">アニメ探知</span>
-                <span class="tool-label-sub">Radar</span>
+                <span class="tool-label-sub">Audio</span>
               </div>
             </button>
           </div>
@@ -628,7 +642,6 @@
       <div class="bangs-container">
         <button class="bang-chip" data-bang="!g"><span class="b-key">!g</span> Google</button>
         <button class="bang-chip" data-bang="!y"><span class="b-key">!y</span> YouTube</button>
-        <button class="bang-chip" data-bang="!a"><span class="b-key">!a</span> AniList</button>
         <button class="bang-chip" data-bang="!gh"><span class="b-key">!gh</span> GitHub</button>
         <button class="bang-chip" data-bang="!r"><span class="b-key">!r</span> Reddit</button>
         <button class="bang-chip" data-bang="!d"><span class="b-key">!d</span> DuckDuck</button>
@@ -1017,36 +1030,6 @@
       </div>
       <div class="editor-footer" style="padding: 0.8rem 1.4rem; justify-content: flex-end;">
         <button type="button" class="editor-btn editor-btn-primary" id="shortcuts-done-btn">
-          ✕ 閉じる / CLOSE
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 8. SEASONAL ANIME RADAR MODAL -->
-  <div class="link-editor-backdrop" id="radar-modal" aria-hidden="true">
-    <div class="link-editor-dialog radar-dialog" style="max-width: 820px;">
-      <div class="editor-header">
-        <div class="editor-header-left">
-          <span class="editor-pill">ANILIST_API // TELEMETRY_RADAR</span>
-          <h2 class="editor-title">最新アニメ探知レーダー · Seasonal Anime Radar</h2>
-        </div>
-        <button class="editor-close-btn" id="radar-close-btn" title="閉じる (Esc)">✕</button>
-      </div>
-      <div class="radar-modal-body" style="padding: 1.2rem 1.5rem; max-height: 70vh; overflow-y: auto;">
-        <div class="radar-status-bar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.6rem; border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
-          <span class="radar-season-badge" id="radar-season-badge" style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--accent); font-weight: 700;">📡 SCANNING ANILIST SATELLITE...</span>
-          <button type="button" class="editor-btn editor-btn-secondary" id="radar-refresh-btn" style="padding: 0.3rem 0.8rem; font-size: 0.75rem;">
-            🔄 再探知 / REFRESH
-          </button>
-        </div>
-        <div class="radar-grid" id="radar-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem;">
-          <!-- Dynamically populated or offline fallback -->
-        </div>
-      </div>
-      <div class="editor-footer" style="padding: 0.8rem 1.4rem; justify-content: space-between; align-items: center;">
-        <span style="font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-muted);">SOURCE: ANILIST GRAPHQL / ZERO TRACKING</span>
-        <button type="button" class="editor-btn editor-btn-primary" id="radar-done-btn">
           ✕ 閉じる / CLOSE
         </button>
       </div>
