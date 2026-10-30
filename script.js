@@ -4423,10 +4423,10 @@
     }, { passive: true });
 
     /* ─── SHINOBI FOCUS & EVA TELEMETRY CORE CONTROLLER ─── */
-    const FOCUS_MINUTES = 25;
-    const BREAK_MINUTES = 5;
-    const FOCUS_MS = FOCUS_MINUTES * 60 * 1000;
-    const BREAK_MS = BREAK_MINUTES * 60 * 1000;
+    let currentFocusMinutes = parseInt(safeStorage.getItem('shinsekai_focus_minutes'), 10) || 25;
+    let currentBreakMinutes = parseInt(safeStorage.getItem('shinsekai_break_minutes'), 10) || 5;
+    let FOCUS_MS = currentFocusMinutes * 60 * 1000;
+    let BREAK_MS = currentBreakMinutes * 60 * 1000;
     const originalTitle = document.title || 'shinsekai';
     let focusState = 'idle'; // 'idle' | 'running' | 'paused' | 'break'
     let focusEndTime = 0;
@@ -4442,7 +4442,7 @@
 
     function updateFocusUI() {
       if (focusTimeDisplay) focusTimeDisplay.textContent = formatFocusTime(focusRemainingMs);
-      if (focusTargetSub) focusTargetSub.textContent = `TRAINING // ${FOCUS_MINUTES}M`;
+      if (focusTargetSub) focusTargetSub.textContent = `${focusState === 'break' ? currentBreakMinutes : currentFocusMinutes}M ${focusState === 'break' ? 'COOLDOWN' : 'TRAINING'}`;
       if (focusModeBadge) {
         focusModeBadge.textContent = focusState === 'break' ? 'BREAK' : (focusState === 'idle' ? 'STANDBY' : focusState.toUpperCase());
       }
@@ -4450,7 +4450,8 @@
         shinobiFocusDeck.classList.toggle('focus-running', focusState === 'running');
         shinobiFocusDeck.classList.toggle('focus-break', focusState === 'break');
       }
-      const pct = Math.max(0, Math.min(100, (focusRemainingMs / FOCUS_MS) * 100));
+      const totalPeriodMs = focusState === 'break' ? BREAK_MS : FOCUS_MS;
+      const pct = Math.max(0, Math.min(100, (focusRemainingMs / totalPeriodMs) * 100));
       const pctStr = pct.toFixed(1) + '%';
       if (syncVal) syncVal.textContent = pctStr;
       if (gaugeFill) gaugeFill.style.width = pctStr;
@@ -4476,8 +4477,8 @@
           if (subSpeaker && subJp && subEn) {
             subSpeaker.textContent = 'SHINSEKAI // OS';
             if (subSpeakerEn) subSpeakerEn.textContent = 'Focus Master';
-            if (subJp) subJp.textContent = '「修練完了！集中目標を達成しました。5分間の冷却休息を開始します」';
-            if (subEn) subEn.textContent = 'Focus session complete! Stand down for 5-minute tactical cooldown.';
+            if (subJp) subJp.textContent = '「修練完了！集中目標を達成しました。冷却休息を開始します」';
+            if (subEn) subEn.textContent = 'Focus session complete! Stand down for tactical cooldown.';
           }
           focusState = 'break';
           focusRemainingMs = BREAK_MS;
@@ -4542,12 +4543,46 @@
       }
     }
 
+    function configureFocusTimer() {
+      const input = prompt('Enter focus training duration in minutes (1 - 180):', currentFocusMinutes);
+      if (input === null) return;
+      const mins = parseInt(input, 10);
+      if (isNaN(mins) || mins <= 0 || mins > 180) return;
+      currentFocusMinutes = mins;
+      safeStorage.setItem('shinsekai_focus_minutes', currentFocusMinutes);
+      FOCUS_MS = currentFocusMinutes * 60 * 1000;
+
+      const breakInput = prompt('Enter cooldown break duration in minutes (1 - 60):', currentBreakMinutes);
+      if (breakInput !== null) {
+        const bMins = parseInt(breakInput, 10);
+        if (!isNaN(bMins) && bMins > 0 && bMins <= 60) {
+          currentBreakMinutes = bMins;
+          safeStorage.setItem('shinsekai_break_minutes', currentBreakMinutes);
+          BREAK_MS = currentBreakMinutes * 60 * 1000;
+        }
+      }
+
+      if (focusState === 'idle') {
+        focusRemainingMs = FOCUS_MS;
+      }
+      updateFocusUI();
+      CyberAudio.playClick();
+    }
+
     if (focusToggleBtn) {
       focusToggleBtn.addEventListener('click', toggleFocus);
     }
     if (focusResetBtn) {
       focusResetBtn.addEventListener('click', resetFocus);
     }
+    if (shinobiFocusDeck) {
+      shinobiFocusDeck.addEventListener('dblclick', configureFocusTimer);
+      shinobiFocusDeck.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        configureFocusTimer();
+      });
+    }
+    updateFocusUI();
 
     /* ─── 9. COMMAND SEARCH BAR & BANG LOGIC ─── */
     const searchEngines = {
