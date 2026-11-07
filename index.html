@@ -2,114 +2,24 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>shinsekai</title>
   <meta name="description" content="新世界 · SHINSEKAI - Anime Cinematic OS Startup Page" />
   <meta name="theme-color" content="#0d080e" />
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚔️</text></svg>" />
-  <link rel="stylesheet" href="style.css?v=2.6" />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preconnect" href="https://www.google.com">
-  <link rel="preconnect" href="https://icon.horse">
-  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Plus+Jakarta+Sans:wght@600;800&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Plus+Jakarta+Sans:wght@600;800&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap"></noscript>
-  <script src="theme-core.js?v=2.6"></script>
-  <!-- Early Zero-Latency Theme & Profile Sync -->
-  <script>
-    (function() {
-      try {
-        document.title = 'shinsekai';
-        var params = (typeof window !== 'undefined' && window.location) ? new URLSearchParams(window.location.search) : null;
-        var t = (params && params.get('theme')) || localStorage.getItem('shinsekai-theme') || 'crimson';
-        var s = (params && params.get('scene')) || localStorage.getItem('shinsekai-scene') || 'crimson';
-        var tier = (params && params.get('tier')) || localStorage.getItem('shinsekai-tier') || 'mid';
-        if (s === 'eyes' || s === 'rengoku' || s === 'sukuna') s = 'crimson';
-        if (s === 'gojo') s = 'tokyonight';
-        if (s === 'sasuke') s = 'catppuccin';
-        document.documentElement.setAttribute('data-theme', t);
-        document.documentElement.setAttribute('data-scene', s);
-        document.documentElement.setAttribute('data-tier', tier);
-
-        // Adaptive visual cost (see FX_LEVELS in script.js): Firefox defaults to 'lite'.
-        var fx = (params && params.get('fx')) || localStorage.getItem('shinsekai-fx');
-        if (fx !== 'full' && fx !== 'lite' && fx !== 'min') {
-          fx = (window.CSS && CSS.supports && CSS.supports('-moz-appearance', 'none')) ? 'lite' : 'full';
-        }
-        document.documentElement.setAttribute('data-fx', fx);
-
-        var THEME_BASE_COLORS = {
-          tokyonight: '#0b0f19',
-          crimson: '#0d080e',
-          sakura: '#140d18',
-          catppuccin: '#11111b',
-          cyberpunk: '#040710',
-          custom: '#080c14'
-        };
-        var metaThemeColor = document.querySelector('meta[name="theme-color"]');
-        if (!metaThemeColor) {
-          metaThemeColor = document.createElement('meta');
-          metaThemeColor.setAttribute('name', 'theme-color');
-          document.head.appendChild(metaThemeColor);
-        }
-        metaThemeColor.setAttribute('content', THEME_BASE_COLORS[t] || THEME_BASE_COLORS.crimson);
-
-        if (t === 'custom' && window.SHINSEKAI_deriveThemeVars) {
-          var c = (params && (params.get('color') || params.get('hex'))) || localStorage.getItem('shinsekai-custom-theme-color') || '#a6e3a1';
-          var v = window.SHINSEKAI_deriveThemeVars(c);
-          metaThemeColor.setAttribute('content', v.themeBase);
-          var root = document.documentElement;
-          root.style.setProperty('--theme-base', v.themeBase, 'important');
-          root.style.setProperty('--accent', v.accent, 'important');
-          root.style.setProperty('--accent-glow', v.accentGlow, 'important');
-          root.style.setProperty('--accent-soft', v.accentSoft, 'important');
-          root.style.setProperty('--accent-alt', v.accentAlt, 'important');
-          root.style.setProperty('--accent-cyan', v.accentCyan, 'important');
-          root.style.setProperty('--glass-bg', v.glassBg, 'important');
-          root.style.setProperty('--glass-border', v.glassBorder, 'important');
-          root.style.setProperty('--glass-border-hover', v.glassBorderHover, 'important');
-          root.style.setProperty('--particle-color', v.particleColor, 'important');
-          root.style.setProperty('--text-main', v.textMain, 'important');
-          root.style.setProperty('--text-bright', v.textBright, 'important');
-          root.style.setProperty('--text-muted', v.textMuted, 'important');
-
-          var earlyStyle = document.createElement('style');
-          earlyStyle.id = 'shinsekai-custom-theme-vars';
-          earlyStyle.textContent = ':root[data-theme="custom"],html[data-theme="custom"],body[data-theme="custom"],[data-theme="custom"]{' +
-            '--theme-base:' + v.themeBase + ' !important;' +
-            '--accent:' + v.accent + ' !important;' +
-            '--accent-glow:' + v.accentGlow + ' !important;' +
-            '--accent-soft:' + v.accentSoft + ' !important;' +
-            '--accent-alt:' + v.accentAlt + ' !important;' +
-            '--accent-cyan:' + v.accentCyan + ' !important;' +
-            '--glass-bg:' + v.glassBg + ' !important;' +
-            '--glass-border:' + v.glassBorder + ' !important;' +
-            '--glass-border-hover:' + v.glassBorderHover + ' !important;' +
-            '--particle-color:' + v.particleColor + ' !important;' +
-            '--text-main:' + v.textMain + ' !important;' +
-            '--text-bright:' + v.textBright + ' !important;' +
-            '--text-muted:' + v.textMuted + ' !important;' +
-          '}';
-          document.head.appendChild(earlyStyle);
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-          if (document.body) {
-            if (!document.body.getAttribute('data-theme')) document.body.setAttribute('data-theme', t);
-            if (!document.body.getAttribute('data-scene')) document.body.setAttribute('data-scene', s);
-            if (!document.body.getAttribute('data-tier')) document.body.setAttribute('data-tier', tier);
-            if (!document.body.getAttribute('data-fx')) document.body.setAttribute('data-fx', fx);
-          }
-        });
-
-        var u = (params && (params.get('user') || params.get('operator'))) || localStorage.getItem('shinsekai-operator-name') || 'MIMOGU';
-        var h = localStorage.getItem('shinsekai-operator-honorific');
-        if (h === null) h = '-SAMA';
-        var formatted = (h && h !== 'none') ? (h.startsWith('-') || h.startsWith(' ') || h.startsWith('・') ? (u + h) : (u + '-' + h)) : u;
-        window.__SHINSEKAI_OPERATOR__ = { name: u, honorific: h, formatted: formatted };
-      } catch(e) {}
-    })();
-  </script>
+  <link rel="icon" type="image/png" sizes="64x64" href="assets/app/favicon-64.png" />
+  <link rel="apple-touch-icon" href="assets/app/apple-touch-icon.png" />
+  <link rel="manifest" href="app.webmanifest" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="SHINSEKAI" />
+  <meta name="color-scheme" content="dark" />
+  <link rel="preload" href="assets/fonts/zen-kaku-gothic-new-900.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/jetbrains-mono-var.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="style.css?v=2.8" />
+  <script src="theme-core.js?v=2.8"></script>
+  <!-- Early zero-latency theme & profile sync (external file: MV3 extension pages block inline scripts) -->
+  <script src="boot.js?v=2.8"></script>
 </head>
 <body class="booting" data-grain="on">
 
@@ -132,13 +42,6 @@
         </div>
         <div class="boot-meta-row">
           <span class="boot-log-text" id="boot-log">INIT_CORE: MIMOGU-SAMA AUTHENTICATED</span>
-          <script>
-            try {
-              if (window.__SHINSEKAI_OPERATOR__ && window.__SHINSEKAI_OPERATOR__.formatted) {
-                document.getElementById('boot-log').textContent = 'INIT_CORE: ' + window.__SHINSEKAI_OPERATOR__.formatted + ' AUTHENTICATED';
-              }
-            } catch(e) {}
-          </script>
           <span class="boot-pct" id="boot-pct">0%</span>
         </div>
       </div>
@@ -167,48 +70,7 @@
       decoding="async"
       loading="eager"
     />
-    <script>
-    (function() {
-      try {
-        var validScenes = { crimson: 1, tokyonight: 1, sakura: 1, catppuccin: 1, cyberpunk: 1 };
-        var stored = null, storedUltra = null, storedMode = null;
-        try {
-          stored = localStorage.getItem('shinsekai-scene');
-          storedUltra = localStorage.getItem('shinsekai-ultra');
-          storedMode = localStorage.getItem('shinsekai-wallpaper-mode');
-        } catch (e) {}
-        var params = new URLSearchParams(location.search);
-        var scene = params.get('scene') || stored || 'crimson';
-        var isUltra = (params && (params.get('ultra') === '1' || params.get('hd') === '1')) || (storedUltra === 'true');
-        var mode = params.get('mode') || storedMode || 'live';
-        var aliases = { eyes: 'crimson', gojo: 'tokyonight', sasuke: 'catppuccin', rengoku: 'crimson', sukuna: 'crimson' };
-        scene = aliases[scene] || scene;
-        if (mode === 'static') {
-          document.body.setAttribute('data-wallpaper-mode', 'static');
-          var customUrl = null, customThumb = null;
-          try {
-            customUrl = localStorage.getItem('shinsekai-custom-wallpaper-url');
-            customThumb = localStorage.getItem('shinsekai-custom-wallpaper-thumb');
-          } catch(e) {}
-          var staticSrc = customUrl || customThumb || ('assets/previews/' + (validScenes[scene] ? scene : 'crimson') + '.png');
-          var staticEl = document.getElementById('bg-static');
-          if (staticEl) staticEl.src = staticSrc;
-        } else if (validScenes[scene]) {
-          document.body.setAttribute('data-wallpaper-mode', 'live');
-          var basePath = isUltra ? 'assets/animated/' : 'assets/animated/720p/';
-          document.getElementById('video-source').src = basePath + scene + '.mp4';
-        }
-        var storedParticles = null;
-        try { storedParticles = localStorage.getItem('shinsekai-particles'); } catch(e) {}
-        var partParam = params.get('particles');
-        if (partParam === '0' || partParam === 'off' || partParam === 'false' || storedParticles === 'off') {
-          document.body.setAttribute('data-particles', 'off');
-        } else {
-          document.body.setAttribute('data-particles', 'on');
-        }
-      } catch (e) {}
-    })();
-    </script>
+    <script src="boot-stage.js?v=2.8"></script>
     <div class="video-scrim"></div>
   </div>
 
@@ -256,7 +118,7 @@
 
       <!-- Right: Mission HUD & Cyber Controls -->
       <div class="hud-controls-deck">
-        <div class="shinobi-focus-deck" id="shinobi-focus-deck">
+        <div class="shinobi-focus-deck" id="shinobi-focus-deck" title="ダブルクリック・右クリックで時間設定 / Double-click or right-click to set focus &amp; break durations">
           <div class="focus-telemetry-header">
             <div class="focus-title-wrap">
               <span class="focus-status-dot" id="focus-status-dot"></span>
@@ -630,13 +492,20 @@
           type="text"
           id="command-input"
           class="command-input"
-          placeholder="検索ワード、またはURLを入力 ( [ / ] キーで起動 ) · Search or enter URL..."
+          placeholder="検索・URL・リンク名 ( [ / ] キーで起動 ) · Search, URL or pinned link..."
           autocomplete="off"
           spellcheck="false"
+          enterkeyhint="go"
+          role="combobox"
+          aria-expanded="false"
+          aria-controls="quick-launch-list"
+          aria-autocomplete="list"
+          aria-label="検索 / Search"
         />
         <div class="search-actions">
           <kbd class="key-tag">/</kbd>
         </div>
+        <div class="quick-launch" id="quick-launch-list" role="listbox" aria-label="ピン留めリンク候補 / Matching pinned links" hidden></div>
       </div>
 
       <div class="bangs-container">
@@ -718,12 +587,14 @@
             <input type="text" id="add-link-desc" placeholder="例: Anime Tracker & List" autocomplete="off" />
           </div>
           <div class="form-group span-seal">
-            <label>封印 / Seal & Icon</label>
+            <label>封印 / Seal &amp; Icon</label>
             <div class="seal-input-stack">
-              <span class="seal-preview-box" id="seal-preview-box" title="アイコンプレビュー / Icon Preview">
-                <img id="preview-favicon-img" class="tile-icon-img" src="" alt="" style="display:none;" />
+              <button type="button" class="seal-preview-box" id="seal-preview-box" title="クリックでアイコン画像をアップロード（オフライン保存） / Click to upload a custom icon (stored offline)">
+                <img id="preview-favicon-img" class="tile-icon-img" alt="" style="display:none;" />
                 <span id="preview-seal-fallback" class="tile-seal-text">印</span>
-              </span>
+              </button>
+              <button type="button" class="seal-icon-clear" id="clear-link-icon-btn" title="カスタムアイコンを解除 / Remove custom icon" style="display:none;">✕</button>
+              <input type="file" id="add-link-icon-file" accept="image/*" hidden />
               <input type="text" id="add-link-seal" maxlength="2" placeholder="漢字" autocomplete="off" title="アイコン取得不可時の代替漢字 / Fallback seal Kanji" />
             </div>
           </div>
@@ -840,6 +711,44 @@
             </div>
           </div>
 
+          <div class="operator-field-group" style="margin-top: 1.1rem;">
+            <label class="operator-label">
+              <span class="label-kanji">起動演出</span>
+              <span class="label-en">BOOT SEQUENCE &amp; VOICE</span>
+            </label>
+            <div class="tier-chips" id="boot-pref-chips">
+              <button type="button" class="tier-chip" data-boot="full" title="毎回フル起動演出 (1.5s) / Full boot animation on every new tab">
+                <span class="chip-main">FULL</span>
+                <span class="chip-sub">1.5s Cinematic</span>
+              </button>
+              <button type="button" class="tier-chip" data-boot="hourly" title="1時間に1回のみ演出・以降は即時表示 / Play at most once per hour, instant otherwise">
+                <span class="chip-main">1 / HOUR</span>
+                <span class="chip-sub">Then Instant</span>
+              </button>
+              <button type="button" class="tier-chip" data-boot="off" title="起動演出なし・即時表示 / Skip the boot animation entirely">
+                <span class="chip-main">OFF</span>
+                <span class="chip-sub">Instant</span>
+              </button>
+              <button type="button" class="tier-chip" id="voice-pref-btn" title="起動時の機体音声 / Play the welcome voice on boot">
+                <span class="chip-main" id="voice-pref-main">VOICE ON</span>
+                <span class="chip-sub">Boot Greeting</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="operator-field-group" style="margin-top: 1.1rem;">
+            <label class="operator-label">
+              <span class="label-kanji">検索機関</span>
+              <span class="label-en">DEFAULT SEARCH ENGINE</span>
+            </label>
+            <div class="tier-chips" id="engine-chips">
+              <button type="button" class="tier-chip" data-engine="google"><span class="chip-main">GOOGLE</span><span class="chip-sub">Default</span></button>
+              <button type="button" class="tier-chip" data-engine="duckduckgo"><span class="chip-main">DDG</span><span class="chip-sub">DuckDuckGo</span></button>
+              <button type="button" class="tier-chip" data-engine="brave"><span class="chip-main">BRAVE</span><span class="chip-sub">Independent</span></button>
+              <button type="button" class="tier-chip" data-engine="startpage"><span class="chip-main">STARTPG</span><span class="chip-sub">Startpage</span></button>
+            </div>
+          </div>
+
           <div class="operator-quick-actions" style="margin-top: 1.25rem;">
             <button type="button" class="editor-btn editor-btn-accent" id="test-boot-btn" title="起動シーケンスを今すぐ再生して確認 / Play the Boot Sequence Now to Preview It">
               ▶ 起動シミュレーション / TEST BOOT
@@ -917,7 +826,7 @@
               <td style="width: 25%;"><span class="shortcut-kbd">/</span></td>
               <td>
                 <div class="shortcut-action">Katana Console</div>
-                <div class="shortcut-desc">検索バーに即座にフォーカス / Focus search console</div>
+                <div class="shortcut-desc">検索・URL・リンク名で瞬間移動 (↑↓ + Enter) / Search, URL, or type a pinned link name to jump</div>
               </td>
             </tr>
             <tr>
@@ -1036,7 +945,7 @@
     </div>
   </div>
 
-  <script src="links.js?v=2.6" defer></script>
-  <script src="script.js?v=2.6" defer></script>
+  <script src="links.js?v=2.8" defer></script>
+  <script src="script.js?v=2.8" defer></script>
 </body>
 </html>

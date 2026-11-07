@@ -1,462 +1,416 @@
 <div align="center">
 
-# ⛩️ 新世界 · SHINSEKAI
-### // 次世代電脳機体 · ANIME COCKPIT STARTUP PAGE //
-**【 領域展開 · DOMAIN EXPANSION FOR YOUR BROWSER 】**
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:0d080e,50:3a0d1c,100:f7768e&height=220&section=header&text=%E6%96%B0%E4%B8%96%E7%95%8C%20%C2%B7%20SHINSEKAI&fontSize=58&fontColor=ffe4ea&fontAlignY=36&desc=%E6%AC%A1%E4%B8%96%E4%BB%A3%E9%9B%BB%E8%84%B3%E6%A9%9F%E4%BD%93%20%2F%2F%20ANIME%20COCKPIT%20STARTPAGE&descSize=16&descAlignY=58&descAlign=50&animation=fadeIn" alt="新世界 · SHINSEKAI" width="100%" />
 
-<p align="center">
-  <i>Transform every blank new tab into a high-performance anime battlestation.</i><br/>
-  <b>Hardware-Accelerated Looping Video Stages · 60 FPS Atmospheric Particle Physics · Mecha Android Voice HUD · Tactical Anime Telemetry</b>
-</p>
+<img src="https://readme-typing-svg.demolab.com?font=Zen+Kaku+Gothic+New&weight=700&size=20&duration=2600&pause=900&color=F7768E&center=true&vCenter=true&width=640&lines=%E8%B5%B7%E5%8B%95%E5%AE%8C%E4%BA%86%20%C2%B7%20SYSTEM%20ONLINE;Live%20anime%20wallpapers%20%C2%B7%2060%20FPS%20particle%20FX;100%25%20offline%20%C2%B7%20zero%20trackers%20%C2%B7%20any%20device;%E9%A0%98%E5%9F%9F%E5%B1%95%E9%96%8B%20%C2%B7%20DOMAIN%20EXPANSION%20FOR%20YOUR%20BROWSER" alt="SYSTEM ONLINE" />
 
-[![System Status](https://img.shields.io/badge/SYS.AUTH-AUTHENTICATED-10b981?style=for-the-badge&logo=shield&logoColor=white)](https://github.com/Mimogu/SHINSEKAI-Startup-Page)
-[![Dependencies](https://img.shields.io/badge/DEP-ZERO_DEPENDENCIES-3b82f6?style=for-the-badge&logo=box&logoColor=white)](https://github.com/Mimogu/SHINSEKAI-Startup-Page)
-[![Performance](https://img.shields.io/badge/FPS-60_GPU_ACCELERATED-8b5cf6?style=for-the-badge&logo=speedtest&logoColor=white)](https://github.com/Mimogu/SHINSEKAI-Startup-Page)
-[![Privacy](https://img.shields.io/badge/TELEMETRY-100%25_OFFLINE_PRIVATE-ff0055?style=for-the-badge&logo=tor-browser&logoColor=white)](https://github.com/Mimogu/SHINSEKAI-Startup-Page)
-[![Platform](https://img.shields.io/badge/OS-LINUX_%7C_WINDOWS_%7C_MACOS-f97316?style=for-the-badge&logo=linux&logoColor=white)](https://github.com/Mimogu/SHINSEKAI-Startup-Page)
-
-<br />
-
-<p align="center">
-  <a href="https://mimogu.github.io/SHINSEKAI-Startup-Page/" target="_blank" rel="noopener noreferrer">
-    <img src="https://img.shields.io/badge/▶_LIVE_DEMO-LAUNCH_SHINSEKAI-ff2a55?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Live Demo" height="42" />
-  </a>
-</p>
-
-<p align="center">
-  ⚔️ <b>Instant Web Deployment:</b> <a href="https://mimogu.github.io/SHINSEKAI-Startup-Page/"><b>https://mimogu.github.io/SHINSEKAI-Startup-Page/</b></a><br />
-  <sub><em>Experience the live cinematic boot sequence, mecha voice greeting, atmospheric particle engine, and holographic bookmark blades right in your browser!</em></sub>
-</p>
+**【 領域展開 · DOMAIN EXPANSION FOR YOUR BROWSER 】**<br/>
+<sub>Every blank new tab becomes the opening scene of your own anime — live video stages, falling sakura, a mecha voice that greets you by name, and a cockpit full of your bookmarks.</sub>
 
 <br/>
 
-<p align="center">
-  <img src="assets/previews/showcase/crimson.jpg" alt="Shinsekai Crimson Flame Interface" width="100%" style="border-radius: 12px; box-shadow: 0 20px 50px rgba(0,0,0,0.85);" />
-</p>
+[![Offline](https://img.shields.io/badge/結界-100%25_OFFLINE-10b981?style=for-the-badge&logo=shield&logoColor=white)](#第陸話--結界--offline--privacy)
+[![Zero deps](https://img.shields.io/badge/依存-ZERO_DEPENDENCIES-3b82f6?style=for-the-badge&logo=javascript&logoColor=white)](#第拾話--機体構造--architecture)
+[![Devices](https://img.shields.io/badge/全端末-PHONE_·_TABLET_·_4K-8b5cf6?style=for-the-badge&logo=googlechrome&logoColor=white)](#第漆話--全端末対応--every-device)
+[![PWA](https://img.shields.io/badge/PWA-INSTALLABLE-f97316?style=for-the-badge&logo=pwa&logoColor=white)](#第壱話--起動--installation)
+[![Privacy](https://img.shields.io/badge/追跡-ZERO_TELEMETRY-ff2a55?style=for-the-badge&logo=torbrowser&logoColor=white)](#第陸話--結界--offline--privacy)
 
-</div>
+<a href="https://mimogu.github.io/SHINSEKAI-Startup-Page/">
+  <img src="https://img.shields.io/badge/▶_出撃_·_LAUNCH_LIVE_DEMO-ff2a55?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Launch live demo" height="40" />
+</a>
 
----
+<br/><br/>
 
-> *「心を燃やせ、歯を食いしばって前を向け」*  
-> — **煉獄 杏寿郎 (Kyojuro Rengoku)** · *"Set your heart ablaze. Grit your teeth and move forward."*
-
----
-
-## ⚡ System Matrix & Tactical Modules
-
-### 🎬 1. Tri-Category Wallpaper Engine: Live Video, Static Artworks & Custom Library
-- **3 Dedicated Modes & Categories**:
-  - **動的 (Live Video)**: Hardware-accelerated looping video backdrops (`crimson.mp4`, `tokyonight.mp4`, `sakura.mp4`, `catppuccin.mp4`, `cyberpunk.mp4`, plus low-power Eco mode).
-  - **静止画 (Static Artworks)**: High-resolution static artworks (`crimson.png`, `tokyonight.png`, `sakura.png`, `catppuccin.png`, `cyberpunk.png`) with minimal RAM (~20MB, zero video decoding).
-  - **カスタム (Custom Library)**: Personal user library featuring multi-file uploads and online web URLs with live format badges and individual delete controls.
-- **Dynamic File Reading & Multiple Uploads**: Select and upload multiple files at once (`.mp4`, `.webm`, `.png`, `.jpg`, `.webp`, `.gif`). All wallpapers are dynamically read and rendered by actual filename from **IndexedDB** (bypassing the strict 5MB `localStorage` limit).
-- **Default Deletion & Restoration by Filename**: Delete default live or static scenes from the UI at will. Contextual restore banners (`↺ 削除された初期動画を復元` / `↺ 削除された初期静止画を復元`) or uploading a file with the original filename instantly restores them.
-- **Enhanced Online Web URLs**: Add direct links to web images or videos with custom display names, saved directly into your Custom collection with URL protocol validation.
-- **Atmospheric Particle Fusion**: Sakura petals, rising embers, and retro CRT scanlines continue to render dynamically over all wallpapers.
-
----
-
-### 🎛️ 2. 調色中枢 · Anime Spectrum Matrix & Chakra Tuner
-Beside the 5 classic faction presets, Shinsekai includes an in-cockpit **Anime Spectrum Tuner** with real-time UI harmonization:
-- **10 霊力結晶 (Chakra Crystals)**: Instant 1-click resonant anime color frequencies with animated targeting rings:
-  - ⚡ **雷光・神速 (`#fbbf24`)**: Amber Gold (Zenitsu / Killua Godspeed)
-  - 🍃 **風神・翠緑 (`#10b981`)**: Emerald Green (Deku / Sanemi Wind Hashira)
-  - 🌊 **碧羅・蒼波 (`#06b6d4`)**: Ocean Cyan (Giyu Tomioka / Water Breathing)
-  - 🔮 **虚式・紫電 (`#c084fc`)**: Lavender Purple (Satoru Gojo Hollow Purple)
-  - 🩸 **真紅・終焉 (`#ff3366`)**: Crimson Red (EVA Unit-01 Berserk / Rengoku)
-  - 🌸 **幽玄・紅桜 (`#f43f5e`)**: Rose Pink (Sakura Ronin / Mitsuri Kanroji)
-  - 🔥 **日輪・業火 (`#fb923c`)**: Sunset Orange (Sun Breathing / Naruto Kurama)
-  - ❄️ **氷華・零度 (`#38bdf8`)**: Sky Blue (Hitsugaya Hyorinmaru / Rimuru Tempest)
-  - ☣️ **毒蝶・幻紫 (`#d946ef`)**: Magenta Purple (Shinobu Kocho Insect Dance)
-  - 🌌 **星骸・白金 (`#e2e8f0`)**: Platinum White (Gintoki Sakata / Satoru Gojo)
-- **周波数調律 · HUE RESONATOR (`0° - 360°`)**: Continuous full-spectrum mecha slider with live angle display and real-time color shifts across the dashboard, glass borders, and particle engine. Fully calibrated with exact 0°/360° pure red boundary synchronization.
-- **彩度・明度 · SATURATION & VALUE MATRIX**: 2D interactive HSV color matrix pad allowing precision coordinate selection across any saturation and brightness value.
-- **色彩座標入力 · HEX & RGB TERMINAL**: Direct terminal input box `[ #______ ]` with instant validation and sync, native eyedropper tool (`⌖`), and individual Red / Green / Blue channel numeric steppers.
-
----
-
-### 🌸 3. Atmospheric Particle Dynamics (60 FPS Canvas)
-- Tailored dynamic particle canvas engine reacting to your selected anime faction:
-  - **紅蓮 (Crimson)**: Rising flame embers with dual-layer temperature glow.
-  - **桜吹雪 (Sakura)**: Fluttering, rotating cherry blossom petals drifting with the wind.
-  - **電脳都市 (Cyberpunk)**: Dual-tint neon cyan and hot-pink digital rain streaks.
-  - **東京夜 / 終末谷 (TokyoNight / Catppuccin)**: Glowing spiritual energy orbs with cosmic auras.
-- **On/Off Toggle Control**: Easily toggle particles on and off with the **`🌸 粒子: ON/OFF`** button in the top HUD toolbar or by pressing <kbd>b</kbd>.
-- **True Zero CPU/GPU Cost When OFF**: Automatically terminates the `requestAnimationFrame` loop, unloads canvas VRAM, and hides the element.
-- **State Persistence & URL Override**: Choice is saved in `localStorage` (`shinsekai-particles`), supports `?particles=off` / `?particles=on` URL params, and is included in profile export/import backups.
-
----
-
-### 🎙️ 4. Mecha Android Voice Greeting
-- Upon boot sequence completion, an onboard anime android voice announces system readiness:  
-  *「ようこそ、ミモグ様。新世界システム、起動完了しました」* (*"Welcome, Mimogu-sama. Shinsekai systems online."*)
-- Robust audio unlock: clean user-gesture unlock listener ensuring seamless audio playback across modern strict browser autoplay policies.
-- Easily replace with any custom anime voice line or sound effect in `assets/audio/welcome.mp3`.
-
----
-
-### ⚔️ 5. Anime Episode Header & Chronometer HUD
-- **Dynamic Episode Title Card**: Displays episode title, arc tag, and act number that organically shifts across 4 time-of-day blocks (e.g. *第壱話 · 黎明の覚醒* in the morning, *第廿四話 · 黎明の咆哮* in the evening).
-- **Imperial Japanese Era Clock**: Synchronizes system time with true Japanese kanji era formatting (*令和八年 九月 火曜日*).
-- **Shinobi Focus & EVA Telemetry Core**: Prominent cockpit focus deck with large digital countdown digits, live EVA sync rate (*特級 · GRADE 1 // 99.8%* tracking focus completion), segmented progress track, and direct <kbd>ENGAGE</kbd> / <kbd>R</kbd> action buttons.
-
----
-
-### 💬 6. Subtitle Dialogue System
-- Real-time anime dialogue bar rendering legendary quotes in Japanese Kanji/Kana accompanied by English translations.
-- Featuring 20 iconic anime lines from **Kyojuro Rengoku**, **Satoru Gojo**, **Ryomen Sukuna**, **Naruto Uzumaki**, **Sasuke Uchiha**, **Mugen** (*Samurai Champloo*), **David Martinez** (*Cyberpunk: Edgerunners*), **Yuta Okkotsu** (*Jujutsu Kaisen*), **Saber** (*Fate/stay night*), **Archer** (*Unlimited Blade Works*), **Kamina** (*Gurren Lagann*), **Tanjiro Kamado**, **Kirei Kotomine**, **Kiritsugu Emiya**, **Lelouch Lamperouge**, **Levi Ackerman**, **Erwin Smith**, **Edward Elric**, **Roronoa Zoro**, and **Monkey D. Luffy**. Click or press <kbd>q</kbd> to cycle anytime.
-
----
-
-### 🗡️ 7. Katana Command Console & Hologram Drawer
-- Press <kbd>/</kbd> to activate the frosted **Katana Search Console** with direct URL navigation and quick bang queries (`!g`, `!y`, `!gh`, `!r`, `!d`, `!w`).
-- **Dynamic Holographic Blade Launcher**: Hover over categorized tab blades to deploy bookmarked sectors (*01 Anime*, *02 Gaming*, *03 Dev Core*, *04 Media*).
-- **In-Browser Bookmark Editor**: Press <kbd>e</kbd> to customize, add, remove, export, and import bookmarks visually with custom Japanese kanji seals.
-
----
-
-### 📺 8. Retro CRT & Film Grain Overlay
-- Toggleable scanline filter and analog film grain (<kbd>g</kbd>) for an authentic 90s vintage anime aesthetic.
-
----
-
-### 🔊 9. Zero-Asset Cyber Audio Synthesizer (Procedural SFX Haptics)
-- **100% Pure Web Audio API**: Procedural sound generation without downloading heavy audio files or assets.
-- **Tactile Cockpit Haptics**: Micro-chirp on tile hover, hologram blade sweep on sector switch, crystalline theme triad shimmer on color adjustments, and mission completion chime.
-- Toggle anytime with the **`🔊 音響: ON/OFF`** tool pill or by pressing <kbd>m</kbd>.
-
----
-
-### ⏳ 10. Shinobi Focus & EVA Telemetry Core (25-Min Training Cycle)
-- **Interactive Focus Engine**: 25-minute tactical training cycles (<kbd>x</kbd> or <kbd>ENGAGE</kbd>) with 5-minute cooldown break periods.
-- **Prominent EVA Telemetry Display**: Large mono-digit countdown (`25:00`), live sync rate percentage tracking focus completion, segmented progress track, and direct <kbd>ENGAGE</kbd> / <kbd>R</kbd> action buttons in the top-right cockpit deck.
-- **Ground-Truth Drift Protection**: Real-time timestamp delta math ensures zero timer drift even across background tabs or system sleep.
-
----
-
-### 🎯 11. Kiroshi Optical Target Reticles & Mecha Chamfers
-- **Cyberpunk Cockpit Aesthetic**: Dynamic optical target brackets on bookmark tiles that illuminate on cursor lock-on.
-- **Chamfered Cockpit Telemetry**: Tactical notch bevels and luminous corner brackets framing the header combat gauge and search capsule.
-
----
-
-## 🎨 Faction Themes & Screenshots
-
-Switch factions instantly via the header dropdown or by pressing <kbd>t</kbd>. Each capture below is the actual live cockpit — episode header, chronometer, sync gauge, tool dock, Katana search console, bookmark blades, and subtitle bar all rendered in real time over the theme's native stage art:
-
-<div align="center">
-
-<table>
-  <tr>
-    <td width="50%" align="center">
-      <img src="assets/previews/showcase/crimson.jpg" alt="紅蓮 · Crimson Flame" width="100%" style="border-radius: 8px;" /><br/>
-      <b>🔥 紅蓮 · Crimson Flame</b><br/>
-    </td>
-    <td width="50%" align="center">
-      <img src="assets/previews/showcase/tokyonight.jpg" alt="東京夜 · TokyoNight Void" width="100%" style="border-radius: 8px;" /><br/>
-      <b>🌌 東京夜 · TokyoNight Void</b><br/>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" align="center">
-      <img src="assets/previews/showcase/sakura.jpg" alt="桜吹雪 · Sakura Ronin" width="100%" style="border-radius: 8px;" /><br/>
-      <b>🌸 桜吹雪 · Sakura Ronin</b><br/>
-    </td>
-    <td width="50%" align="center">
-      <img src="assets/previews/showcase/catppuccin.jpg" alt="終末谷 · Catppuccin Spiral" width="100%" style="border-radius: 8px;" /><br/>
-      <b>🌀 終末谷 · Catppuccin Spiral</b><br/>
-    </td>
-  </tr>
-  <tr>
-    <td colspan="2" align="center">
-      <img src="assets/previews/showcase/cyberpunk.jpg" alt="電脳都市 · Cyberpunk Neon" width="85%" style="border-radius: 8px;" /><br/>
-      <b>⚡ 電脳都市 · Cyberpunk Neon</b><br/>
-    </td>
-  </tr>
-</table>
+<img src="assets/previews/showcase/crimson.jpg" alt="SHINSEKAI · Crimson Flame cockpit" width="100%" />
 
 </div>
 
 <br/>
 
-| Faction Theme | Japanese Lore | Aesthetic Colors | Particle Dynamics | Video Stage (720p default · 1080p Ultra) |
-|:---|:---|:---|:---|:---|
-| **紅蓮 · Crimson** | 煉獄炎獄 (Flame Breathing) | Crimson `#f7768e` / Blazing Ember | Rising Flame Embers | `assets/animated/720p/crimson.mp4` · `assets/animated/crimson.mp4` |
-| **東京夜 · TokyoNight** | 無量空処 (Infinite Void) | Electric Blue `#7aa2f7` / Deep Void | Spatial Energy Orbs | `assets/animated/720p/tokyonight.mp4` · `assets/animated/tokyonight.mp4` |
-| **桜吹雪 · Sakura** | 侍道 · 桜散る (Ronin Way) | Cherry Pink `#f4b8e4` / Pastel Mist | Fluttering Sakura Petals | `assets/animated/720p/sakura.mp4` · `assets/animated/sakura.mp4` |
-| **終末谷 · Catppuccin** | 螺旋輪廻 (Valley of the End) | Lavender `#cba6f7` / Sage Teal | Mystic Chakra Spheres | `assets/animated/720p/catppuccin.mp4` · `assets/animated/catppuccin.mp4` |
-| **電脳都市 · Cyberpunk** | 攻殻機動 (Night City Cyber) | Neon Cyan `#00f0ff` / Hot Pink | Vertical Digital Matrix | `assets/animated/720p/cyberpunk.mp4` · `assets/animated/cyberpunk.mp4` |
-| **カスタム · Custom** | 調色中枢 · 霊力波 (Spectrum Matrix) | 10 Anime Chakra Cores, 0–360° Hue Resonator, & Hex Terminal | Resonant Aura Prisms | User-defined or active wallpaper |
-
-*Every faction boots on the 720p stage by default (lower RAM/decode cost); the 1080p Ultra master is one click away in the scene selector or via `?ultra=1`.*
+> ### 「心を燃やせ、歯を食いしばって前を向け」
+> **煉獄 杏寿郎** · *Kyojuro Rengoku* — "Set your heart ablaze. Grit your teeth and move forward."
 
 ---
 
-## 🚀 Deployment & Installation
+## 📺 放送リスト · Episode Guide
 
-### Option 1: Native Chromium New Tab (Brave, Chrome, Edge, Opera)
+| 話数 | Episode | What's inside |
+|:---:|:---|:---|
+| 第壱話 | [起動 · Installation](#第壱話--起動--installation) | Chrome/Brave/Edge new tab, Firefox, phone home screen, self-hosting |
+| 第弐話 | [機能 · Abilities](#第弐話--機能--abilities) | Every module of the cockpit |
+| 第参話 | [陣営 · Factions](#第参話--陣営--factions--themes) | Five themes + the custom Spectrum Tuner |
+| 第肆話 | [操作 · Controls](#第肆話--操作--keyboard-controls) | Full keyboard map |
+| 第伍話 | [検索 · Katana Console](#第伍話--検索--katana-console) | Search, quick launch, bangs, URLs |
+| 第陸話 | [結界 · Offline & Privacy](#第陸話--結界--offline--privacy) | What touches the network (almost nothing) |
+| 第漆話 | [全端末 · Every Device](#第漆話--全端末対応--every-device) | Phones, tablets, touch, notches, 4K |
+| 第捌話 | [改造 · Customization](#第捌話--改造--customization) | Name, links, icons, wallpapers, voice, backups |
+| 第玖話 | [秘術 · URL Parameters](#第玖話--秘術--url-parameters) | Boot straight into any configuration |
+| 第拾話 | [機体構造 · Architecture](#第拾話--機体構造--architecture) | Performance engine and file map |
+| 最終話 | [次回予告 · Next Episode](#最終話--次回予告--next-episode) | Credits & contributing |
 
-Because this repository contains a valid Manifest V3 `manifest.json`, you can make Shinsekai your official new tab page in seconds without any store extension:
+---
+
+## 第壱話 · 起動 · Installation
+
+> *「問おう、貴方が私のマスターか」* — **Saber** · "I ask of you: are you my Master?"
+
+### ⚔️ A. Chromium New Tab — Chrome · Brave · Edge · Opera · Vivaldi
+
+The repo is a ready-made Manifest V3 extension. No store, no account:
 
 ```bash
-# 1. Clone the battle station repository
 git clone https://github.com/Mimogu/SHINSEKAI-Startup-Page.git
 ```
 
-1. In your browser, open `chrome://extensions` (or `brave://extensions`, `edge://extensions`).
-2. Toggle **Developer mode** **ON** in the top-right corner.
-3. Click **Load unpacked** (top-left) and select the cloned `SHINSEKAI-Startup-Page` directory.
-4. Press <kbd>Ctrl</kbd> + <kbd>T</kbd>. **Shinsekai is now your operational startpage!**
+1. Open `chrome://extensions` (or `brave://extensions`, `edge://extensions`).
+2. Turn on **Developer mode** (top right).
+3. **Load unpacked** → pick the cloned `SHINSEKAI-Startup-Page` folder.
+4. Press <kbd>Ctrl</kbd>+<kbd>T</kbd>. 起動完了.
+
+> [!NOTE]
+> Extension pages enforce a strict Content-Security-Policy: **no inline `<script>` and no `onclick=`/`onerror=` attributes**. All boot logic lives in `theme-core.js`, `boot.js` and `boot-stage.js` for that reason — keep it that way when editing `index.html`.
+
+### 🦊 B. Firefox
+
+- **New tab:** install [New Tab Override](https://addons.mozilla.org/firefox/addon/new-tab-override/) → *Local file* → choose `index.html`.
+- **Home page:** *Settings → Home → Custom URLs* → `file:///home/YOU/SHINSEKAI-Startup-Page/index.html` (Windows: `file:///C:/Users/YOU/…/index.html`).
+
+### 📱 C. Phone, tablet or desktop app (PWA)
+
+Open the [live site](https://mimogu.github.io/SHINSEKAI-Startup-Page/) once while online, then:
+
+- **Android / Chrome / Edge:** menu → **Install app** / **Add to Home screen**.
+- **iPhone / iPad (Safari):** Share → **Add to Home Screen**.
+
+It launches full-screen with its own 新 icon and keeps working **offline** (see 第陸話).
+
+### 🏯 D. Your own copy on GitHub Pages
+
+Fork → *Settings → Pages* → deploy from `main` / root. Any static host works (Netlify, Cloudflare Pages, nginx, `python3 -m http.server`). There is no build step.
 
 ---
 
-### Option 2: Mozilla Firefox Setup
+## 第弐話 · 機能 · Abilities
 
-#### A. Dedicated New Tab
-1. Install [New Tab Override](https://addons.mozilla.org/firefox/addon/new-tab-override/).
-2. In extension settings, choose **Local File** and point it to `index.html`.
+> *「大丈夫、僕 最強だから」* — **Gojo Satoru** · "Don't worry. After all, I'm the strongest."
 
-#### B. Homepage / Startup Window
-1. Open Firefox **Settings** (`Ctrl + ,`) → **Home**.
-2. Under **Homepage and new windows**, select **Custom URLs...**.
-3. Enter the absolute path to your local `index.html`:
-   - **Linux**: `file:///home/YOUR_USERNAME/Documents/SHINSEKAI-Startup-Page/index.html`
-   - **Windows**: `file:///C:/Users/YOUR_USERNAME/Documents/SHINSEKAI-Startup-Page/index.html`
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### 🎬 映像舞台 · Wallpaper Engine
+- **動的 Live** — five looping anime stages, 720p by default, **1080p Ultra** with one click.
+- **静止画 Static** — the same five scenes as 1080p WebP stills (zero video decoding).
+- **カスタム Custom** — upload many MP4 / WebM / PNG / JPG / WebP / GIF files at once (35 MB each, stored in IndexedDB), or add web URLs.
+- **省電力 Eco** — no video at all.
+- Delete any default and bring it back with *Restore* or by re-uploading a file with the same name.
+
+</td>
+<td width="50%" valign="top">
+
+### 🌸 粒子演出 · Particle FX
+- **紅蓮** rising embers · **桜吹雪** spinning petals · **電脳都市** neon rain · **東京夜 / 終末谷** spirit orbs · **カスタム** orbs in your colour.
+- Rendered at half resolution, capped at 60 FPS, and **fully stopped** when off (<kbd>b</kbd>), hidden, or a dialog is open.
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+### ⚔️ 話数表示 · Episode HUD
+- The title card changes with the time of day: 第壱話 *dawn*, 第拾弐話 *duel*, 第廿四話 *climax*, 終章 *standby*.
+- Clock with Japanese era date (令和八年 十一月七日 土曜日), 12/24 h toggle (<kbd>c</kbd>).
+
+</td>
+<td valign="top">
+
+### 💬 字幕 · Subtitle Bar
+- 20 legendary lines (Rengoku, Gojo, Sukuna, Naruto, Levi, Lelouch, Luffy, Zoro, Kamina, Saber, Archer, Edward Elric…) in Japanese + English.
+- Starts on a random quote every tab; click or <kbd>q</kbd> to cycle.
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+### ⏳ 忍修練 · Shinobi Focus Timer
+- 25-minute focus / 5-minute cooldown (<kbd>x</kbd>). **Double-click or right-click** it to set 1–180 / 1–60 minutes.
+- **Survives new tabs and reloads** and stays in sync across every open tab; exactly one tab rings at the end.
+- Optional **desktop notification** when a phase ends while you're elsewhere.
+- Shows the countdown in the tab title: `[12:34] shinsekai`.
+
+</td>
+<td valign="top">
+
+### 🎙️ 機体音声 · Mecha Voice & Synth SFX
+- *「ようこそ、ミモグ様。新世界システム、起動完了しました」* plays when the boot finishes (<kbd>v</kbd> to replay).
+- Boot animation **FULL / 1 per hour / OFF** and voice **ON / OFF** in the Operator hub.
+- Procedural Web Audio chirps, blade sweeps and chimes — no sound files — toggle with <kbd>m</kbd>.
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+### 🗡️ 刀剣格納庫 · Blade Launcher
+- Four bookmark sectors (01 アニメ · 02 電子遊戯 · 03 開発中枢 · 04 媒体通信), opened by hover, tap or <kbd>1</kbd>–<kbd>4</kbd>; pin it open with <kbd>p</kbd>.
+- Real logos for the default sites ship **inside the repo**; anything else shows its kanji seal 封印 or an icon you upload.
+
+</td>
+<td valign="top">
+
+### 📺 走査線 · CRT & Film Grain
+- Retro scanlines + grain in a single composited layer (<kbd>g</kbd>).
+- Kiroshi-style target brackets and chamfered mecha frames on the HUD.
+
+</td>
+</tr>
+</table>
 
 ---
 
-## 🎮 Command Keybindings HUD
+## 第参話 · 陣営 · Factions & Themes
 
-Navigate your startpage like a mecha cockpit with full keyboard controls:
+> *「お前が信じる、お前を信じろ！」* — **Kamina** · "Believe in the you who believes in yourself!"
 
-| Hotkey | Action | Tactical Description |
+Switch with <kbd>t</kbd> or the faction button. A default wallpaper follows the faction; your own custom wallpaper or Eco mode is never replaced.
+
+<div align="center">
+<table>
+  <tr>
+    <td width="50%" align="center"><img src="assets/previews/showcase/crimson.jpg" alt="紅蓮 · Crimson Flame" width="100%" /><br/><b>🔥 紅蓮 · Crimson Flame</b><br/><sub>煉獄炎獄 · rising embers · <code>#f7768e</code></sub></td>
+    <td width="50%" align="center"><img src="assets/previews/showcase/tokyonight.jpg" alt="東京夜 · TokyoNight" width="100%" /><br/><b>🌌 東京夜 · TokyoNight Void</b><br/><sub>無量空処 · spirit orbs · <code>#7aa2f7</code></sub></td>
+  </tr>
+  <tr>
+    <td width="50%" align="center"><img src="assets/previews/showcase/sakura.jpg" alt="桜吹雪 · Sakura Ronin" width="100%" /><br/><b>🌸 桜吹雪 · Sakura Ronin</b><br/><sub>侍刀一閃 · falling petals · <code>#f4b8e4</code></sub></td>
+    <td width="50%" align="center"><img src="assets/previews/showcase/catppuccin.jpg" alt="終末谷 · Catppuccin" width="100%" /><br/><b>🌀 終末谷 · Catppuccin Spiral</b><br/><sub>宿命螺旋 · chakra spheres · <code>#cba6f7</code></sub></td>
+  </tr>
+  <tr>
+    <td colspan="2" align="center"><img src="assets/previews/showcase/cyberpunk.jpg" alt="電脳都市 · Cyberpunk" width="80%" /><br/><b>⚡ 電脳都市 · Cyberpunk Neon</b><br/><sub>超限界 · digital rain · <code>#00f0ff</code></sub></td>
+  </tr>
+</table>
+</div>
+
+### 🎛️ 調色中枢 · Custom Spectrum Tuner
+
+Your own faction colour, applied live to every border, glow and particle:
+
+| 霊力結晶 Chakra Core | Colour | | 霊力結晶 Chakra Core | Colour |
+|:---|:---:|:---:|:---|:---:|
+| ⚡ 雷光・神速 Amber Gold | `#fbbf24` | | 🌸 幽玄・紅桜 Rose Pink | `#f43f5e` |
+| 🍃 風神・翠緑 Emerald | `#10b981` | | 🔥 日輪・業火 Sunset Orange | `#fb923c` |
+| 🌊 碧羅・蒼波 Ocean Cyan | `#06b6d4` | | ❄️ 氷華・零度 Sky Blue | `#38bdf8` |
+| 🔮 虚式・紫電 Lavender | `#c084fc` | | ☣️ 毒蝶・幻紫 Magenta | `#d946ef` |
+| 🩸 真紅・終焉 Crimson | `#ff3366` | | 🌌 星骸・白金 Platinum | `#e2e8f0` |
+
+Plus a 0–360° **hue resonator**, a 2-D **saturation/value pad**, **HEX** and **R/G/B** inputs, and a screen **eyedropper** (⌖). Too-dark or washed-out picks are automatically lifted to a readable accent, so the UI never disappears.
+
+---
+
+## 第肆話 · 操作 · Keyboard Controls
+
+> *「悔いなき選択を自分で選べ」* — **Levi Ackerman** · "Make the choice you'll regret the least."
+
+| Key | 技 Technique | Effect |
 |:---:|:---|:---|
-| <kbd>/</kbd> | **Katana Console** | Instantly focus the search bar from anywhere |
-| <kbd>t</kbd> | **Cycle Faction** | Rotate themes (*Crimson → TokyoNight → Sakura → Catppuccin → Cyberpunk → Custom*) |
-| <kbd>s</kbd> / <kbd>w</kbd> | **Cycle Scene** | Switch live video stages on the fly |
-| <kbd>u</kbd> / <kbd>o</kbd> | **Operator Profile** | Launch the Operator Identity hub to customize pilot name & honorific |
-| <kbd>e</kbd> | **Link Matrix** | Launch the visual cyberpunk bookmark configuration dialog |
-| <kbd>g</kbd> | **CRT Scanlines** | Toggle vintage anime monitor scanlines and film grain |
-| <kbd>b</kbd> / <kbd>a</kbd> | **Particle FX** | Toggle floating particles, cherry blossom petals, or burning flame embers |
-| <kbd>c</kbd> | **Clock Format** | Toggle 12-hour (AM/PM) and military 24-hour chrono formats |
-| <kbd>m</kbd> | **Cyber SFX Haptics** | Toggle synthesized Web Audio sound effects and UI haptics |
-| <kbd>x</kbd> | **Shinobi Pomodoro** | Start / pause 25-minute focus training cycle or tactical break |
-| <kbd>p</kbd> | **Lock Drawer** | Pin the holographic bookmark drawer open |
-| <kbd>v</kbd> | **Voice Comms** | Re-trigger the mecha android audio greeting |
-| <kbd>q</kbd> | **Cycle Dialogue** | Advance to the next anime subtitle quote |
-| <kbd>1</kbd> - <kbd>4</kbd> | **Deploy Sector** | Jump directly to bookmark category (*Anime, Gaming, Dev, Media*) |
-| <kbd>?</kbd> | **Shortcuts Matrix** | Open the interactive in-cockpit keybindings cheatsheet HUD |
-| <kbd>Esc</kbd> | **Cancel / Disengage** | Dismiss search focus, close popovers or exit modals |
+| <kbd>/</kbd> | 刀 Katana Console | Focus search |
+| <kbd>t</kbd> | 陣営 Cycle Faction | Crimson → TokyoNight → Sakura → Catppuccin → Cyberpunk → Custom |
+| <kbd>s</kbd> / <kbd>w</kbd> | 舞台 Cycle Wallpaper | Next live / static scene |
+| <kbd>1</kbd>–<kbd>4</kbd> | 展開 Deploy Sector | Open a bookmark sector |
+| <kbd>p</kbd> | 固定 Pin Dock | Keep the bookmark drawer open |
+| <kbd>e</kbd> | 構成 Link Editor | Edit bookmarks, icons, import / export |
+| <kbd>u</kbd> / <kbd>o</kbd> | 操縦士 Operator Hub | Name, honorific, performance tier, boot, voice, search engine |
+| <kbd>x</kbd> | 修練 Focus Timer | Start / pause / end break |
+| <kbd>b</kbd> / <kbd>a</kbd> | 粒子 Particles | Toggle particle FX |
+| <kbd>g</kbd> | 走査線 CRT | Toggle scanlines & grain |
+| <kbd>c</kbd> | 時計 Clock | 12 h / 24 h |
+| <kbd>m</kbd> | 音響 Synth SFX | Toggle UI sounds |
+| <kbd>v</kbd> | 音声 Voice | Replay the greeting |
+| <kbd>q</kbd> | 台詞 Quote | Next subtitle |
+| <kbd>?</kbd> | 一覧 Help | Keybinding sheet |
+| <kbd>Esc</kbd> | 解除 Disengage | Close popups / dialogs, leave the search box |
+
+Hotkeys never fire while you're typing or while a dialog is open, and never steal browser shortcuts (<kbd>Ctrl</kbd>/<kbd>Alt</kbd>/<kbd>⌘</kbd> combos, Japanese IME input).
 
 ---
 
-## 🌐 Tactical URL Query Parameters
+## 第伍話 · 検索 · Katana Console
 
-Configure or bookmark Shinsekai with pre-configured startup states directly through the URL:
+> *「撃っていいのは、撃たれる覚悟のある奴だけだ」* — **Lelouch** · "The only ones who should shoot are those prepared to be shot."
 
-| Query Parameter | Example Value | Description |
+**瞬間移動 · Quick launch.** Start typing a pinned link's name — `crunch`, `git`, `arch` — and matching bookmarks appear under the search bar. <kbd>↑</kbd>/<kbd>↓</kbd> to choose, <kbd>Enter</kbd> to jump. When what you typed is the start of a link's name it's pre-selected; <kbd>Shift</kbd>+<kbd>Enter</kbd> always searches the web instead.
+
+| Type | Goes to |
+|:---|:---|
+| `anything else` | Your default engine — **Google, DuckDuckGo, Brave or Startpage** (Operator hub → 検索機関) |
+| `!g` `!y` `!gh` `!r` `!d` `!w` + words | Google · YouTube · GitHub · Reddit · DuckDuckGo · Wikipedia |
+| `!aur yay`, `!mdn grid`, `!npm vite` … | Any of DuckDuckGo's ~13,000 [bangs](https://duckduckgo.com/bangs) |
+| `github.com`, `https://…`, `localhost:3000`, `192.168.1.1/admin`, `mailto:a@b.jp` | Opened directly |
+| `3.14`, `node.js` | Searched (things that merely contain a dot aren't treated as sites) |
+| `:user NAME`, `:settings` | Rename the pilot / open the Operator hub |
+
+---
+
+## 第陸話 · 結界 · Offline & Privacy
+
+> *「失礼だな、純愛だよ」* — **Okkotsu Yuta** · "How rude. This is pure love."
+
+**The page itself makes zero third-party requests.** No CDN, no analytics, no Google Fonts, no favicon service:
+
+| Piece | Where it comes from |
+|:---|:---|
+| Fonts (Zen Kaku Gothic New, JetBrains Mono, Plus Jakarta Sans) | `assets/fonts/` — subsetted WOFF2, ~280 KB. A JIS level-1 kanji pack only downloads if you type a kanji the UI doesn't already use. |
+| Bookmark logos | `assets/icons/` (bundled) or an image you upload — stored inline with the link. |
+| Wallpapers, stills, voice, app icons | `assets/` |
+| Your settings, links, focus timer | `localStorage`; uploaded wallpapers in IndexedDB. Never leaves the browser. |
+
+**The 結界 barrier (service worker).** When served over http(s) (GitHub Pages, any static host), `sw.js` precaches the whole app, so it opens with no connection. Wallpaper videos are cached the first time they play online and then loop offline too (with proper byte-range support). A video that was never cached falls back to its still image for that session only — your saved choice is untouched. The extension and `file://` installs are local already and don't use it.
+
+Only two things ever go online, and only because you asked: **the search you submit** and **web-URL wallpapers** you add yourself.
+
+Upgrading from an older version? Icons it had cached from Google / icon.horse are moved into your links automatically, then the old cache keys are deleted.
+
+---
+
+## 第漆話 · 全端末対応 · Every Device
+
+> *「立って歩け、前へ進め」* — **Edward Elric** · "Stand up and walk. Keep moving forward."
+
+| Device | How the cockpit adapts |
+|:---|:---|
+| 🖥️ Desktop / laptop | The classic single-screen cockpit; the bookmark drawer opens on hover. |
+| 📺 4K monitors & TVs | Everything scales up proportionally (2200 px+ and 3000 px+ steps), so the HUD isn't a speck in the middle. |
+| 📱 Phones (portrait & landscape) | The layout stacks and the page scrolls; dialogs become full-width and scroll as one page; the subtitle bar stacks; 16 px inputs stop iOS from zooming in. |
+| 👆 Touch screens & tablets | 44 px tap targets, keyboard-hint badges hidden, the drawer opens on tap and closes when you tap elsewhere. |
+| 🔲 Notches & rounded corners | `viewport-fit=cover` + safe-area padding. |
+| 🐢 Slow / low-power hardware | Auto performance tier (HIGH / MID / ECO) and an FPS watchdog that drops costly blur when frames dip. |
+| ♿ Accessibility | `prefers-reduced-motion`, visible keyboard focus rings, forced-colours mode, ARIA roles on the search box and its suggestion list. |
+
+---
+
+## 第捌話 · 改造 · Customization
+
+> *「人は心が原動力だから、心はどこまでも強くなれる」* — **Kamado Tanjiro**
+
+<details open>
+<summary><b>👤 操縦士 · Operator identity</b> — <kbd>u</kbd></summary>
+
+- Callsign (e.g. `LEVI`, `ZERO`) and honorific: `-SAMA`, `-SAN`, `-SENPAI`, `-KUN`, none, or your own (`殿`, `-COMMANDER`…).
+- **機体性能 Performance tier:** HIGH (30 particles, 16 px blur) · MID (18, 8 px) · ECO (no particles, no blur) · 🔄 auto-detect.
+- **起動演出 Boot:** FULL every tab · **1 / HOUR** (then instant) · OFF — and the voice greeting ON / OFF.
+- **検索機関 Search engine:** Google · DuckDuckGo · Brave · Startpage.
+- ▶ **Test boot** to watch the sequence with your name.
+
+</details>
+
+<details>
+<summary><b>🔗 構成中枢 · Links & icons</b> — <kbd>e</kbd></summary>
+
+- Add, edit, delete links per sector, each with a 1–2 character kanji seal (観 遊 網 音…).
+- **Click the seal box to upload any image as the link's icon.** It's shrunk to a 64×64 WebP (~1 KB) and saved with the link — works offline forever. ✕ removes it.
+- To ship a logo for everyone: drop `assets/icons/<hostname>.webp` and add it to `SHINSEKAI_BUNDLED_ICONS` at the bottom of `links.js`. Default links live in `links.js` too.
+
+</details>
+
+<details>
+<summary><b>💾 Backup · export / import</b></summary>
+
+**⭳ Export** saves `shinsekai-profile-<name>.json`: links (with custom icons), operator, theme & custom colour, wallpaper, tier, CRT / particles / dock, boot & voice, search engine, SFX, clock format and focus durations. **⭱ Import** restores it on any machine. (Uploaded wallpaper files stay in that browser's IndexedDB.)
+
+</details>
+
+<details>
+<summary><b>🎬 Wallpapers & voice</b></summary>
+
+- Replace a stage: `assets/animated/720p/<theme>.mp4` (default) and optionally `assets/animated/<theme>.mp4` (1080p Ultra). Stills: `assets/previews/<theme>.webp`.
+- Replace the greeting: `assets/audio/welcome.mp3`.
+- Or skip the files entirely and use the **カスタム** tab to upload your own.
+
+</details>
+
+---
+
+## 第玖話 · 秘術 · URL Parameters
+
+> *「体は剣で出来ている」* — **Archer** · "I am the bone of my sword."
+
+| Parameter | Example | Effect |
 |:---|:---|:---|
-| `?scene=` | `?scene=tokyonight` | Select background scene (`crimson`, `tokyonight`, `sakura`, `catppuccin`, `cyberpunk`, `eco` or aliases `gojo`, `eyes`, `sasuke`) |
-| `?mode=` | `?mode=static` | Force the wallpaper category on boot (`live` or `static`) independent of the scene |
-| `?theme=` | `?theme=catppuccin` | Select color faction theme (`crimson`, `tokyonight`, `sakura`, `catppuccin`, `cyberpunk`, `custom`) |
-| `?color=` | `?color=%23a6e3a1` | Custom theme hex accent color (e.g. `%2300f0ff` or `ff007f`) |
-| `?user=` / `?operator=` | `?user=LEVI` | Override pilot callsign name |
-| `?honorific=` / `?title=` | `?honorific=-SENPAI` | Set Japanese honorific (`-SAMA`, `-SAN`, `-SENPAI`, `-KUN`, `none`, or custom) |
-| `?particles=` | `?particles=off` | Enable or disable atmospheric particle canvas (`on` or `off`) |
-| `?ultra=1` / `?hd=1` | `?ultra=1` | Force startup directly in HD Ultra (1080p) master mode |
-| `?pinned=1` | `?pinned=1` | Lock the holographic bookmark drawer open on boot |
-| `?fx=` | `?fx=lite` | Visual-cost level: `full` (glass blur on every panel), `lite` (no blur on always-on panels; the default on Firefox and picked automatically on slow machines) or `min` (lite + no CRT/grain, this session only). `full`/`lite` are remembered. |
-| `?noboot=1` | `?noboot=1` | Bypass the 1.5-second cinematic boot sequence for instant page display |
-| `?menu=` | `?menu=operator` | Auto-launch a modal on boot (`operator`, `links`, `shortcuts`, `theme`, `scene`) |
+| `theme` | `?theme=sakura` | `crimson` `tokyonight` `sakura` `catppuccin` `cyberpunk` `custom` (unknown values fall back to crimson) |
+| `color` / `hex` | `?theme=custom&color=%23ff3366` | Custom faction colour |
+| `scene` | `?scene=tokyonight` | Wallpaper (`eco` too; aliases `gojo` `eyes` `sasuke` `rengoku` `sukuna`) |
+| `mode` | `?mode=static` | `live` or `static` |
+| `ultra` / `hd` | `?ultra=1` | 1080p stage |
+| `user` / `operator` | `?user=LEVI` | Callsign |
+| `honorific` / `title` | `?honorific=-SENPAI` | Honorific (`none` for nothing) |
+| `particles` | `?particles=off` | `on` / `off` |
+| `pinned` | `?pinned=1` | Bookmark drawer open |
+| `tier` | `?tier=eco` | `high` `mid` `eco` for this load (doesn't change your saved tier) |
+| `fx` | `?fx=lite` | `full` · `lite` (no glass blur; Firefox default) · `min` (this session) |
+| `noboot` | `?noboot=1` | Skip the boot animation |
+| `menu` | `?menu=operator` | Open `operator` `links` `shortcuts` `theme` `scene` on load |
 
-*Example Command Link:*  
-`index.html?theme=custom&color=%23ff3366&scene=crimson&ultra=1&user=RENGOKU&honorific=-SAMA&noboot=1`
-
----
-
-## ⚡ Performance, Memory & Lifecycle Architecture
-
-Shinsekai features an autonomous performance engine engineered to operate at an ultra-low memory footprint (~35–50 MB active, dropping to ~20 MB when inactive):
-
-### 🏎️ 1. Hardware Tier Presets (`high` / `mid` / `eco`)
-The engine autonomously detects your hardware environment (`deviceMemory`, `hardwareConcurrency`, screen width, data-saver flags, and `prefers-reduced-motion`) and adapts rendering parameters:
-
-| Tier | Ambient Particles | Backdrop Blur (`--blur-px`) | Film Grain | Video Decoding Stage |
-|:---|:---:|:---:|:---:|:---|
-| **High** | 30 | `16px` | Enabled | 720p30 Loop (or optional 1080p Ultra) |
-| **Mid** *(Default)* | 18 | `8px` | Enabled | 720p30 Loop |
-| **Eco** | 0 | `0px` *(flat)* | Disabled | Zero Video Decoding (Static High-Res Backdrop, ~20MB RAM) |
-
-*Manual Override:* Set your preferred tier anytime via DevTools console (`applyTierPreset('eco')`) or let the runtime FPS watchdog manage it dynamically.
-
-### 📼 2. 720p Default with Optional HD Ultra (1080p)
-- **720p Default Transcodes**: All 5 anime scene loops are pre-encoded with high-efficiency `libx264`, `preset=slow`, `crf=20`, `scale=1280:720`, `lanczos` filtering, and `+faststart` web optimization, shrinking file sizes by 30–60% with zero perceived quality loss.
-- **HD Ultra (1080p) On-Demand**: Surfaced as explicit options in the scene selector (**紅蓮 HD**, **東京夜 HD**, etc.) for large high-DPI displays without imposing memory overhead on normal sessions. The selection automatically persists in `localStorage` across new tabs.
-
-### 💤 3. Visibility-Driven Power Lifecycle
-- Whether the animation engines run is **derived from ground truth** (`document.hidden` and whether a modal is open) every time it is asked — never from a flag that events toggle. One idempotent `syncEngines()` reconciles reality and is safe to call from any event, in any order (`visibilitychange`, `pageshow`, Page Lifecycle `resume`, `focus`, modal open/close, and a 3-second health check that heals a missed event).
-- When the tab is hidden the video, particles and quote timer pause; when it is visible again the clock is corrected immediately and everything restarts.
-- Losing **window focus** (address bar, another window, another monitor, focus-follows-mouse) does *not* pause anything — the page is still visible.
-- The wallpaper stays loaded while hidden to prevent Chromium video element decimation.
-
-### 🪶 3b. Adaptive FX Level (`full` / `lite` / `min`)
-Independent of the hardware tier. `lite` removes `backdrop-filter` from the always-on panels and popovers (they are already 82–96% opaque, so it is barely visible) and is the **default on Firefox**. The FPS watchdog steps `full → lite → min` automatically after sustained low frame rates, and never touches your wallpaper or saved tier.
-
-### 🛡️ 4. Watchdogs & Error Recovery
-- **Runtime FPS Watchdog**: Measures frame delivery over 2-second windows, but only while the page is actually running (not hidden, no modal open, not in the first seconds after load) and it restarts its window after any long gap. After 3 consecutive slow windows it lowers the FX level (see 3b).
-- **Resume-Freeze Recovery**: Some GPU/decoder pipelines silently lose their hardware decode context after a tab sits backgrounded. After every resume the engine verifies the frame clock is really moving, escalating `play()` → full reload from where it left off.
-- **2-Strike Error & Freeze Recovery**: If video decoders stall or throw errors twice consecutively, Shinsekai cleanly falls back to `eco` static mode instead of entering an infinite retry loop.
-- **Zero-Latency Boot Loader**: An early inline script parses the URL/stored scene prior to DOM rendering, loading the exact video immediately and eliminating wasteful initial double-decodes.
+`index.html?theme=custom&color=%23ff3366&scene=crimson&user=RENGOKU&honorific=-SAMA&noboot=1`
 
 ---
 
-## 🔒 Privacy, Offline & Network Transparency
+## 第拾話 · 機体構造 · Architecture
 
-- **100% Private & Self-Hosted**: Zero trackers, zero telemetry, zero analytics scripts, and zero third-party telemetry beacons. Your bookmarks and pilot profile stay strictly inside your local browser `localStorage`.
-- **Network Requests**: External network activity is strictly limited to:
-  1. **Google Fonts**: Lightweight typography loading on cold boot (*JetBrains Mono*, *Plus Jakarta Sans*, *Zen Kaku Gothic New*).
-  2. **Favicon Cache Sync**: When you add new bookmarks, Shinsekai optionally resolves icons via Google / icon.horse and **stores compact 32×32 data-URIs permanently in localStorage**. Once cached, icons are served 100% offline with zero network requests. Icon syncing is sequentially rate-limited (120ms delays) and completely dormant when offline.
+> *「我が兵士よ怒れ、我が兵士よ叫べ、我が兵士よ戦え！」* — **Erwin Smith**
 
----
+<details>
+<summary><b>⚙️ Performance & lifecycle engine</b></summary>
 
-## 🔍 Quick Search Bangs
+- **Derived, not toggled:** whether video / particles / quotes run is recomputed from `document.hidden` + "is a dialog open" every time, so they can never get stuck paused. Losing window focus doesn't pause a visible page.
+- **Video health watchdog:** detects frozen decoders after sleep or tab switching and escalates `play()` → seek nudge → full reload from the same timestamp.
+- **Adaptive FX:** an FPS sampler (only while the page is really running) steps `full → lite → min` after sustained drops, then stops sampling. It never changes your wallpaper or saved tier.
+- **Colour picker pipeline:** drag input is applied once per frame, transitions are frozen while tuning, storage is written once on release.
+- **Zero-flash boot:** `boot.js` sets theme / tier / FX attributes and custom-colour variables before first paint; `boot-stage.js` starts loading exactly the wallpaper you'll see (never a default video that's about to be replaced).
 
-Type any shortcut into the Katana search capsule followed by your query:
-
-| Bang | Target Terminal | Example Command |
-|:---:|:---|:---|
-| `!g` | Google Search | `!g mechanical keyboard reviews` |
-| `!y` | YouTube Video | `!y anime lofi hip hop mix` |
-| `!gh` | GitHub Code | `!gh cachyos linux` |
-| `!r` | Reddit Community | `!r unixporn` |
-| `!d` | DuckDuckGo Privacy | `!d neovim lua setup` |
-| `!w` | Wikipedia Archive | `!w mecha anime history` |
-
-*Tip: Pasting or typing direct URLs (e.g., `github.com`, `mailto:pilot@shinsekai.org`, or `https://archlinux.org`) will jump straight to the destination.*  
-*Operator Command Tip: Type `:user <name>` or `:settings` in the search bar to immediately configure your pilot identity.*
-
----
-
-## 🛠️ Customizing Your Station
-
-### 1. Custom Operator / Pilot Name & Identity
-1. Press <kbd>u</kbd> (or click **`👤 OPERATOR`** in the top bar).
-2. Enter your desired pilot callsign / name (e.g. `ALEX`, `SHADOW`, `LEVI`, `ZERO`).
-3. Select your preferred Japanese honorific protocol (`-SAMA`, `-SAN`, `-SENPAI`, `-KUN`, `NONE / 敬称なし`, or a `CUSTOM` title).
-4. Select your **機体性能 (Hardware Performance Tier)** (`HIGH`, `MID`, `ECO`) or click **`🔄 自動判定 (Auto-Detect)`** to benchmark your device based on CPU cores, RAM, and motion preferences.
-5. Watch the real-time mecha boot telemetry preview update live as you type.
-6. Click **`▶ 起動シミュレーション (Test Boot)`** to immediately experience the cinematic mecha boot sequence and audio greeting with your custom name!
-
-### 2. Unified Profile & Link Matrix Editor (No Coding Required)
-1. Press <kbd>e</kbd> or click the **`⚙️ リンク編集`** button in the header.
-2. Select your category blade (**01 アニメ**, **02 電子遊戯**, **03 開発中枢**, **04 媒体通信**).
-3. Click **`✏️ 編集`** to modify, **`🗑️ 削除`** to delete, or add bookmarks using the bottom form with custom Japanese kanji seals (`観`, `遊`, `網`, `音`, etc.).
-4. Click **`⭳ 設定保存 (Export)`** to download a unified **`shinsekai-profile-<name>.json`** backup containing your complete setup: pinned links, operator name, honorific, active theme, custom theme color, scene, tier, and CRT filters.
-5. Click **`⭱ 設定読込 (Import)`** to restore your complete profile anytime on any machine.
-
-### 3. Custom Video Stages
-To add or replace video stages, drop your looping `.mp4` into the respective tier folder matching the theme name:
-- **Default 720p Loop** (standard playback): Place in `assets/animated/720p/<theme>.mp4`
-- **HD Ultra 1080p Loop** (optional high-res mode): Place in `assets/animated/<theme>.mp4`
-
-```
-assets/animated/
-├── 720p/               # Default 720p30 loops (CRF 20, Lanczos)
-│   ├── crimson.mp4
-│   ├── tokyonight.mp4
-│   ├── sakura.mp4
-│   ├── catppuccin.mp4
-│   └── cyberpunk.mp4
-├── crimson.mp4         # Optional 1080p Ultra master
-├── tokyonight.mp4      # Optional 1080p Ultra master
-├── sakura.mp4          # Optional 1080p Ultra master
-├── catppuccin.mp4      # Optional 1080p Ultra master
-└── cyberpunk.mp4       # Optional 1080p Ultra master
-```
-
-### 4. Wallpaper Management (Live, Static & Custom)
-1. Click the wallpaper button in the top-right tool dock (or press <kbd>w</kbd> / <kbd>s</kbd> to cycle).
-2. Choose from the modern segmented control bar:
-   - **System Presets Group**:
-     - **`▶ 動的 (LIVE)`**: Hardware-accelerated anime video loops displayed by filename.
-     - **`🖼 静止画 (STATIC)`**: High-resolution static artworks displayed by filename.
-   - **Custom Library Group**:
-     - **`📁 カスタム (CUSTOM)`**: Displays a dynamic badge count of your personal collection.
-3. **Clean Custom Separation**: Inside the `カスタム` panel, items are strictly organized into dedicated subsections:
-   - **`▶ カスタム動的映像 (Custom Videos)`**: Displays uploaded `.mp4` and `.webm` files with exact file size badges.
-   - **`🖼 カスタム静止画 (Custom Images)`**: Displays uploaded `.png`, `.jpg`, `.webp`, and `.gif` files with format badges.
-   - **`🔗 オンラインリンク (Web URLs)`**: Displays external online image and video bookmarks.
-4. **1080p Ultra HD / 720p Toggle Button**: Seamlessly toggle between 720p standard mode (low VRAM, power-efficient) and 1080p Ultra HD mode directly from the wallpaper popover header bar without page reloads.
-5. **Multi-File Upload & Storage Limits**: Click **`＋ ファイル追加`** to select and upload multiple files at once (up to 35MB per file). Files are stored safely in **IndexedDB** without 5MB `localStorage` limits.
-6. **Contextual Restores & Deletions**:
-   - Delete any preset or custom wallpaper at any time via the **`✕`** delete button on each item.
-   - Contextual restore banners appear directly within their respective panels whenever default items are deleted.
-
-> **Tip for Wayland / Hyprland users:** Shinsekai's companion desktop script also accepts arbitrary static wallpapers:
-> ```bash
-> ~/.config/hypr/scripts/wallpaper.sh static /path/to/wallpaper.png
-> ~/.config/hypr/scripts/wallpaper.sh static crimson   # Uses built-in theme PNG
-> ```
-
-### 5. Custom Welcome Voice
-Replace `assets/audio/welcome.mp3` with your favorite anime character dialogue or custom voice synthesis clip!
-
----
-
-## 📁 Battlestation Architecture
+</details>
 
 ```
 SHINSEKAI-Startup-Page/
-├── assets/
-│   ├── animated/           # Theme looping MP4 stages
-│   │   ├── 720p/           # 720p30 CRF-20 default web-optimized loops (Faststart)
-│   │   │   ├── catppuccin.mp4
-│   │   │   ├── crimson.mp4
-│   │   │   ├── cyberpunk.mp4
-│   │   │   ├── sakura.mp4
-│   │   │   └── tokyonight.mp4
-│   │   ├── catppuccin.mp4  # HD Ultra 1080p Valley of the End Chakra
-│   │   ├── crimson.mp4     # HD Ultra 1080p Flame Breathing Embers
-│   │   ├── cyberpunk.mp4   # HD Ultra 1080p Night City Rain
-│   │   ├── sakura.mp4      # HD Ultra 1080p Ronin Cherry Blossom
-│   │   └── tokyonight.mp4  # HD Ultra 1080p Infinite Void Cosmos
-│   ├── audio/              # Mecha female voice welcome asset
-│   │   └── welcome.mp3     # 「ようこそ、ミモグ様」
-│   └── previews/           # Clean wallpaper-only stills (used live as <video poster> & static stage)
-│       ├── catppuccin.png  # 終末谷 Interface
-│       ├── crimson.png     # 紅蓮 Interface
-│       ├── cyberpunk.png   # 電脳都市 Interface
-│       ├── sakura.png      # 桜吹雪 Interface
-│       ├── tokyonight.png  # 東京夜 Interface
-│       └── showcase/       # Cockpit UI marketing captures rendered over stage art
-│           ├── catppuccin.jpg
-│           ├── crimson.jpg
-│           ├── cyberpunk.jpg
-│           ├── sakura.jpg
-│           └── tokyonight.jpg
-├── index.html              # Clean semantic anime HUD viewport & zero-latency loader
-├── links.js                # Default pinned links & kanji seals
-├── manifest.json           # Native Chromium Web Extension manifest (V3)
-├── README.md               # Mission dossier & documentation
-├── script.js               # Reactive engine, tier manager, particle physics & watchdogs
-├── style.css               # Glassmorphism, CSS variable blur, GPU isolation & themes
-├── theme-core.js           # Synchronous anti-FOUC theme/profile bootstrap (loaded before <body>)
-└── *.min.js / *.min.css    # Pre-compiled production bundles (script.min.js, style.min.css, theme-core.min.js)
+├── index.html          # Cockpit markup — no inline scripts (MV3-CSP safe)
+├── style.css           # Themes, glass, animations, every-device layer, @font-face
+├── script.js           # Engine: wallpapers, particles, focus timer, search, editors
+├── theme-core.js       # Colour math & custom-theme variables (shared)
+├── boot.js             # <head> bootstrap: theme / tier / fx before first paint
+├── boot-stage.js       # Picks & starts the active wallpaper immediately
+├── links.js            # Default bookmarks + bundled-icon map  ← edit me
+├── sw.js               # 結界 offline service worker (http(s) hosting only)
+├── app.webmanifest     # Installable app (PWA) manifest
+├── manifest.json       # Chromium extension manifest (new-tab override)
+└── assets/
+    ├── animated/       # Live stages: 720p/ default, root = 1080p Ultra
+    ├── previews/       # 1080p WebP stills (+ showcase/ captures for this README)
+    ├── fonts/          # Self-hosted WOFF2 subsets + LICENSE-OFL.txt
+    ├── icons/          # Bundled bookmark logos (64×64 WebP)
+    ├── app/            # App / favicon icons
+    └── audio/          # welcome.mp3
 ```
+
+> [!TIP]
+> Shipping changes to a hosted copy? Bump `VERSION` in `sw.js` (and the `?v=` query strings in `index.html`) so installed apps pick them up.
 
 ---
 
+## 最終話 · 次回予告 · Next Episode
+
+> *「海賊王に、おれはなる！」* — **Monkey D. Luffy** · "I'm going to be the King of the Pirates!"
+
+**次回、新世界 —「君だけの起動画面」**<br/>
+*Next time on SHINSEKAI: "A Start Screen Only You Own." Fork it, tune your faction, pin your links… and don't miss it!*
+
+Quote suggestions, new faction stages and pull requests are always welcome. Fonts are © their authors under the SIL Open Font License (`assets/fonts/LICENSE-OFL.txt`); site logos belong to their respective owners.
+
 <div align="center">
 
-### // MISSION COMPLETE //
+Crafted with passion for anime and clean aesthetics by **[Mimogu](https://github.com/Mimogu)**.
 
-Crafted with passion for anime culture and clean aesthetics by **[Mimogu](https://github.com/Mimogu)**.  
-*Contributions, anime quote suggestions, and pull requests are always welcome.*
+**新世界システム · オールグリーン · 全システム正常始動**<br/>
+<sub>SHINSEKAI OS // ALL SYSTEMS NOMINAL // ZERO TELEMETRY // TO BE CONTINUED ▶</sub>
 
-<p align="center">
-  <b>新世界システム · オールグリーン · 全システム正常始動</b><br/>
-  <sub>SHINSEKAI OS // ALL SYSTEMS NOMINAL // ZERO TELEMETRY</sub>
-</p>
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:f7768e,50:3a0d1c,100:0d080e&height=120&section=footer" alt="" width="100%" />
 
 </div>

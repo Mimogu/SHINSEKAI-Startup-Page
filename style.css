@@ -4,6 +4,58 @@
    Hardware-Accelerated Video Stage · Atmospheric Particles · Anime Subtitle HUD
    ════════════════════════════════════════════════════════════════════════════ */
 
+/* ─── 0. SELF-HOSTED FONTS (100% offline — no Google Fonts request) ───
+   Subsetted WOFF2 files in assets/fonts (SIL OFL, see LICENSE-OFL.txt).
+   Zen Kaku Gothic New ships as two files per weight: a ~95 KB core with
+   kana, punctuation and every kanji the UI itself uses, plus a JIS level-1
+   kanji extension. The extension is declared FIRST so the core (declared
+   last) is tried first; the browser only downloads the extension when
+   you type a kanji that the core doesn't contain (e.g. a custom name). */
+@font-face {
+  font-family: 'Zen Kaku Gothic New';
+  font-style: normal;
+  font-weight: 100 700; /* must match the core face exactly, or it gets picked (and downloaded) first */
+  font-display: swap;
+  src: url('assets/fonts/zen-kaku-gothic-new-700-kanji.woff2') format('woff2');
+  unicode-range: U+4E00-9FFF;
+}
+@font-face {
+  font-family: 'Zen Kaku Gothic New';
+  font-style: normal;
+  font-weight: 800 900;
+  font-display: swap;
+  src: url('assets/fonts/zen-kaku-gothic-new-900-kanji.woff2') format('woff2');
+  unicode-range: U+4E00-9FFF;
+}
+@font-face {
+  font-family: 'Zen Kaku Gothic New';
+  font-style: normal;
+  font-weight: 100 700;
+  font-display: swap;
+  src: url('assets/fonts/zen-kaku-gothic-new-700.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Zen Kaku Gothic New';
+  font-style: normal;
+  font-weight: 800 900;
+  font-display: swap;
+  src: url('assets/fonts/zen-kaku-gothic-new-900.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 100 800;
+  font-display: swap;
+  src: url('assets/fonts/jetbrains-mono-var.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+  src: url('assets/fonts/plus-jakarta-sans-var.woff2') format('woff2');
+}
+
 /* ─── 1. ANIME COLOR THEMES ─── */
 :root {
   /* Every theme this site ships is dark. Without this, Chromium/Firefox
@@ -15,8 +67,8 @@
      page CSS), but it removes the jarring white flash. */
   color-scheme: dark;
   --font-main: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
-  --font-jp: 'Zen Kaku Gothic New', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Consolas, monospace;
+  --font-jp: 'Zen Kaku Gothic New', 'Hiragino Sans', 'Yu Gothic UI', 'Noto Sans CJK JP', 'Noto Sans JP', sans-serif;
   --ease-cinematic: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --blur-px: 16px;
@@ -561,7 +613,7 @@ body[data-particles="off"] .ambient-canvas {
   z-index: 550;
   justify-self: end;
   width: 100%;
-  max-width: 310px;
+  max-width: 21.875rem;
 }
 
 /* Shinobi Focus & EVA Telemetry Core */
@@ -849,7 +901,7 @@ body[data-particles="off"] .ambient-canvas {
   gap: 0.35rem;
   position: relative;
   width: 100%;
-  max-width: 310px;
+  max-width: 21.875rem; /* 310px left the 4th visual pill (CRT) orphaned on its own row */
 }
 
 .quick-tools-row {
@@ -971,7 +1023,7 @@ body[data-particles="off"] .ambient-canvas {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  min-width: 250px;
+  min-width: 15.625rem;
   max-height: 290px;
   overflow-y: auto;
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.85), 0 0 20px var(--accent-soft);
@@ -984,15 +1036,15 @@ body[data-particles="off"] .ambient-canvas {
 }
 
 #theme-popover {
-  min-width: 300px;
-  max-width: 325px;
+  min-width: 18.75rem;
+  max-width: 20.3125rem;
   max-height: 580px;
   padding: 10px 12px;
 }
 
 #scene-popover {
-  min-width: 350px;
-  max-width: 410px;
+  min-width: 21.875rem;
+  max-width: 25.625rem;
   max-height: 520px;
   padding: 10px 12px;
 }
@@ -1697,7 +1749,7 @@ body[data-particles="off"] .ambient-canvas {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 140px;
+  max-width: 8.75rem;
 }
 
 .spectrum-crystals-grid {
@@ -2060,7 +2112,7 @@ body[data-particles="off"] .ambient-canvas {
   align-items: center;
   gap: 0.75rem;
   width: 100%;
-  max-width: 680px;
+  max-width: 42.5rem;
   padding: 0.75rem 1.25rem;
   background: rgba(10, 14, 26, 0.82);
   border: 1px solid var(--glass-border);
@@ -2192,7 +2244,7 @@ body[data-particles="off"] .ambient-canvas {
   flex-direction: column;
   align-items: center;
   width: 100%;
-  max-width: 1120px;
+  max-width: 70rem;
   margin: 0 auto;
   gap: 0.65rem;
 }
@@ -2500,7 +2552,7 @@ body:not([data-dock-pinned="true"]) .blade-launcher-container:not(:hover):not(.o
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  max-width: 1000px;
+  max-width: 62.5rem;
   margin: 0 auto;
   padding: 0.55rem 1.4rem;
   background: rgba(8, 12, 22, 0.88);
@@ -3332,7 +3384,32 @@ body.boot-active .anime-subtitles-bar {
   color: var(--accent);
 }
 
-.seal-preview-box:hover {
+.seal-preview-box {
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+}
+
+.seal-icon-clear {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  padding: 0;
+  border-radius: 6px;
+  border: 1px solid var(--glass-border);
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--text-muted);
+  font-size: 0.65rem;
+  cursor: pointer;
+}
+
+.seal-icon-clear:hover {
+  color: #ff6b81;
+  border-color: #ff6b81;
+}
+
+.seal-preview-box:hover,
+.seal-preview-box:focus-visible {
   border-color: var(--accent);
   box-shadow: 0 0 10px var(--accent-soft);
 }
@@ -3980,3 +4057,318 @@ body.boot-active .anime-subtitles-bar {
 }
 
 
+
+/* ════════════════════════════════════════════════════════════════════════════
+   ─── 16. 瞬間移動 · QUICK LAUNCH (type a pinned link's name, Enter) ───
+   ════════════════════════════════════════════════════════════════════════════ */
+.search-capsule {
+  position: relative;
+}
+
+.search-stage:has(.quick-launch:not([hidden])) {
+  z-index: 900;
+}
+
+.quick-launch {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  padding: 0.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  background: rgba(8, 10, 20, 0.97);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.85), 0 0 22px var(--accent-soft);
+  z-index: 5;
+}
+
+.quick-launch[hidden] {
+  display: none;
+}
+
+.ql-item {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  width: 100%;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  background: transparent;
+  color: var(--text-main);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ql-item.active,
+.ql-item:hover {
+  background: var(--accent-soft);
+  border-color: var(--glass-border-hover);
+}
+
+.ql-item .tile-seal {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+}
+
+.ql-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.ql-title {
+  font-weight: 800;
+  font-size: 0.86rem;
+  color: var(--text-bright);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ql-sub {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ql-sector {
+  font-family: var(--font-jp);
+  font-size: 0.72rem;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.ql-enter {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  padding: 1px 6px;
+  border: 1px solid var(--glass-border);
+  border-radius: 4px;
+  color: var(--text-muted);
+  visibility: hidden;
+  flex-shrink: 0;
+}
+
+.ql-item.active .ql-enter {
+  visibility: visible;
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.ql-hint {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  padding: 0.25rem 0.65rem 0.1rem;
+  opacity: 0.8;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   ─── 17. 全端末対応 · EVERY-DEVICE LAYER ───
+   Phones, tablets, foldables, touch laptops, notched screens, TVs and 4K.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* Notches / rounded corners / home indicators (needs viewport-fit=cover). */
+.cinema-viewport {
+  padding-top: max(1.25rem, env(safe-area-inset-top));
+  padding-right: max(2.2rem, env(safe-area-inset-right));
+  padding-bottom: max(1.25rem, env(safe-area-inset-bottom));
+  padding-left: max(2.2rem, env(safe-area-inset-left));
+}
+
+/* The cockpit is a single locked 100dvh screen on desktops. On phones,
+   portrait tablets and short landscape windows that screen is taller than
+   the viewport, and with overflow:hidden the bottom (bookmarks, quotes)
+   was simply unreachable. Let it scroll there. */
+@media (max-width: 768px), (max-height: 620px) {
+  html, body {
+    height: auto;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+  .cinema-viewport {
+    height: auto;
+    min-height: 100dvh;
+    gap: 1.1rem;
+    justify-content: flex-start;
+  }
+  .search-stage {
+    margin: 0.4rem 0;
+  }
+  .video-stage,
+  .ambient-canvas,
+  .crt-overlay {
+    position: fixed;
+  }
+}
+
+@media (max-width: 1100px) {
+  .cinema-viewport {
+    padding-right: max(1.2rem, env(safe-area-inset-right));
+    padding-left: max(1.2rem, env(safe-area-inset-left));
+  }
+}
+
+@media (max-width: 768px) {
+  .cinema-viewport {
+    padding-right: max(0.85rem, env(safe-area-inset-right));
+    padding-left: max(0.85rem, env(safe-area-inset-left));
+  }
+  .hud-controls-deck {
+    max-width: 100%;
+  }
+  .anime-popover {
+    max-width: calc(100vw - 24px);
+    max-height: 70dvh;
+  }
+  #theme-popover,
+  #scene-popover {
+    min-width: 0;
+    width: min(360px, calc(100vw - 24px));
+  }
+  .link-editor-dialog {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 100dvh !important;
+    border-radius: 14px;
+  }
+  /* 16px+ stops iOS Safari from zooming the page when an input is focused. */
+  .command-input,
+  .link-editor-dialog input[type="text"],
+  .link-editor-dialog input[type="url"] {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 420px) {
+  .quick-tools-row .tool-label-sub {
+    display: none;
+  }
+  .tool-pill {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+  .ql-sector {
+    display: none;
+  }
+}
+
+/* Touch screens: no hover, fat fingers. Bigger hit areas, and no hover-only
+   reveals (the bookmark drawer opens on tap and closes on a tap elsewhere). */
+@media (hover: none) and (pointer: coarse) {
+  .tool-pill,
+  .bang-chip,
+  .tab-blade,
+  .holo-tile,
+  .tier-chip,
+  .honorific-chip,
+  .editor-btn,
+  .focus-cmd-btn,
+  .ql-item {
+    min-height: 44px;
+  }
+  .pop-wallpaper-delete-btn,
+  .editor-close-btn {
+    min-width: 40px;
+    min-height: 40px;
+  }
+  .key-tag,
+  .focus-kbd,
+  .tab-hotkey,
+  .sub-controls-hint kbd {
+    display: none;
+  }
+}
+
+/* Big monitors & TVs: scale the whole rem-based cockpit up instead of
+   leaving a small HUD floating in the middle of a 4K screen. */
+@media (min-width: 2200px) and (min-height: 1100px) {
+  html { font-size: 20px; }
+}
+@media (min-width: 3000px) and (min-height: 1500px) {
+  html { font-size: 26px; }
+}
+
+/* Keyboard users: visible focus ring everywhere (mouse clicks unaffected). */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Windows High Contrast / forced colours: keep panels readable. */
+@media (forced-colors: active) {
+  .tool-pill,
+  .search-capsule,
+  .holo-tile,
+  .tab-blade {
+    border: 1px solid CanvasText;
+  }
+}
+
+/* Phones: stack the subtitle bar (speaker, then the quote at full width)
+   instead of squeezing the line into a narrow middle column. */
+@media (max-width: 600px) {
+  .anime-subtitles-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.35rem;
+    text-align: center;
+  }
+  .sub-speaker-box {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .sub-controls-hint {
+    display: none;
+  }
+}
+
+/* Phones / short screens: the dialogs scroll as ONE page. As a fixed-height
+   flex column the pinned-links list was squeezed down to a few pixels. */
+@media (max-width: 768px), (max-height: 620px) {
+  .link-editor-dialog {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .link-editor-dialog > * {
+    flex-shrink: 0;
+  }
+  .editor-links-container {
+    max-height: none;
+    overflow: visible;
+    flex: none;
+  }
+  .operator-modal-body,
+  .shortcuts-modal-body {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .editor-link-card {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .editor-link-main {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+  .editor-link-actions {
+    flex: 1 1 100%;
+    justify-content: flex-end;
+  }
+}

@@ -15,7 +15,7 @@
           return window.localStorage.getItem(key);
         }
       } catch (e) {}
-      return this._mem[key] || null;
+      return Object.prototype.hasOwnProperty.call(this._mem, key) ? this._mem[key] : null;
     },
     setItem(key, val) {
       try {
@@ -88,8 +88,13 @@
       return 'mid';
     }
 
-    let currentTier = safeStorage.getItem('shinsekai-tier') || detectTier();
-    if (!safeStorage.getItem('shinsekai-tier')) safeStorage.setItem('shinsekai-tier', currentTier);
+    // ?tier= overrides for this load (boot.js already painted with it).
+    const tierParam = (typeof window !== 'undefined' && window.location) ? new URLSearchParams(window.location.search).get('tier') : null;
+    let currentTier = TIER_CONFIG[tierParam] ? tierParam : safeStorage.getItem('shinsekai-tier');
+    if (!TIER_CONFIG[currentTier]) {
+      currentTier = detectTier();
+      safeStorage.setItem('shinsekai-tier', currentTier);
+    }
 
     function updateTierUI(tier) {
       const activeTier = tier || currentTier;
@@ -102,6 +107,7 @@
     }
 
     function applyTierPreset(tier) {
+      if (!TIER_CONFIG[tier]) return; // ignore junk from imports / console calls
       currentTier = tier;
       safeStorage.setItem('shinsekai-tier', tier);
       const cfg = TIER_CONFIG[tier] || TIER_CONFIG.mid;
@@ -136,7 +142,10 @@
 
     const urlParams = (typeof window !== 'undefined' && window.location) ? new URLSearchParams(window.location.search) : null;
     const paramScene = urlParams ? urlParams.get('scene') : null;
-    const paramTheme = urlParams ? urlParams.get('theme') : null;
+    const VALID_THEME_KEYS = ['crimson', 'tokyonight', 'sakura', 'catppuccin', 'cyberpunk', 'custom'];
+    // An unknown ?theme= value used to be written straight into data-theme by
+    // the boot sequence, leaving the page with no theme variables at all.
+    const paramTheme = (urlParams && VALID_THEME_KEYS.includes(urlParams.get('theme'))) ? urlParams.get('theme') : null;
     const paramPinned = urlParams ? urlParams.get('pinned') : null;
     const paramUser = urlParams ? (urlParams.get('user') || urlParams.get('operator')) : null;
     const paramHonorific = urlParams ? (urlParams.get('honorific') || urlParams.get('title')) : null;
@@ -559,7 +568,7 @@
       }
 
       if (particlesActive) {
-        if (typeof respawnParticles === 'function') respawnParticles();
+        if (!particles.length && typeof respawnParticles === 'function') respawnParticles(); // initCanvas() already spawned them on boot
         if (typeof startCanvasAnim === 'function') startCanvasAnim();
       } else {
         if (typeof stopCanvasAnim === 'function') stopCanvasAnim();
@@ -911,8 +920,17 @@
       }
     ];
 
-    let currentQuoteIdx = 0;
+    // Start on a random quote — as a new-tab page the first quote is the one
+    // you see most, and it used to always be the same one.
+    let currentQuoteIdx = Math.floor(Math.random() * animeQuotes.length);
     let quoteTimer = null;
+    if (subJp && subEn && subSpeaker) {
+      const q0 = animeQuotes[currentQuoteIdx];
+      subSpeaker.textContent = q0.speaker;
+      if (subSpeakerEn) subSpeakerEn.textContent = q0.speakerEn || '';
+      subJp.textContent = q0.jp;
+      subEn.textContent = q0.en;
+    }
 
     function startQuoteTimer() {
       clearInterval(quoteTimer);
@@ -923,7 +941,6 @@
       if (!subJp || !subEn || !subSpeaker) return;
       currentQuoteIdx = (currentQuoteIdx + 1) % animeQuotes.length;
       const q = animeQuotes[currentQuoteIdx];
-      const subSpeakerEn = document.getElementById('sub-speaker-en');
 
       subJp.style.opacity = '0';
       subEn.style.opacity = '0';
@@ -1104,22 +1121,22 @@
 
     /* ─── DEFAULT LIVE SCENES & STATIC ARTWORKS ─── */
     const DEFAULT_LIVE_SCENES = [
-      { key: 'crimson',    fileName: 'crimson.mp4',    label: '映像: 紅蓮',     labelEn: 'Crimson',       badge: '720p / 1080p MP4', video: { default: 'assets/animated/720p/crimson.mp4',    ultra: 'assets/animated/crimson.mp4'    }, preview: 'assets/previews/crimson.png' },
-      { key: 'tokyonight', fileName: 'tokyonight.mp4', label: '映像: 東京夜',   labelEn: 'TokyoNight',    badge: '720p / 1080p MP4', video: { default: 'assets/animated/720p/tokyonight.mp4', ultra: 'assets/animated/tokyonight.mp4' }, preview: 'assets/previews/tokyonight.png' },
-      { key: 'sakura',     fileName: 'sakura.mp4',     label: '映像: 桜吹雪',   labelEn: 'Sakura',        badge: '720p / 1080p MP4', video: { default: 'assets/animated/720p/sakura.mp4',    ultra: 'assets/animated/sakura.mp4'    }, preview: 'assets/previews/sakura.png' },
-      { key: 'catppuccin', fileName: 'catppuccin.mp4', label: '映像: 終末谷',   labelEn: 'Catppuccin',    badge: '720p / 1080p MP4', video: { default: 'assets/animated/720p/catppuccin.mp4', ultra: 'assets/animated/catppuccin.mp4' }, preview: 'assets/previews/catppuccin.png' },
-      { key: 'cyberpunk',  fileName: 'cyberpunk.mp4',  label: '映像: 電脳都市', labelEn: 'Cyberpunk',     badge: '720p / 1080p MP4', video: { default: 'assets/animated/720p/cyberpunk.mp4', ultra: 'assets/animated/cyberpunk.mp4' }, preview: 'assets/previews/cyberpunk.png' },
+      { key: 'crimson',    fileName: 'crimson.mp4',    label: '映像: 紅蓮',     labelEn: 'Crimson',       badge: '720p / 1080p MP4', video: { default: 'assets/animated/720p/crimson.mp4',    ultra: 'assets/animated/crimson.mp4'    }, preview: 'assets/previews/crimson.webp' },
+      { key: 'tokyonight', fileName: 'tokyonight.mp4', label: '映像: 東京夜',   labelEn: 'TokyoNight',    badge: '720p / 1080p MP4', video: { default: 'assets/animated/720p/tokyonight.mp4', ultra: 'assets/animated/tokyonight.mp4' }, preview: 'assets/previews/tokyonight.webp' },
+      { key: 'sakura',     fileName: 'sakura.mp4',     label: '映像: 桜吹雪',   labelEn: 'Sakura',        badge: '720p / 1080p MP4', video: { default: 'assets/animated/720p/sakura.mp4',    ultra: 'assets/animated/sakura.mp4'    }, preview: 'assets/previews/sakura.webp' },
+      { key: 'catppuccin', fileName: 'catppuccin.mp4', label: '映像: 終末谷',   labelEn: 'Catppuccin',    badge: '720p / 1080p MP4', video: { default: 'assets/animated/720p/catppuccin.mp4', ultra: 'assets/animated/catppuccin.mp4' }, preview: 'assets/previews/catppuccin.webp' },
+      { key: 'cyberpunk',  fileName: 'cyberpunk.mp4',  label: '映像: 電脳都市', labelEn: 'Cyberpunk',     badge: '720p / 1080p MP4', video: { default: 'assets/animated/720p/cyberpunk.mp4', ultra: 'assets/animated/cyberpunk.mp4' }, preview: 'assets/previews/cyberpunk.webp' },
       { key: 'eco',        fileName: 'eco',            label: '省電力: 静止画', labelEn: 'Eco (Low Power)', badge: 'ECO · 0% GPU / LOW RAM', video: null, preview: null }
     ];
 
     const scenes = DEFAULT_LIVE_SCENES;
 
     const DEFAULT_STATIC_ARTWORKS = [
-      { key: 'crimson',    fileName: 'crimson.png',    label: '静止画: 紅蓮',     labelEn: 'Crimson',    badge: 'PNG · 1080p', src: 'assets/previews/crimson.png' },
-      { key: 'tokyonight', fileName: 'tokyonight.png', label: '静止画: 東京夜',   labelEn: 'TokyoNight', badge: 'PNG · 1080p', src: 'assets/previews/tokyonight.png' },
-      { key: 'sakura',     fileName: 'sakura.png',     label: '静止画: 桜吹雪',   labelEn: 'Sakura',     badge: 'PNG · 1080p', src: 'assets/previews/sakura.png' },
-      { key: 'catppuccin', fileName: 'catppuccin.png', label: '静止画: 終末谷',   labelEn: 'Catppuccin', badge: 'PNG · 1080p', src: 'assets/previews/catppuccin.png' },
-      { key: 'cyberpunk',  fileName: 'cyberpunk.png',  label: '静止画: 電脳都市', labelEn: 'Cyberpunk',  badge: 'PNG · 1080p', src: 'assets/previews/cyberpunk.png' }
+      { key: 'crimson',    fileName: 'crimson.webp',    label: '静止画: 紅蓮',     labelEn: 'Crimson',    badge: 'WebP · 1080p', src: 'assets/previews/crimson.webp' },
+      { key: 'tokyonight', fileName: 'tokyonight.webp', label: '静止画: 東京夜',   labelEn: 'TokyoNight', badge: 'WebP · 1080p', src: 'assets/previews/tokyonight.webp' },
+      { key: 'sakura',     fileName: 'sakura.webp',     label: '静止画: 桜吹雪',   labelEn: 'Sakura',     badge: 'WebP · 1080p', src: 'assets/previews/sakura.webp' },
+      { key: 'catppuccin', fileName: 'catppuccin.webp', label: '静止画: 終末谷',   labelEn: 'Catppuccin', badge: 'WebP · 1080p', src: 'assets/previews/catppuccin.webp' },
+      { key: 'cyberpunk',  fileName: 'cyberpunk.webp',  label: '静止画: 電脳都市', labelEn: 'Cyberpunk',  badge: 'WebP · 1080p', src: 'assets/previews/cyberpunk.webp' }
     ];
 
     const sceneAliasMap = {
@@ -1615,10 +1632,25 @@
     // doesn't divide evenly into a 60 Hz refresh, so frames were shown for
     // uneven durations (visible judder, worst in Firefox). Set to 1.15 to restore.
     const VIDEO_PLAYBACK_RATE = 1.0;
+
+    /* When a video can't load (offline before it was ever cached, missing
+       file, broken web URL) show the matching still instead — for THIS
+       session only. It used to switch to Eco mode and save that permanently,
+       so one offline moment silently turned your wallpaper off for good. */
+    let videoFallbackActive = false;
+    function showVideoFallbackStill() {
+      videoFallbackActive = true;
+      const scene = DEFAULT_LIVE_SCENES.find(it => it.key === activeWallpaper.id);
+      const still = (scene && scene.preview) || 'assets/previews/crimson.webp';
+      if (bgVideo) { try { bgVideo.pause(); } catch (e) {} bgVideo.style.opacity = '0'; }
+      if (bgStatic) { bgStatic.src = still; bgStatic.style.opacity = '1'; }
+      document.body.setAttribute('data-wallpaper-mode', 'static');
+    }
     let pendingCanPlay = null;
     let fadeInFallbackTimer = null;
 
     function applyDefaultLiveScene(sceneKey, isUltra = null) {
+      videoFallbackActive = false;
       const resolvedKey = sceneAliasMap[sceneKey] || sceneKey;
       let s = DEFAULT_LIVE_SCENES.find(it => it.key === resolvedKey);
       if (!s) s = DEFAULT_LIVE_SCENES[0];
@@ -1718,6 +1750,7 @@
     }
 
     function applyDefaultStaticScene(artKey) {
+      videoFallbackActive = false;
       let s = DEFAULT_STATIC_ARTWORKS.find(it => it.key === artKey);
       if (!s) s = DEFAULT_STATIC_ARTWORKS[0];
 
@@ -1747,12 +1780,41 @@
       }
 
       if (sceneLabel) sceneLabel.textContent = s.label;
-      if (sceneLabelSub) sceneLabelSub.textContent = (s.labelEn || s.key.toUpperCase()) + ' (PNG)';
+      if (sceneLabelSub) sceneLabelSub.textContent = (s.labelEn || s.key.toUpperCase()) + ' (STILL)';
 
       updateWallpaperListHighlights();
     }
 
+    /* Tiny blurred placeholder that boot-stage.js shows synchronously while the
+       real blob is read from IndexedDB. Generated for whichever custom image is
+       ACTIVE (it used to be the last *uploaded* one, so boot could flash a
+       different picture than the one you'd selected). */
+    function cacheCustomThumb(record) {
+      if (!record || !record.blob || record.type === 'live' || record.mimeType === 'image/gif') {
+        safeStorage.removeItem('shinsekai-custom-wallpaper-thumb');
+        return;
+      }
+      const tempUrl = URL.createObjectURL(record.blob);
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const cvs = document.createElement('canvas');
+          cvs.width = 64;
+          cvs.height = 36;
+          const ctx = cvs.getContext('2d');
+          if (ctx && activeWallpaper.id === record.id) {
+            ctx.drawImage(img, 0, 0, 64, 36);
+            safeStorage.setItem('shinsekai-custom-wallpaper-thumb', cvs.toDataURL('image/webp', 0.5));
+          }
+        } catch (e) {}
+        URL.revokeObjectURL(tempUrl);
+      };
+      img.onerror = () => URL.revokeObjectURL(tempUrl);
+      img.src = tempUrl;
+    }
+
     async function applyCustomFileWallpaper(recordOrId) {
+      videoFallbackActive = false;
       let record = recordOrId;
       if (typeof recordOrId === 'string') {
         record = await getCustomWallpaperByIdFromDB(recordOrId);
@@ -1771,6 +1833,7 @@
         name: record.name,
         type: record.type || 'static'
       });
+      cacheCustomThumb(record);
 
       isCustomWallpaper = true;
       currentWallpaperMode = record.type || 'static';
@@ -1788,6 +1851,8 @@
           bgVideo.playsInline = true;
           bgVideo.setAttribute('muted', '');
           bgVideo.setAttribute('playsinline', '');
+          bgVideo.removeAttribute('poster');
+          if (videoSource) videoSource.removeAttribute('src');
           bgVideo.src = currentCustomObjectUrl;
           bgVideo.defaultPlaybackRate = VIDEO_PLAYBACK_RATE;
           bgVideo.playbackRate = VIDEO_PLAYBACK_RATE;
@@ -1816,6 +1881,7 @@
     }
 
     function applyCustomWebWallpaper(recordOrId) {
+      videoFallbackActive = false;
       let record = recordOrId;
       if (typeof recordOrId === 'string') {
         const list = getCustomWebWallpapers();
@@ -1852,6 +1918,8 @@
           bgVideo.playsInline = true;
           bgVideo.setAttribute('muted', '');
           bgVideo.setAttribute('playsinline', '');
+          bgVideo.removeAttribute('poster');
+          if (videoSource) videoSource.removeAttribute('src');
           bgVideo.src = record.url;
           bgVideo.defaultPlaybackRate = VIDEO_PLAYBACK_RATE;
           bgVideo.playbackRate = VIDEO_PLAYBACK_RATE;
@@ -1916,6 +1984,7 @@
 
     function isVideoActive() {
       return (
+        !videoFallbackActive &&
         (currentWallpaperMode === 'live' || activeWallpaper.type === 'live') &&
         activeWallpaper.id !== 'eco' &&
         document.body.getAttribute('data-scene') !== 'eco' &&
@@ -2087,8 +2156,12 @@
       bgVideo.addEventListener('playing', () => { videoErrorCount = 0; });
       bgVideo.addEventListener('error', () => {
         if (!isVideoActive()) return;
-        if (++videoErrorCount >= 2) { applyScene('eco'); return; }
+        if (++videoErrorCount >= 2) { showVideoFallbackStill(); return; }
         try { bgVideo.load(); ensureVideoPlayback(); } catch (e) {}
+      });
+      // Back online after a fallback: try the real video again.
+      window.addEventListener('online', () => {
+        if (videoFallbackActive) { videoFallbackActive = false; videoErrorCount = 0; restoreWallpaperSource(); }
       });
 
       // Health watchdog (every 3s while visible): also self-heals a missed
@@ -2285,28 +2358,6 @@
               const record = await addCustomWallpaperToDB(file);
               addedCount++;
               lastAddedCustom = record;
-
-              // Generate lightweight low-res thumbnail for synchronous zero-flash boot
-              if (isImage && file.type !== 'image/gif') {
-                try {
-                  const img = new Image();
-                  const tempUrl = URL.createObjectURL(file);
-                  img.onload = () => {
-                    try {
-                      const cvs = document.createElement('canvas');
-                      cvs.width = 64;
-                      cvs.height = 36;
-                      const ctx = cvs.getContext('2d');
-                      if (ctx) {
-                        ctx.drawImage(img, 0, 0, 64, 36);
-                        safeStorage.setItem('shinsekai-custom-wallpaper-thumb', cvs.toDataURL('image/webp', 0.5));
-                      }
-                    } catch (e) {}
-                    URL.revokeObjectURL(tempUrl);
-                  };
-                  img.src = tempUrl;
-                } catch (e) {}
-              }
             } catch (err) {
               console.error('Failed to save custom wallpaper:', err);
               const errMsg = (err && (err.message || err.name)) ? String(err.message || err.name) : 'Storage Quota Error';
@@ -2355,6 +2406,10 @@
           const finalTitle = (inputTitle && inputTitle.trim()) ? inputTitle.trim() : defaultTitle;
 
           const record = addCustomWebWallpaper(cleanUrl, finalTitle);
+          if (!record) {
+            alert('無効なURLです (Invalid or unsafe URL — use a direct http(s) link to an image or video)');
+            return;
+          }
           switchWallpaperCategoryTab('custom');
           applyCustomWebWallpaper(record);
           await renderWallpaperLists();
@@ -2370,9 +2425,13 @@
         if (raw) savedActive = JSON.parse(raw);
       } catch (e) {}
 
-      if (!savedActive) {
+      // Explicit ?scene= / ?mode= URL parameters (documented in the README) win
+      // over the saved wallpaper — they used to be ignored as soon as any
+      // wallpaper had ever been picked.
+      if (!savedActive || paramScene || (urlParams && urlParams.get('mode'))) {
         const savedMode = (urlParams ? urlParams.get('mode') : null) || safeStorage.getItem('shinsekai-wallpaper-mode') || 'live';
-        const legacyCustomUrl = safeStorage.getItem('shinsekai-custom-wallpaper-url');
+        // One-time migration of the pre-library single custom URL (only when nothing is saved yet).
+        const legacyCustomUrl = savedActive ? null : safeStorage.getItem('shinsekai-custom-wallpaper-url');
         const rawSavedScene = paramScene || safeStorage.getItem('shinsekai-scene') || 'crimson';
         const sceneKey = sceneAliasMap[rawSavedScene] || rawSavedScene;
 
@@ -2882,17 +2941,18 @@
         particlesStatusIcon.textContent = THEME_PARTICLE_ICONS[t.key] || '🌸';
       }
 
-      if (syncScene && t.defaultScene) {
-        if (currentWallpaperMode === 'static') {
-          if (!isCustomWallpaper) {
-            applyStaticWallpaper(null, t.defaultScene);
-            const s = scenes.find(it => it.key === t.defaultScene) || scenes[0];
-            currentSceneIdx = scenes.indexOf(s);
-            safeStorage.setItem('shinsekai-scene', s.key);
-            document.body.setAttribute('data-scene', s.key);
-          }
+      // Only follow the theme with a matching wallpaper when a *default*
+      // wallpaper is showing. Previously a custom uploaded/URL video (and Eco
+      // mode) was silently replaced by the theme's stock video on every
+      // theme switch.
+      const wallpaperIsUserChoice = isCustomWallpaper || activeWallpaper.id === 'eco';
+      if (syncScene && t.defaultScene && !wallpaperIsUserChoice) {
+        if (activeWallpaper.source === 'default-static') {
+          applyDefaultStaticScene(t.defaultScene);
+          const s = scenes.find(it => it.key === t.defaultScene) || scenes[0];
+          currentSceneIdx = scenes.indexOf(s);
         } else {
-          applyScene(t.defaultScene);
+          applyDefaultLiveScene(t.defaultScene);
         }
       }
     }
@@ -3074,13 +3134,6 @@
           e.stopPropagation();
           scheduleCustomTheme(e.target.value, { source: 'native' });
           commitCustomTheme();
-        });
-      }
-
-      const nativePickerLabel = document.querySelector('.spectrum-native-label');
-      if (nativePickerLabel) {
-        nativePickerLabel.addEventListener('click', (e) => {
-          e.stopPropagation();
         });
       }
 
@@ -3283,173 +3336,121 @@
       return trimmed;
     }
 
-    /* ─── 8.0. FAVICON & PERSISTENT OFFLINE ICON CACHE ─── */
-    const ICON_CACHE_PREFIX = 'shinsekai-icon-';
+    /* ─── 8.0. 100% OFFLINE ICONS ───
+       No network is ever used for icons (the old version hot-linked Google's
+       favicon service and fetched icon.horse in the background — both leaked
+       every pinned hostname and broke offline). Resolution order:
+         1. item.icon  — a custom image you uploaded in the link editor
+                          (stored inline as a tiny data: URL)
+         2. bundled    — assets/icons/<host>.webp via SHINSEKAI_BUNDLED_ICONS
+                          (links.js), matched with or without "www."
+         3. kanji seal — the item's 封印 text */
+    const LEGACY_ICON_CACHE_PREFIX = 'shinsekai-icon-';
+    const BUNDLED_ICONS = (typeof window !== 'undefined' && window.SHINSEKAI_BUNDLED_ICONS) || {};
 
     function getHostname(href) {
       if (!href || href === '#' || href.startsWith('mailto:') || href.startsWith('tel:')) return '';
       try {
         const clean = sanitizeUrl(href);
-        if (!clean || clean === '#' || clean.startsWith('javascript:') || clean.startsWith('mailto:') || clean.startsWith('tel:')) return '';
+        if (!clean || clean === '#' || clean.startsWith('mailto:') || clean.startsWith('tel:')) return '';
         const { hostname } = new URL(clean);
-        return hostname || '';
+        return (hostname || '').toLowerCase();
       } catch (e) {
         return '';
       }
     }
 
-    /** Returns Google S2 CDN URL for any href. */
-    function getFaviconUrl(href) {
-      const hostname = getHostname(href);
-      if (!hostname) return '';
-      return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(hostname)}&sz=64`;
+    function getBundledIcon(href) {
+      const host = getHostname(href);
+      if (!host) return '';
+      const bare = host.replace(/^www\./, '');
+      return BUNDLED_ICONS[host] || BUNDLED_ICONS[bare] || '';
     }
 
-    /**
-     * Builds the inner HTML for a .tile-seal or .editor-link-seal element.
-     * Priority:
-     *  1. Cached base64 data URL from localStorage (instant, works offline, survives cache wipe)
-     *  2. Google S2 CDN direct in <img> (instant, works online without CORS restrictions)
-     *  3. Kanji seal fallback text on error
-     */
-    function buildTileIconHtml(url, seal, fallback) {
-      const sealText = escapeHtml(seal || fallback || '★');
-      const hostname = getHostname(url);
-      if (!hostname) {
-        return `<span class="tile-seal-text">${sealText}</span>`;
-      }
+    // Only images we created ourselves (data:image/…) or local bundled paths.
+    function isSafeIconSrc(src) {
+      return typeof src === 'string' && (/^data:image\/(png|webp|jpeg|gif);base64,[a-z0-9+/=]+$/i.test(src) || /^assets\/icons\/[\w.-]+\.(webp|png|svg)$/i.test(src));
+    }
 
-      // Check localStorage first — if previously saved, works completely offline
-      const cached = safeStorage.getItem(ICON_CACHE_PREFIX + hostname);
-      const iconSrc = cached || getFaviconUrl(url);
+    function resolveIconSrc(item) {
+      if (item && isSafeIconSrc(item.icon)) return item.icon;
+      return getBundledIcon(item && item.url);
+    }
 
+    /** Inner HTML for a .tile-seal / .editor-link-seal element. */
+    function buildTileIconHtml(item) {
+      const sealText = escapeHtml((item && (item.seal || (item.title ? item.title.slice(0, 1) : ''))) || '★');
+      const iconSrc = resolveIconSrc(item);
+      if (!iconSrc) return `<span class="tile-seal-text">${sealText}</span>`;
       return `<img class="tile-icon-img"
           src="${escapeHtml(iconSrc)}"
-          alt="${sealText}"
-          loading="lazy"
+          alt=""
           decoding="async"
-          onerror="this.style.display='none';var s=this.nextElementSibling;if(s)s.style.display='';"
-          onload="var s=this.nextElementSibling;if(s)s.style.display='none';"
         /><span class="tile-seal-text" style="display:none;">${sealText}</span>`;
     }
 
-    const inFlightIconFetches = new Set();
+    // Broken image -> kanji seal, via ONE delegated capture listener (MV3
+    // extension pages block inline onerror/onload attributes; load/error
+    // don't bubble, hence capture).
+    function handleTileIconEvent(e) {
+      const img = e.target;
+      if (!(img instanceof HTMLImageElement) || !img.classList.contains('tile-icon-img')) return;
+      const fallback = img.nextElementSibling;
+      const failed = e.type === 'error';
+      img.style.display = failed ? 'none' : '';
+      if (fallback && fallback.classList.contains('tile-seal-text')) fallback.style.display = failed ? '' : 'none';
+    }
+    document.addEventListener('error', handleTileIconEvent, true);
+    document.addEventListener('load', handleTileIconEvent, true);
 
-    /**
-     * Saves an icon to localStorage as a compact 32x32 base64 PNG data URL.
-     * ONLY runs when there is an active internet connection.
-     * Silent and non-blocking: never interferes with the visible <img> elements.
-     */
-    async function cacheIconForOffline(url) {
-      if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
-      const hostname = getHostname(url);
-      if (!hostname) return;
-
-      const key = ICON_CACHE_PREFIX + hostname;
-      if (safeStorage.getItem(key)) return;
-      if (inFlightIconFetches.has(hostname)) return;
-      inFlightIconFetches.add(hostname);
-
-      let blobUrl = null;
-      let offCanvas = null;
-      try {
-        const resp = await fetch(`https://icon.horse/icon/${encodeURIComponent(hostname)}`, { mode: 'cors' });
-        if (!resp.ok) return;
-        const blob = await resp.blob();
-        if (!blob || blob.size === 0) return;
-
+    /* Downscale an uploaded image to a 64x64 WebP data URL (~2-6 KB) so it
+       can live inside the link record in localStorage. */
+    function imageFileToIconDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        if (!file || !/^image\//.test(file.type)) { reject(new Error('Not an image')); return; }
+        const url = URL.createObjectURL(file);
         const img = new Image();
-        blobUrl = URL.createObjectURL(blob);
-        await new Promise((resolve, reject) => {
-          img.onload = resolve;
-          img.onerror = reject;
-          img.src = blobUrl;
-        });
-
-        offCanvas = document.createElement('canvas');
-        offCanvas.width = 32;
-        offCanvas.height = 32;
-        const ctx = offCanvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, 32, 32);
-        const compactDataUrl = offCanvas.toDataURL('image/png');
-
-        safeStorage.setItem(key, compactDataUrl);
-
-        // Update any live images on page for this domain that previously fell back to seal
-        document.querySelectorAll(`img.tile-icon-img[src*="${hostname}"]`).forEach(el => {
-          el.src = compactDataUrl;
-          el.style.display = '';
-          const fallback = el.nextElementSibling;
-          if (fallback && fallback.classList.contains('tile-seal-text')) {
-            fallback.style.display = 'none';
-          }
-        });
-      } catch (e) {
-      } finally {
-        if (blobUrl) {
-          URL.revokeObjectURL(blobUrl);
-        }
-        if (offCanvas) {
-          offCanvas.width = 0;
-          offCanvas.height = 0;
-        }
-        inFlightIconFetches.delete(hostname);
-      }
-    }
-
-    /**
-     * Syncs icon cache with active links — removes cached icons for domains no longer pinned.
-     * Keeps localStorage permanently lean and trimmed to only active links.
-     */
-    function syncIconCache() {
-      const activeDomains = new Set();
-      currentLinks.forEach(sec => {
-        (sec.items || []).forEach(item => {
-          const host = getHostname(item.url);
-          if (host) activeDomains.add(host);
-        });
-      });
-
-      try {
-        if (typeof window !== 'undefined' && window.localStorage) {
-          const keysToRemove = [];
-          for (let i = 0; i < localStorage.length; i++) {
-            const k = localStorage.key(i);
-            if (k && k.startsWith(ICON_CACHE_PREFIX)) {
-              const domain = k.slice(ICON_CACHE_PREFIX.length);
-              if (!activeDomains.has(domain)) {
-                keysToRemove.push(k);
-              }
-            }
-          }
-          keysToRemove.forEach(k => { safeStorage.removeItem(k); });
-        }
-      } catch (e) {}
-    }
-
-    /**
-     * Iterates all links and caches their icons for offline use.
-     * ONLY runs when online, debounced and rate-limited to avoid request bursts.
-     */
-    let iconSyncTimer = null;
-    function syncAllIconsOffline() {
-      if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
-      if (iconSyncTimer) clearTimeout(iconSyncTimer);
-      iconSyncTimer = setTimeout(async () => {
-        const urls = [];
-        currentLinks.forEach(sec => {
-          (sec.items || []).forEach(item => {
-            if (item.url) urls.push(item.url);
-          });
-        });
-        for (const url of urls) {
-          if (typeof navigator !== 'undefined' && navigator.onLine === false) break;
+        img.onload = () => {
           try {
-            await cacheIconForOffline(url);
-          } catch (e) {}
-          await new Promise(r => setTimeout(r, 120));
+            const size = 64;
+            const cvs = document.createElement('canvas');
+            cvs.width = size; cvs.height = size;
+            const ctx = cvs.getContext('2d');
+            const scale = Math.min(size / img.naturalWidth, size / img.naturalHeight);
+            const w = img.naturalWidth * scale, h = img.naturalHeight * scale;
+            ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+            let data = cvs.toDataURL('image/webp', 0.9);
+            if (!data.startsWith('data:image/webp')) data = cvs.toDataURL('image/png'); // Safari
+            resolve(data);
+          } catch (err) { reject(err); }
+          URL.revokeObjectURL(url);
+        };
+        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Unreadable image')); };
+        img.src = url;
+      });
+    }
+
+    /* One-time migration: icons the old version had cached per hostname in
+       localStorage were already offline copies — move them into the link
+       items that use them (unless a bundled icon exists), then delete the
+       old keys so localStorage stays lean. */
+    function migrateLegacyIconCache(links) {
+      let changed = false;
+      try {
+        const keys = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k && k.startsWith(LEGACY_ICON_CACHE_PREFIX)) keys.push(k);
         }
-      }, 350);
+        if (!keys.length) return false;
+        links.forEach(sec => (sec.items || []).forEach(item => {
+          if (item.icon || getBundledIcon(item.url)) return;
+          const cached = safeStorage.getItem(LEGACY_ICON_CACHE_PREFIX + getHostname(item.url));
+          if (isSafeIconSrc(cached)) { item.icon = cached; changed = true; }
+        }));
+        keys.forEach(k => safeStorage.removeItem(k));
+      } catch (e) {}
+      return changed;
     }
 
     function getInitialLinks() {
@@ -3469,6 +3470,9 @@
     }
 
     let currentLinks = getInitialLinks();
+    if (migrateLegacyIconCache(currentLinks)) {
+      safeStorage.setItem('shinsekai-custom-links', JSON.stringify(currentLinks));
+    }
     let currentActiveSector = 'anime';
 
     function switchSector(sectorName) {
@@ -3515,7 +3519,7 @@
           <div class="sector-grid">
             ${sec.items.map(item => `
               <a href="${escapeHtml(sanitizeUrl(item.url))}" class="holo-tile" target="_blank" rel="noopener noreferrer">
-                <span class="tile-seal">${buildTileIconHtml(item.url, item.seal, item.title ? item.title.slice(0, 1) : '★')}</span>
+                <span class="tile-seal">${buildTileIconHtml(item)}</span>
                 <div class="tile-info">
                   <span class="tile-title">${escapeHtml(item.title || 'Bookmark')}</span>
                   <span class="tile-sub">${escapeHtml(item.desc || '')}</span>
@@ -3546,6 +3550,12 @@
           bladeLauncher.classList.remove('open-active');
         }
       });
+      // Touch screens never fire mouseleave: close the drawer when you tap
+      // anywhere outside it instead.
+      document.addEventListener('pointerdown', (e) => {
+        if (e.pointerType === 'mouse' || dockPinned) return;
+        if (!bladeLauncher.contains(e.target)) bladeLauncher.classList.remove('open-active');
+      }, { passive: true });
     }
 
     // Initialize blade launcher tiles from config
@@ -3554,42 +3564,49 @@
     /* ─── 8.1. LINK EDITOR MODAL CONTROLLER ─── */
     let activeEditorSectorId = 'anime';
 
-    /**
-     * Refreshes the live seal preview box in the editor form.
-     * Shows the favicon from Google CDN if the URL is valid;
-     * otherwise shows the kanji seal text or '印' as a placeholder.
-     */
+    /* Custom icon chosen in the form ('' = none). Lives here until ADD/UPDATE. */
+    let editorIconData = '';
+    const addLinkIconFile = document.getElementById('add-link-icon-file');
+    const clearLinkIconBtn = document.getElementById('clear-link-icon-btn');
+
+    /** Live seal/icon preview in the editor form — same offline resolution as the tiles. */
     function updateSealPreview(url, sealText) {
       if (!previewFaviconImg || !previewSealFallback) return;
-      const hostname = getHostname(url);
       const displaySeal = sealText || '印';
-
       previewSealFallback.textContent = displaySeal;
-
-      if (!hostname) {
+      const src = resolveIconSrc({ url, icon: editorIconData });
+      if (clearLinkIconBtn) clearLinkIconBtn.style.display = editorIconData ? '' : 'none';
+      if (!src) {
         previewFaviconImg.style.display = 'none';
-        previewFaviconImg.src = '';
+        previewFaviconImg.removeAttribute('src');
         previewSealFallback.style.display = '';
         return;
       }
-
-      const cached = safeStorage.getItem(ICON_CACHE_PREFIX + hostname);
-      const faviconUrl = cached || getFaviconUrl(url);
-
-      previewFaviconImg.src = faviconUrl;
-      previewFaviconImg.alt = displaySeal;
+      previewFaviconImg.src = src;
       previewFaviconImg.style.display = '';
       previewSealFallback.style.display = 'none';
+    }
 
-      previewFaviconImg.onerror = () => {
-        previewFaviconImg.style.display = 'none';
-        previewSealFallback.style.display = '';
-      };
-      previewFaviconImg.onload = () => {
-        previewFaviconImg.style.display = '';
-        previewSealFallback.style.display = 'none';
-        if (!cached) cacheIconForOffline(url);
-      };
+    if (sealPreviewBox && addLinkIconFile) {
+      sealPreviewBox.addEventListener('click', () => addLinkIconFile.click());
+      addLinkIconFile.addEventListener('change', async () => {
+        const file = addLinkIconFile.files && addLinkIconFile.files[0];
+        addLinkIconFile.value = '';
+        if (!file) return;
+        try {
+          editorIconData = await imageFileToIconDataUrl(file);
+        } catch (e) {
+          alert('画像を読み込めませんでした (Could not read that image)');
+          return;
+        }
+        updateSealPreview(addLinkUrl ? addLinkUrl.value : '', addLinkSeal ? addLinkSeal.value : '');
+      });
+    }
+    if (clearLinkIconBtn) {
+      clearLinkIconBtn.addEventListener('click', () => {
+        editorIconData = '';
+        updateSealPreview(addLinkUrl ? addLinkUrl.value : '', addLinkSeal ? addLinkSeal.value : '');
+      });
     }
 
     function resetEditorForm() {
@@ -3598,6 +3615,7 @@
       if (addLinkUrl) addLinkUrl.value = '';
       if (addLinkDesc) addLinkDesc.value = '';
       if (addLinkSeal) addLinkSeal.value = '';
+      editorIconData = '';
       // Reset seal preview to blank state
       updateSealPreview('', '');
       if (addLinkBtn) {
@@ -3634,8 +3652,6 @@
 
     function saveLinks() {
       safeStorage.setItem('shinsekai-custom-links', JSON.stringify(currentLinks));
-      syncIconCache();
-      syncAllIconsOffline();
     }
 
     function renderEditorModal() {
@@ -3668,7 +3684,7 @@
       editorLinksList.innerHTML = currentSec.items.map((item, idx) => `
         <div class="editor-link-card ${idx === currentEditingIdx ? 'editing-active' : ''}" data-idx="${idx}">
           <div class="editor-link-main">
-            <span class="editor-link-seal">${buildTileIconHtml(item.url, item.seal, item.title ? item.title.slice(0, 1) : '★')}</span>
+            <span class="editor-link-seal">${buildTileIconHtml(item)}</span>
             <div class="editor-link-info">
               <span class="editor-link-title">${escapeHtml(item.title)}</span>
               <span class="editor-link-sub">${escapeHtml(item.desc || item.url)}</span>
@@ -3711,6 +3727,7 @@
           if (addLinkUrl) addLinkUrl.value = item.url || '';
           if (addLinkDesc) addLinkDesc.value = item.desc || '';
           if (addLinkSeal) addLinkSeal.value = item.seal || '';
+          editorIconData = isSafeIconSrc(item.icon) && item.icon.startsWith('data:') ? item.icon : '';
 
           updateSealPreview(item.url || '', item.seal || '');
 
@@ -3790,12 +3807,14 @@
         const currentSec = currentLinks.find(s => s.id === activeEditorSectorId) || currentLinks[0];
         if (currentSec) {
           const editingIdx = editLinkIndex ? parseInt(editLinkIndex.value, 10) : -1;
+          const entry = { title, url, desc, seal };
+          if (editorIconData) entry.icon = editorIconData;
           if (editingIdx >= 0 && editingIdx < currentSec.items.length) {
             // Update existing link
-            currentSec.items[editingIdx] = { title, url, desc, seal };
+            currentSec.items[editingIdx] = entry;
           } else {
             // Add new link
-            currentSec.items.push({ title, url, desc, seal });
+            currentSec.items.push(entry);
           }
           saveLinks();
           resetEditorForm();
@@ -3856,7 +3875,14 @@
             tier: currentTier,
             grain: grainActive,
             particles: particlesActive,
-            dockPinned: dockPinned
+            dockPinned: dockPinned,
+            bootPref: safeStorage.getItem('shinsekai-boot-pref') || 'full',
+            bootVoice: safeStorage.getItem('shinsekai-boot-voice') !== 'off',
+            searchEngine: safeStorage.getItem('shinsekai-search-engine') || 'google',
+            sfx: safeStorage.getItem('shinsekai_sfx_enabled') !== '0',
+            clock12h: safeStorage.getItem('shinsekai-clock-12h') === 'true',
+            focusMinutes: parseInt(safeStorage.getItem('shinsekai_focus_minutes'), 10) || 25,
+            breakMinutes: parseInt(safeStorage.getItem('shinsekai_break_minutes'), 10) || 5
           },
           links: currentLinks
         };
@@ -3901,7 +3927,8 @@
                       title: String(item.title || 'Bookmark').trim(),
                       url: sanitizeUrl(item.url),
                       desc: String(item.desc || '').trim(),
-                      seal: String(item.seal || (item.title ? item.title.slice(0, 1) : '★')).trim().slice(0, 2)
+                      seal: String(item.seal || (item.title ? item.title.slice(0, 1) : '★')).trim().slice(0, 2),
+                      ...(isSafeIconSrc(item.icon) ? { icon: item.icon } : {})
                     }))
                 }));
 
@@ -3950,6 +3977,15 @@
                   if (typeof parsed.settings.grain === 'boolean') setGrain(parsed.settings.grain);
                   if (typeof parsed.settings.particles === 'boolean') setParticles(parsed.settings.particles);
                   if (typeof parsed.settings.dockPinned === 'boolean') setDockPinned(parsed.settings.dockPinned);
+                  // Newer settings: stored now, picked up fully on the next new tab.
+                  const st = parsed.settings;
+                  if (['full', 'hourly', 'off'].includes(st.bootPref)) safeStorage.setItem('shinsekai-boot-pref', st.bootPref);
+                  if (typeof st.bootVoice === 'boolean') safeStorage.setItem('shinsekai-boot-voice', st.bootVoice ? 'on' : 'off');
+                  if (['google', 'duckduckgo', 'brave', 'startpage'].includes(st.searchEngine)) safeStorage.setItem('shinsekai-search-engine', st.searchEngine);
+                  if (typeof st.sfx === 'boolean') safeStorage.setItem('shinsekai_sfx_enabled', st.sfx ? '1' : '0');
+                  if (typeof st.clock12h === 'boolean') safeStorage.setItem('shinsekai-clock-12h', st.clock12h ? 'true' : 'false');
+                  if (st.focusMinutes >= 1 && st.focusMinutes <= 180) safeStorage.setItem('shinsekai_focus_minutes', String(st.focusMinutes | 0));
+                  if (st.breakMinutes >= 1 && st.breakMinutes <= 60) safeStorage.setItem('shinsekai_break_minutes', String(st.breakMinutes | 0));
                 }
 
                 resetEditorForm();
@@ -4008,8 +4044,10 @@
       if (previewLineStep) previewLineStep.textContent = `${formatted} AUTHENTICATED // DEPLOYING INTERFACE...`;
       if (previewLineWelcome) previewLineWelcome.textContent = `新世界 起動完了 // WELCOME ${formatted}`;
       if (previewLineMatrix) {
-        const activeTheme = (themes && themes[currentThemeIdx]) ? themes[currentThemeIdx].key.toUpperCase() : 'CRIMSON';
-        previewLineMatrix.textContent = `SYNCHRONIZING ${activeTheme} FLAME MATRIX // ${formatted}`;
+        // Same line the real boot shows for the active theme (it used to say
+        // "… FLAME MATRIX" for every theme).
+        const tpl = themeBootLoreTemplates[currentThemeKey] || themeBootLoreTemplates.crimson;
+        previewLineMatrix.textContent = tpl.subTemplate.replace('{OPERATOR}', formatted);
       }
     }
 
@@ -4404,8 +4442,11 @@
 
     // Subtle audio haptics delegation across interactive HUD elements
     document.addEventListener('mouseover', (e) => {
-      const target = e.target.closest('.holo-tile, .tab-blade, .tool-pill, .bang-chip, .editor-btn, .modal-nav-btn, .color-swatch-btn');
-      if (target) {
+      const target = e.target.closest('.holo-tile, .tab-blade, .tool-pill, .bang-chip, .editor-btn, .modal-nav-btn');
+      // mouseover bubbles from every child (icon, label, kbd…), so moving the
+      // pointer inside one button used to chirp repeatedly. Only chirp when
+      // the pointer actually enters the control from outside it.
+      if (target && !(e.relatedTarget && target.contains(e.relatedTarget))) {
         CyberAudio.playChirp();
       }
     }, { passive: true });
@@ -4416,15 +4457,26 @@
         CyberAudio.playBlade();
         return;
       }
-      const clickable = e.target.closest('.tool-pill, .bang-chip, .editor-btn, .modal-nav-btn, .color-swatch-btn');
+      const clickable = e.target.closest('.tool-pill, .bang-chip, .editor-btn, .modal-nav-btn');
       if (clickable) {
         CyberAudio.playClick();
       }
     }, { passive: true });
 
-    /* ─── SHINOBI FOCUS & EVA TELEMETRY CORE CONTROLLER ─── */
-    let currentFocusMinutes = parseInt(safeStorage.getItem('shinsekai_focus_minutes'), 10) || 25;
-    let currentBreakMinutes = parseInt(safeStorage.getItem('shinsekai_break_minutes'), 10) || 5;
+    /* ─── SHINOBI FOCUS & EVA TELEMETRY CORE CONTROLLER ───
+       The timer state lives in localStorage (absolute end time, not a
+       countdown), so it survives reloads and — this being a new-tab page —
+       every new tab shows the same running session instead of a fresh 25:00.
+       Open tabs stay in sync through the `storage` event, and only one tab
+       fires the alarm/notification when a phase ends. */
+    const FOCUS_STATE_KEY = 'shinsekai-focus-state';
+    const FOCUS_ALARM_KEY = 'shinsekai-focus-alarm';
+    const clampInt = (v, lo, hi, dflt) => {
+      const n = parseInt(v, 10);
+      return (isNaN(n) || n < lo || n > hi) ? dflt : n;
+    };
+    let currentFocusMinutes = clampInt(safeStorage.getItem('shinsekai_focus_minutes'), 1, 180, 25);
+    let currentBreakMinutes = clampInt(safeStorage.getItem('shinsekai_break_minutes'), 1, 60, 5);
     let FOCUS_MS = currentFocusMinutes * 60 * 1000;
     let BREAK_MS = currentBreakMinutes * 60 * 1000;
     const originalTitle = document.title || 'shinsekai';
@@ -4432,6 +4484,7 @@
     let focusEndTime = 0;
     let focusRemainingMs = FOCUS_MS;
     let focusTimer = null;
+    let lastFocusTitle = '';
 
     function formatFocusTime(ms) {
       const totalSec = Math.max(0, Math.ceil(ms / 1000));
@@ -4440,11 +4493,24 @@
       return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
     }
 
+    function persistFocusState() {
+      safeStorage.setItem(FOCUS_STATE_KEY, JSON.stringify({
+        state: focusState,
+        endTime: focusEndTime,
+        remainingMs: focusRemainingMs
+      }));
+    }
+
     function updateFocusUI() {
-      if (focusTimeDisplay) focusTimeDisplay.textContent = formatFocusTime(focusRemainingMs);
-      if (focusTargetSub) focusTargetSub.textContent = `${focusState === 'break' ? currentBreakMinutes : currentFocusMinutes}M ${focusState === 'break' ? 'COOLDOWN' : 'TRAINING'}`;
+      if (focusTimeDisplay) setTextIfChanged(focusTimeDisplay, formatFocusTime(focusRemainingMs));
+      if (focusTargetSub) setTextIfChanged(focusTargetSub, `${focusState === 'break' ? currentBreakMinutes : currentFocusMinutes}M ${focusState === 'break' ? 'COOLDOWN' : 'TRAINING'}`);
       if (focusModeBadge) {
-        focusModeBadge.textContent = focusState === 'break' ? 'BREAK' : (focusState === 'idle' ? 'STANDBY' : focusState.toUpperCase());
+        setTextIfChanged(focusModeBadge, focusState === 'break' ? 'BREAK' : (focusState === 'idle' ? 'STANDBY' : focusState.toUpperCase()));
+      }
+      if (focusCmdIcon && focusCmdText) {
+        const running = focusState === 'running';
+        setTextIfChanged(focusCmdIcon, running ? '❚❚' : (focusState === 'break' ? '■' : '▶'));
+        setTextIfChanged(focusCmdText, running ? 'PAUSE' : (focusState === 'paused' ? 'RESUME' : (focusState === 'break' ? 'END BREAK' : 'ENGAGE')));
       }
       if (shinobiFocusDeck) {
         shinobiFocusDeck.classList.toggle('focus-running', focusState === 'running');
@@ -4453,47 +4519,71 @@
       const totalPeriodMs = focusState === 'break' ? BREAK_MS : FOCUS_MS;
       const pct = Math.max(0, Math.min(100, (focusRemainingMs / totalPeriodMs) * 100));
       const pctStr = pct.toFixed(1) + '%';
-      if (syncVal) syncVal.textContent = pctStr;
+      if (syncVal) setTextIfChanged(syncVal, pctStr);
       if (gaugeFill) gaugeFill.style.width = pctStr;
-      if (focusState === 'idle') {
-        document.title = originalTitle;
-      } else if (focusState === 'break') {
-        document.title = `[☕ ${formatFocusTime(focusRemainingMs)}] ${originalTitle}`;
-      } else {
-        document.title = `[${formatFocusTime(focusRemainingMs)}] ${originalTitle}`;
-      }
+      let title = originalTitle;
+      if (focusState === 'break') title = `[☕ ${formatFocusTime(focusRemainingMs)}] ${originalTitle}`;
+      else if (focusState !== 'idle') title = `[${formatFocusTime(focusRemainingMs)}] ${originalTitle}`;
+      if (title !== lastFocusTitle) { lastFocusTitle = title; document.title = title; }
+    }
+
+    function showFocusSubtitle(speakerEn, jp, en) {
+      if (!subSpeaker || !subJp || !subEn) return;
+      subSpeaker.textContent = 'SHINSEKAI // OS';
+      if (subSpeakerEn) subSpeakerEn.textContent = speakerEn;
+      subJp.textContent = jp;
+      subEn.textContent = en;
+    }
+
+    // Exactly one tab rings for a given phase end (localStorage claim).
+    function claimFocusAlarm(endTime) {
+      const tag = String(endTime);
+      if (safeStorage.getItem(FOCUS_ALARM_KEY) === tag) return false;
+      safeStorage.setItem(FOCUS_ALARM_KEY, tag);
+      return true;
+    }
+
+    function notifyFocus(title, body) {
+      try {
+        if ('Notification' in window && Notification.permission === 'granted' && document.hidden) {
+          new Notification(title, { body, tag: 'shinsekai-focus', silent: false });
+        }
+      } catch (e) {}
+    }
+
+    function startFocusTicker() {
+      clearInterval(focusTimer);
+      focusTimer = (focusState === 'running' || focusState === 'break') ? setInterval(tickFocus, 1000) : null;
     }
 
     function tickFocus() {
       if (focusState !== 'running' && focusState !== 'break') return;
-      const now = Date.now();
-      focusRemainingMs = Math.max(0, focusEndTime - now);
+      focusRemainingMs = Math.max(0, focusEndTime - Date.now());
 
       if (focusRemainingMs <= 0) {
-        clearInterval(focusTimer);
-        focusTimer = null;
-        CyberAudio.playPomodoroAlarm();
+        const endedAt = focusEndTime;
+        const ring = claimFocusAlarm(endedAt);
         if (focusState === 'running') {
-          if (subSpeaker && subJp && subEn) {
-            subSpeaker.textContent = 'SHINSEKAI // OS';
-            if (subSpeakerEn) subSpeakerEn.textContent = 'Focus Master';
-            if (subJp) subJp.textContent = '「修練完了！集中目標を達成しました。冷却休息を開始します」';
-            if (subEn) subEn.textContent = 'Focus session complete! Stand down for tactical cooldown.';
+          if (ring) {
+            CyberAudio.playPomodoroAlarm();
+            notifyFocus('修練完了 · Focus complete', `${currentFocusMinutes} min session done — ${currentBreakMinutes} min cooldown started.`);
           }
+          showFocusSubtitle('Focus Master', '「修練完了！集中目標を達成しました。冷却休息を開始します」', 'Focus session complete! Stand down for tactical cooldown.');
           focusState = 'break';
-          focusRemainingMs = BREAK_MS;
-          focusEndTime = Date.now() + BREAK_MS;
-          focusTimer = setInterval(tickFocus, 1000);
+          // Chain from the scheduled end, not from "now": a throttled
+          // background tab must not stretch the break.
+          focusEndTime = endedAt + BREAK_MS;
+          focusRemainingMs = Math.max(0, focusEndTime - Date.now());
+          persistFocusState();
+          startFocusTicker();
           updateFocusUI();
         } else {
-          CyberAudio.playPomodoroAlarm();
-          if (subSpeaker && subJp && subEn) {
-            subSpeaker.textContent = 'SHINSEKAI // OS';
-            if (subSpeakerEn) subSpeakerEn.textContent = 'Mission Ready';
-            if (subJp) subJp.textContent = '「休息終了。機体全系統正常。いつでも次の修練へ移行可能です」';
-            if (subEn) subEn.textContent = 'Tactical break finished. All systems nominal. Ready for next mission.';
+          if (ring) {
+            CyberAudio.playPomodoroAlarm();
+            notifyFocus('休息終了 · Break over', 'All systems nominal. Ready for the next mission.');
           }
-          resetFocus();
+          showFocusSubtitle('Mission Ready', '「休息終了。機体全系統正常。いつでも次の修練へ移行可能です」', 'Tactical break finished. All systems nominal. Ready for next mission.');
+          resetFocus(true);
         }
         return;
       }
@@ -4503,31 +4593,36 @@
     function startFocus() {
       focusState = 'running';
       focusEndTime = Date.now() + focusRemainingMs;
-      clearInterval(focusTimer);
-      focusTimer = setInterval(tickFocus, 1000);
+      persistFocusState();
+      startFocusTicker();
       updateFocusUI();
       CyberAudio.playClick();
+      // Ask once, on a real user gesture, so the end of a session can be
+      // announced even while you're in another tab.
+      try {
+        if ('Notification' in window && Notification.permission === 'default') {
+          Notification.requestPermission().catch(() => {});
+        }
+      } catch (e) {}
     }
 
     function pauseFocus() {
-      if (focusTimer) {
-        clearInterval(focusTimer);
-        focusTimer = null;
-      }
+      focusRemainingMs = Math.max(0, focusEndTime - Date.now());
       focusState = 'paused';
+      persistFocusState();
+      startFocusTicker();
       updateFocusUI();
       CyberAudio.playClick();
     }
 
-    function resetFocus() {
-      if (focusTimer) {
-        clearInterval(focusTimer);
-        focusTimer = null;
-      }
+    function resetFocus(silent) {
       focusState = 'idle';
+      focusEndTime = 0;
       focusRemainingMs = FOCUS_MS;
+      persistFocusState();
+      startFocusTicker();
       updateFocusUI();
-      CyberAudio.playClick();
+      if (silent !== true) CyberAudio.playClick();
     }
 
     function toggleFocus() {
@@ -4543,19 +4638,56 @@
       }
     }
 
+    // Load persisted state (also used when another tab changes it).
+    function loadFocusState() {
+      let saved = null;
+      try { saved = JSON.parse(safeStorage.getItem(FOCUS_STATE_KEY) || 'null'); } catch (e) {}
+      const now = Date.now();
+      focusState = 'idle';
+      focusEndTime = 0;
+      focusRemainingMs = FOCUS_MS;
+      if (saved && typeof saved === 'object') {
+        if ((saved.state === 'running' || saved.state === 'break') && saved.endTime > 0) {
+          focusState = saved.state;
+          focusEndTime = saved.endTime;
+          // A focus phase that finished while no tab was open rolls into its
+          // break silently; anything older than that is simply over.
+          if (focusState === 'running' && focusEndTime <= now && focusEndTime + BREAK_MS > now) {
+            focusState = 'break';
+            focusEndTime += BREAK_MS;
+          }
+          if (focusEndTime <= now) {
+            focusState = 'idle';
+            focusEndTime = 0;
+          } else {
+            focusRemainingMs = focusEndTime - now;
+          }
+        } else if (saved.state === 'paused' && saved.remainingMs > 0) {
+          focusState = 'paused';
+          focusRemainingMs = Math.min(saved.remainingMs, FOCUS_MS);
+        }
+      }
+      startFocusTicker();
+      updateFocusUI();
+    }
+
+    window.addEventListener('storage', (e) => {
+      if (e.key === FOCUS_STATE_KEY) loadFocusState();
+    });
+
     function configureFocusTimer() {
       const input = prompt('Enter focus training duration in minutes (1 - 180):', currentFocusMinutes);
       if (input === null) return;
-      const mins = parseInt(input, 10);
-      if (isNaN(mins) || mins <= 0 || mins > 180) return;
+      const mins = clampInt(input, 1, 180, NaN);
+      if (isNaN(mins)) return;
       currentFocusMinutes = mins;
       safeStorage.setItem('shinsekai_focus_minutes', currentFocusMinutes);
       FOCUS_MS = currentFocusMinutes * 60 * 1000;
 
       const breakInput = prompt('Enter cooldown break duration in minutes (1 - 60):', currentBreakMinutes);
       if (breakInput !== null) {
-        const bMins = parseInt(breakInput, 10);
-        if (!isNaN(bMins) && bMins > 0 && bMins <= 60) {
+        const bMins = clampInt(breakInput, 1, 60, NaN);
+        if (!isNaN(bMins)) {
           currentBreakMinutes = bMins;
           safeStorage.setItem('shinsekai_break_minutes', currentBreakMinutes);
           BREAK_MS = currentBreakMinutes * 60 * 1000;
@@ -4564,25 +4696,26 @@
 
       if (focusState === 'idle') {
         focusRemainingMs = FOCUS_MS;
+        persistFocusState();
       }
       updateFocusUI();
       CyberAudio.playClick();
     }
 
-    if (focusToggleBtn) {
-      focusToggleBtn.addEventListener('click', toggleFocus);
-    }
-    if (focusResetBtn) {
-      focusResetBtn.addEventListener('click', resetFocus);
-    }
+    if (focusToggleBtn) focusToggleBtn.addEventListener('click', toggleFocus);
+    if (focusResetBtn) focusResetBtn.addEventListener('click', () => resetFocus());
     if (shinobiFocusDeck) {
-      shinobiFocusDeck.addEventListener('dblclick', configureFocusTimer);
+      shinobiFocusDeck.addEventListener('dblclick', (e) => {
+        // Rapid clicks on ENGAGE/RESET shouldn't open the duration prompt.
+        if (e.target.closest('button')) return;
+        configureFocusTimer();
+      });
       shinobiFocusDeck.addEventListener('contextmenu', (e) => {
         e.preventDefault();
         configureFocusTimer();
       });
     }
-    updateFocusUI();
+    loadFocusState();
 
     /* ─── 9. COMMAND SEARCH BAR & BANG LOGIC ─── */
     const searchEngines = {
@@ -4591,8 +4724,47 @@
       youtube: 'https://www.youtube.com/results?search_query=',
       github: 'https://github.com/search?q=',
       reddit: 'https://www.reddit.com/search/?q=',
-      wikipedia: 'https://en.wikipedia.org/wiki/Special:Search?search='
+      wikipedia: 'https://en.wikipedia.org/wiki/Special:Search?search=',
+      brave: 'https://search.brave.com/search?q=',
+      startpage: 'https://www.startpage.com/do/search?q='
     };
+
+    /* Default engine for plain queries (Operator hub → 検索機関). */
+    const DEFAULT_ENGINES = ['google', 'duckduckgo', 'brave', 'startpage'];
+    let defaultEngine = DEFAULT_ENGINES.includes(safeStorage.getItem('shinsekai-search-engine')) ? safeStorage.getItem('shinsekai-search-engine') : 'google';
+    const engineChips = document.querySelectorAll('#engine-chips .tier-chip[data-engine]');
+    function updateEngineUI() {
+      engineChips.forEach(c => c.classList.toggle('active', c.dataset.engine === defaultEngine));
+    }
+    engineChips.forEach(c => c.addEventListener('click', () => {
+      defaultEngine = c.dataset.engine;
+      safeStorage.setItem('shinsekai-search-engine', defaultEngine);
+      updateEngineUI();
+    }));
+    updateEngineUI();
+    const webSearchUrl = q => searchEngines[defaultEngine] + encodeURIComponent(q);
+
+    const BANGS = {
+      g:  { search: searchEngines.google,     home: 'https://www.google.com' },
+      y:  { search: searchEngines.youtube,    home: 'https://www.youtube.com' },
+      gh: { search: searchEngines.github,     home: 'https://github.com' },
+      r:  { search: searchEngines.reddit,     home: 'https://www.reddit.com' },
+      d:  { search: searchEngines.duckduckgo, home: 'https://duckduckgo.com' },
+      w:  { search: searchEngines.wikipedia,  home: 'https://en.wikipedia.org' }
+    };
+
+    /* "Is this a URL rather than a search?" — the old check (any dot and no
+       space) sent "3.14" or "node.js" to https://3.14 / https://node.js style
+       dead ends and sent "localhost:3000" to Google. Now: an explicit http(s)://,
+       localhost / IPv4 (optionally with port/path), or host.tld where the TLD
+       is alphabetic and 2+ letters. */
+    function looksLikeUrl(q) {
+      if (/\s/.test(q)) return false;
+      if (/^https?:\/\//i.test(q)) return true;
+      if (/^mailto:[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(q)) return true;
+      if (/^(localhost|\d{1,3}(\.\d{1,3}){3})(:\d+)?(\/.*)?$/i.test(q)) return true;
+      return /^([a-z0-9-]+\.)+[a-z]{2,}(:\d+)?([/?#].*)?$/i.test(q) && !/\.(js|ts|json|txt|exe|html|css|cpp|java)$/i.test(q);
+    }
 
     if (commandInput) {
       function checkBangs(val) {
@@ -4604,8 +4776,104 @@
         });
       }
 
+      /* ─── 瞬間移動 · QUICK LAUNCH ───
+         Typing matches your pinned links (title, description, hostname,
+         sector). ↑/↓ choose, Enter opens. When what you typed is the start of
+         the best match's title ("crunch" → Crunchyroll) it is pre-selected,
+         so Enter jumps straight there; Shift+Enter always does a web search. */
+      const quickLaunchList = document.getElementById('quick-launch-list');
+      let qlResults = [];
+      let qlIndex = -1;
+
+      function qlScore(item, sec, q) {
+        const title = (item.title || '').toLowerCase();
+        const host = getHostname(item.url).replace(/^www\./, '');
+        const desc = (item.desc || '').toLowerCase();
+        if (title === q) return 100;
+        if (title.startsWith(q)) return 80;
+        if (host.startsWith(q)) return 70;
+        if (title.split(/[\s/._-]+/).some(w => w.startsWith(q))) return 60;
+        if (title.includes(q)) return 45;
+        if (host.includes(q)) return 35;
+        if (desc.includes(q)) return 20;
+        if ((sec.main || '').toLowerCase().includes(q) || (sec.sub || '').toLowerCase().includes(q)) return 10;
+        return 0;
+      }
+
+      function renderQuickLaunch() {
+        if (!quickLaunchList) return;
+        const raw = commandInput.value.trim();
+        const q = raw.toLowerCase();
+        qlResults = [];
+        if (q && !/^[!:/]/.test(q) && q.length <= 40) {
+          currentLinks.forEach(sec => (sec.items || []).forEach(item => {
+            const score = qlScore(item, sec, q);
+            if (score) qlResults.push({ item, sec, score });
+          }));
+          qlResults.sort((a, b) => b.score - a.score);
+          qlResults = qlResults.slice(0, 6);
+        }
+        if (!qlResults.length) {
+          quickLaunchList.hidden = true;
+          quickLaunchList.innerHTML = '';
+          commandInput.setAttribute('aria-expanded', 'false');
+          qlIndex = -1;
+          return;
+        }
+        qlIndex = (!/\s/.test(q) && qlResults[0].score >= 70) ? 0 : -1;
+        quickLaunchList.innerHTML = qlResults.map((r, i) => `
+          <button type="button" class="ql-item" role="option" id="ql-opt-${i}" data-idx="${i}" tabindex="-1">
+            <span class="tile-seal">${buildTileIconHtml(r.item)}</span>
+            <span class="ql-text">
+              <span class="ql-title">${escapeHtml(r.item.title || 'Bookmark')}</span>
+              <span class="ql-sub">${escapeHtml(getHostname(r.item.url) || r.item.url || '')}${r.item.desc ? ' · ' + escapeHtml(r.item.desc) : ''}</span>
+            </span>
+            <span class="ql-sector">${escapeHtml(r.sec.kanji || '')}</span>
+            <kbd class="ql-enter">↵</kbd>
+          </button>`).join('') + '<div class="ql-hint">↑↓ 選択 · Enter 起動 · Shift+Enter ウェブ検索 / web search</div>';
+        quickLaunchList.hidden = false;
+        commandInput.setAttribute('aria-expanded', 'true');
+        highlightQuickLaunch();
+      }
+
+      function highlightQuickLaunch() {
+        if (!quickLaunchList) return;
+        quickLaunchList.querySelectorAll('.ql-item').forEach((el, i) => el.classList.toggle('active', i === qlIndex));
+        if (qlIndex >= 0) commandInput.setAttribute('aria-activedescendant', 'ql-opt-' + qlIndex);
+        else commandInput.removeAttribute('aria-activedescendant');
+      }
+
+      function hideQuickLaunch() {
+        if (!quickLaunchList || quickLaunchList.hidden) return;
+        quickLaunchList.hidden = true;
+        commandInput.setAttribute('aria-expanded', 'false');
+        qlIndex = -1;
+      }
+
+      function openQuickLaunch(idx) {
+        const r = qlResults[idx];
+        if (!r) return false;
+        const href = sanitizeUrl(r.item.url);
+        if (href === '#') return false;
+        window.location.href = href;
+        return true;
+      }
+
+      if (quickLaunchList) {
+        // pointerdown (not click) so it fires before the input's blur hides the list.
+        quickLaunchList.addEventListener('pointerdown', (e) => {
+          const btn = e.target.closest('.ql-item');
+          if (!btn) return;
+          e.preventDefault();
+          openQuickLaunch(parseInt(btn.dataset.idx, 10));
+        });
+      }
+      commandInput.addEventListener('blur', () => setTimeout(hideQuickLaunch, 120));
+      commandInput.addEventListener('focus', renderQuickLaunch);
+
       commandInput.addEventListener('input', (e) => {
         checkBangs(e.target.value);
+        renderQuickLaunch();
       });
 
       bangChips.forEach(chip => {
@@ -4619,13 +4887,24 @@
 
       commandInput.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
+          if (quickLaunchList && !quickLaunchList.hidden) { hideQuickLaunch(); return; }
           commandInput.blur();
           return;
         }
 
+        if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && qlResults.length && quickLaunchList && !quickLaunchList.hidden) {
+          e.preventDefault();
+          const n = qlResults.length;
+          qlIndex = e.key === 'ArrowDown' ? (qlIndex + 1) % n : (qlIndex <= 0 ? n - 1 : qlIndex - 1);
+          highlightQuickLaunch();
+          return;
+        }
+
         if (e.key === 'Enter') {
+          if (e.isComposing) return; // IME (Japanese input) confirming a word
           const query = commandInput.value.trim();
           if (!query) return;
+          if (!e.shiftKey && qlIndex >= 0 && quickLaunchList && !quickLaunchList.hidden && openQuickLaunch(qlIndex)) return;
 
           const lowerQuery = query.toLowerCase();
           if (lowerQuery === ':user' || lowerQuery === ':settings' || lowerQuery === '!user' || lowerQuery === '!settings' || lowerQuery === '/user' || lowerQuery === '/settings') {
@@ -4648,30 +4927,24 @@
             }
           }
 
-          if (lowerQuery === '!gh' || lowerQuery.startsWith('!gh ')) {
-            const term = query.slice(3).trim();
-            window.location.href = term ? searchEngines.github + encodeURIComponent(term) : 'https://github.com';
-          } else if (lowerQuery === '!y' || lowerQuery.startsWith('!y ')) {
-            const term = query.slice(2).trim();
-            window.location.href = term ? searchEngines.youtube + encodeURIComponent(term) : 'https://www.youtube.com';
-          } else if (lowerQuery === '!r' || lowerQuery.startsWith('!r ')) {
-            const term = query.slice(2).trim();
-            window.location.href = term ? searchEngines.reddit + encodeURIComponent(term) : 'https://www.reddit.com';
-          } else if (lowerQuery === '!d' || lowerQuery.startsWith('!d ')) {
-            const term = query.slice(2).trim();
-            window.location.href = term ? searchEngines.duckduckgo + encodeURIComponent(term) : 'https://duckduckgo.com';
-          } else if (lowerQuery === '!g' || lowerQuery.startsWith('!g ')) {
-            const term = query.slice(2).trim();
-            window.location.href = term ? searchEngines.google + encodeURIComponent(term) : 'https://www.google.com';
-          } else if (lowerQuery === '!w' || lowerQuery.startsWith('!w ')) {
-            const term = query.slice(2).trim();
-            window.location.href = term ? searchEngines.wikipedia + encodeURIComponent(term) : 'https://en.wikipedia.org';
-          } else if (/^https?:\/\//i.test(query) || (query.includes('.') && !query.includes(' '))) {
-            const dest = query.startsWith('http') ? query : 'https://' + query;
+          const bangMatch = query.match(/^!(\S+)(?:\s+([\s\S]*))?$/);
+          if (bangMatch) {
+            const bangKey = bangMatch[1].toLowerCase();
+            const term = (bangMatch[2] || '').trim();
+            const bang = Object.prototype.hasOwnProperty.call(BANGS, bangKey) ? BANGS[bangKey] : null;
+            if (bang) {
+              window.location.href = term ? bang.search + encodeURIComponent(term) : bang.home;
+            } else {
+              // Unknown bang: DuckDuckGo understands ~13k of them (!aur, !mdn, !npm…).
+              window.location.href = searchEngines.duckduckgo + encodeURIComponent(query);
+            }
+          } else if (looksLikeUrl(query)) {
+            const dest = /^(https?:\/\/|mailto:)/i.test(query) ? query
+              : ((/^(localhost|\d{1,3}(\.\d{1,3}){3})(:\d+)?(\/|$)/i.test(query) ? 'http://' : 'https://') + query);
             const safe = sanitizeUrl(dest);
-            window.location.href = safe !== '#' ? safe : (searchEngines.google + encodeURIComponent(query));
+            window.location.href = safe !== '#' ? safe : webSearchUrl(query);
           } else {
-            window.location.href = searchEngines.google + encodeURIComponent(query);
+            window.location.href = webSearchUrl(query);
           }
         }
       });
@@ -4718,12 +4991,57 @@
       });
     }
 
-    function executeBootSequence(onDone) {
+    /* Boot preferences (operator modal): the 1.5 s cinematic + welcome voice
+       on EVERY new tab gets old fast, so both are now configurable.
+         full   — always play (default, previous behaviour)
+         hourly — play at most once per hour, instant otherwise
+         off    — never (same as ?noboot=1) */
+    const BOOT_PREFS = ['full', 'hourly', 'off'];
+    const LAST_BOOT_KEY = 'shinsekai-last-boot';
+    let bootPref = BOOT_PREFS.includes(safeStorage.getItem('shinsekai-boot-pref')) ? safeStorage.getItem('shinsekai-boot-pref') : 'full';
+    let bootVoiceEnabled = safeStorage.getItem('shinsekai-boot-voice') !== 'off';
+
+    function bootPlayedRecently() {
+      const last = parseInt(safeStorage.getItem(LAST_BOOT_KEY), 10) || 0;
+      return Date.now() - last < 60 * 60 * 1000;
+    }
+
+    function playBootVoice() {
+      if (bootVoiceEnabled) playWelcomeVoice();
+    }
+
+    const bootPrefChips = document.querySelectorAll('#boot-pref-chips .tier-chip[data-boot]');
+    const voicePrefBtn = document.getElementById('voice-pref-btn');
+    const voicePrefMain = document.getElementById('voice-pref-main');
+
+    function updateBootPrefUI() {
+      bootPrefChips.forEach(chip => chip.classList.toggle('active', chip.dataset.boot === bootPref));
+      if (voicePrefBtn) voicePrefBtn.classList.toggle('active', bootVoiceEnabled);
+      if (voicePrefMain) voicePrefMain.textContent = bootVoiceEnabled ? 'VOICE ON' : 'VOICE OFF';
+    }
+
+    bootPrefChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        bootPref = chip.dataset.boot;
+        safeStorage.setItem('shinsekai-boot-pref', bootPref);
+        updateBootPrefUI();
+      });
+    });
+    if (voicePrefBtn) {
+      voicePrefBtn.addEventListener('click', () => {
+        bootVoiceEnabled = !bootVoiceEnabled;
+        safeStorage.setItem('shinsekai-boot-voice', bootVoiceEnabled ? 'on' : 'off');
+        updateBootPrefUI();
+      });
+    }
+    updateBootPrefUI();
+
+    function executeBootSequence(onDone, opts = {}) {
       let overlay = document.getElementById('boot-overlay');
-      const activeThemeKey = paramTheme || safeStorage.getItem('shinsekai-theme') || 'crimson';
-      currentThemeKey = activeThemeKey;
-      document.documentElement.setAttribute('data-theme', activeThemeKey);
-      document.body.setAttribute('data-theme', activeThemeKey);
+      // applyTheme()/applyCustomTheme() already ran and validated the theme;
+      // re-reading raw storage/URL here used to put unknown ?theme= values
+      // straight into data-theme.
+      const activeThemeKey = currentThemeKey;
 
       refreshThemeBootLore();
       const lore = themeBootLore[activeThemeKey] || themeBootLore.crimson;
@@ -4771,7 +5089,11 @@
       if (kanji) kanji.textContent = lore.kanji;
       if (sub) sub.textContent = lore.sub;
 
-      const skipBoot = urlParams && (urlParams.get('noboot') === '1' || urlParams.get('noboot') === 'true');
+      const skipBoot = !opts.force && (
+        (urlParams && (urlParams.get('noboot') === '1' || urlParams.get('noboot') === 'true')) ||
+        bootPref === 'off' ||
+        (bootPref === 'hourly' && bootPlayedRecently())
+      );
       if (skipBoot) {
         overlay.classList.add('boot-completed');
         if (overlay.parentNode) {
@@ -4790,10 +5112,12 @@
         } else if (urlParams && (urlParams.get('menu') === 'shortcuts' || urlParams.get('menu') === 'help')) {
           openShortcutsModal();
         }
-        playWelcomeVoice();
+        if (!opts.force && bootPref !== 'hourly') playBootVoice();
         if (typeof onDone === 'function') onDone();
         return;
       }
+
+      safeStorage.setItem(LAST_BOOT_KEY, String(Date.now()));
 
       document.body.classList.remove('boot-ready', 'boot-active');
       document.body.classList.add('booting');
@@ -4833,7 +5157,7 @@
           if (pLog) pLog.textContent = `新世界 起動完了 // WELCOME ${formatted}`;
 
           // Play the female android voice the moment loading is finished!
-          playWelcomeVoice();
+          playBootVoice();
 
           setTimeout(() => {
             overlay.classList.add('boot-completed');
@@ -4859,7 +5183,7 @@
       testBootBtn.addEventListener('click', () => {
         saveOperatorSettings();
         closeOperatorModal();
-        executeBootSequence();
+        executeBootSequence(null, { force: true });
       });
     }
 
@@ -4868,14 +5192,17 @@
 
     /* ─── 11. GLOBAL CLICK & SHORTCUT HANDLERS ─── */
     document.addEventListener('click', (e) => {
-      if (!e.target.closest('.dropdown-wrapper')) {
+      // The wallpaper popover isn't inside a .dropdown-wrapper, so clicking any
+      // empty area inside it (headers, the upload note…) used to close it.
+      if (!e.target.closest('.dropdown-wrapper, .anime-popover, #scene-btn')) {
         if (themePopover) themePopover.classList.remove('open');
         if (scenePopover) scenePopover.classList.remove('open');
       }
     });
 
     document.addEventListener('keydown', (e) => {
-      if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) {
+      const ae = document.activeElement;
+      if (ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.tagName === 'SELECT' || ae.isContentEditable)) {
         if (e.key === 'Escape') {
           document.activeElement.blur();
           if (shortcutsModal && shortcutsModal.classList.contains('open')) {
@@ -4898,6 +5225,11 @@
 
       const key = e.key.toLowerCase();
 
+      // While a dialog is open only Esc and '?' do anything — single-letter
+      // hotkeys used to change the theme / start the timer / swap the
+      // wallpaper behind the dialog.
+      if (isModalOpen() && e.key !== 'Escape' && e.key !== '?') return;
+
       if (e.key === '/') {
         e.preventDefault();
         if (commandInput) {
@@ -4912,7 +5244,7 @@
         cycleQuote();
       } else if (key === 'g') {
         setGrain(!grainActive);
-      } else if (key === 'b') {
+      } else if (key === 'b' || key === 'a') {
         setParticles(!particlesActive);
       } else if (key === 'p') {
         setDockPinned(!dockPinned);
@@ -4960,9 +5292,6 @@
       }
     });
 
-    // Offline icon persistence: background sync ONLY when online and system is idle
-    setTimeout(syncAllIconsOffline, 2500);
-    window.addEventListener('online', syncAllIconsOffline);
     window.addEventListener('beforeunload', revokeCustomObjectUrl);
 
     /* ─── RUNTIME FPS WATCHDOG (adaptive visual cost) ───
@@ -4982,6 +5311,9 @@
       let frames = 0, windowStart = 0, lastNow = 0, badStreak = 0;
       function reset() { frames = 0; windowStart = 0; lastNow = 0; badStreak = 0; }
       function step(now) {
+        // Nothing left to step down to: stop sampling instead of keeping a
+        // requestAnimationFrame loop alive for the lifetime of the tab.
+        if (currentFx === 'min') return;
         requestAnimationFrame(step);
         if (isSuspended() || now < GRACE_MS || !document.body.classList.contains('boot-ready')) { reset(); return; }
         if (!windowStart || now - lastNow > 400) { frames = 0; windowStart = now; lastNow = now; return; }
@@ -5000,6 +5332,15 @@
       }
       requestAnimationFrame(step);
     })();
+  }
+
+  /* Offline barrier (sw.js): only for http(s) hosting such as GitHub Pages.
+     Extension and file:// installs are already fully local. Registered after
+     load so it never competes with the boot sequence / first video frame. */
+  if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    });
   }
 
   if (document.readyState === 'loading') {

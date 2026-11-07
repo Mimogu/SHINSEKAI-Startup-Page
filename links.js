@@ -72,3 +72,35 @@ window.SHINSEKAI_DEFAULT_LINKS = [
     ]
   }
 ];
+
+/**
+ * Bundled offline icons (assets/icons/<hostname>.webp, 64x64).
+ * Any link whose hostname is listed here shows its real logo with zero network
+ * requests. Other links show their kanji seal, or a custom icon you upload in
+ * the link editor. To add one: drop a square <hostname>.webp/.png into
+ * assets/icons/ and add the hostname -> path entry below.
+ */
+window.SHINSEKAI_BUNDLED_ICONS = {
+  "anilist.co": "assets/icons/anilist.co.webp",
+  "chatgpt.com": "assets/icons/chatgpt.com.webp",
+  "claude.ai": "assets/icons/claude.ai.webp",
+  "crunchyroll.com": "assets/icons/crunchyroll.com.webp",
+  "discord.com": "assets/icons/discord.com.webp",
+  "discuss.cachyos.org": "assets/icons/discuss.cachyos.org.webp",
+  "drive.google.com": "assets/icons/drive.google.com.webp",
+  "github.com": "assets/icons/github.com.webp",
+  "howlongtobeat.com": "assets/icons/howlongtobeat.com.webp",
+  "listen.moe": "assets/icons/listen.moe.webp",
+  "mail.proton.me": "assets/icons/mail.proton.me.webp",
+  "mangadex.org": "assets/icons/mangadex.org.webp",
+  "myanimelist.net": "assets/icons/myanimelist.net.webp",
+  "protondb.com": "assets/icons/protondb.com.webp",
+  "reddit.com": "assets/icons/reddit.com.webp",
+  "steamdb.info": "assets/icons/steamdb.info.webp",
+  "store.steampowered.com": "assets/icons/store.steampowered.com.webp",
+  "twitch.tv": "assets/icons/twitch.tv.webp",
+  "web.telegram.org": "assets/icons/web.telegram.org.webp",
+  "wiki.archlinux.org": "assets/icons/wiki.archlinux.org.webp",
+  "x.com": "assets/icons/x.com.webp",
+  "youtube.com": "assets/icons/youtube.com.webp"
+};
